@@ -8,7 +8,6 @@ import '../../core/constants/app_spacing.dart';
 import '../widgets/app_outline_button.dart';
 import '../widgets/outline_headline.dart';
 
-/// Premium onboarding splash matching the reference fuel-app look.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, required this.next});
 

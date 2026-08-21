@@ -21,7 +21,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Continue'), findsOneWidget);
-    expect(find.text('Vehicle name'), findsOneWidget);
+    expect(find.text('Vehicle Name'), findsOneWidget);
     expect(find.text('Car'), findsOneWidget);
   });
 }

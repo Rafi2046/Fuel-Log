@@ -16,6 +16,7 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.prefixIcon,
     this.suffixText,
+    this.suffixIcon,
     this.inputFormatters,
     this.onChanged,
     this.obscureText = false,
@@ -29,6 +30,7 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final IconData? prefixIcon;
   final String? suffixText;
+  final Widget? suffixIcon;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
   final bool obscureText;
@@ -57,7 +59,11 @@ class AppTextField extends StatelessWidget {
                 ? null
                 : Icon(prefixIcon, color: AppColors.textTertiary, size: 20),
             suffixText: suffixText,
-            suffixStyle: AppTextStyles.label,
+            suffixStyle: AppTextStyles.label.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+            suffixIcon: suffixIcon,
           ),
         ),
       ],
