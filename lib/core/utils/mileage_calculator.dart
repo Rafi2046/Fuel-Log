@@ -28,10 +28,12 @@ double calculateAverageMileage(List<FuelLog> logs) {
   return totalDistance / totalAmount;
 }
 
-/// Per-fill efficiency points (chronological), capped for charts.
+/// Per-fill efficiency points (chronological).
+///
+/// Pass [maxPoints] null to keep the full history (for scrollable charts).
 List<EfficiencyPoint> buildEfficiencySeries(
   List<FuelLog> logs, {
-  int maxPoints = 8,
+  int? maxPoints = 8,
 }) {
   if (logs.length < 2) return const [];
 
@@ -52,6 +54,6 @@ List<EfficiencyPoint> buildEfficiencySeries(
   }
 
   points.sort((a, b) => a.date.compareTo(b.date));
-  if (points.length <= maxPoints) return points;
+  if (maxPoints == null || points.length <= maxPoints) return points;
   return points.sublist(points.length - maxPoints);
 }

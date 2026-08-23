@@ -9,7 +9,7 @@ import '../screens/chart_fullscreen_page.dart';
 import 'advanced_efficiency_chart.dart';
 import 'expense_ratio_chart.dart';
 
-/// Swipeable analytics with pill indicators + fullscreen expand.
+/// Swipeable analytics — expand control lives inside the chart card.
 class AnalyticsCarousel extends StatefulWidget {
   const AnalyticsCarousel({
     super.key,
@@ -33,11 +33,12 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
   String get _title =>
       _page == 0 ? 'consumption'.tr() : 'expenseRatio'.tr();
 
-  Widget _chartFor(int index) {
+  Widget _chartFor(int index, {required bool fullscreen}) {
     if (index == 0) {
       return AdvancedEfficiencyChart(
         logs: widget.logs,
         unit: widget.mileageUnit,
+        scrollable: fullscreen,
       );
     }
     return ExpenseRatioChart(logs: widget.logs);
@@ -47,7 +48,7 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
     return ChartFullscreenPage.open(
       context,
       title: _title,
-      child: _chartFor(_page),
+      child: _chartFor(_page, fullscreen: true),
     );
   }
 
@@ -62,29 +63,12 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              _title,
-              style: AppTextStyles.label.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              tooltip: 'expandChart'.tr(),
-              onPressed: _openFullscreen,
-              icon: const Icon(
-                Icons.open_in_full_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+        Text(
+          _title,
+          style: AppTextStyles.label.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Container(
@@ -95,12 +79,42 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(color: AppColors.border),
           ),
-          child: PageView(
-            controller: _controller,
-            onPageChanged: (i) => setState(() => _page = i),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
             children: [
-              _chartFor(0),
-              _chartFor(1),
+              Positioned.fill(
+                child: PageView(
+                  controller: _controller,
+                  onPageChanged: (i) => setState(() => _page = i),
+                  children: [
+                    _chartFor(0, fullscreen: false),
+                    _chartFor(1, fullscreen: false),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Material(
+                  color: AppColors.background.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  child: InkWell(
+                    onTap: _openFullscreen,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    child: Tooltip(
+                      message: 'expandChart'.tr(),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.open_in_full_rounded,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
