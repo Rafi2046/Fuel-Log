@@ -6,9 +6,9 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/summary_stat_card.dart';
 
-/// Dashboard Home Tab View displaying stats summary and chart placeholder.
-class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+/// Home tab View displaying stats summary and chart placeholder.
+class HomeTab extends StatelessWidget {
+  const HomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -5,15 +5,15 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../widgets/app_card.dart';
 
-/// Settings Tab View listing export, import, unit preferences, and dark mode.
-class SettingsView extends StatefulWidget {
-  const SettingsView({super.key});
+/// Settings tab listing export, import, unit preferences, and dark mode.
+class SettingsTab extends StatefulWidget {
+  const SettingsTab({super.key});
 
   @override
-  State<SettingsView> createState() => _SettingsViewState();
+  State<SettingsTab> createState() => _SettingsTabState();
 }
 
-class _SettingsViewState extends State<SettingsView> {
+class _SettingsTabState extends State<SettingsTab> {
   bool _darkThemeEnabled = true;
 
   @override

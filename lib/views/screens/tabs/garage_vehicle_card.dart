@@ -4,68 +4,11 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../widgets/app_card.dart';
-import '../../widgets/app_outline_button.dart';
-import '../vehicle_setup_screen.dart';
 
-/// Garage Tab View listing vehicles with an Add Vehicle button.
-class GarageView extends StatelessWidget {
-  const GarageView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.screenPadding),
-      children: [
-        // Primary Active Vehicle Card: Toyota Axio
-        _VehicleCard(
-          name: 'Toyota Axio',
-          model: 'Sedan • 2021',
-          odometer: '45,210 km',
-          icon: Icons.directions_car_filled_rounded,
-          isDefault: true,
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        // Secondary Vehicle Card: Honda Civic
-        _VehicleCard(
-          name: 'Honda Civic',
-          model: 'Sedan • 2023',
-          odometer: '28,400 km',
-          icon: Icons.directions_car_outlined,
-          isDefault: false,
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        // Bike Vehicle Card: Yamaha R15
-        _VehicleCard(
-          name: 'Yamaha R15',
-          model: 'Motorcycle • 2022',
-          odometer: '12,100 km',
-          icon: Icons.two_wheeler_rounded,
-          isDefault: false,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-
-        // Bottom Prominent Outlined Button: "+ Add New Vehicle"
-        AppOutlineButton(
-          label: '+ Add New Vehicle',
-          icon: Icons.add_rounded,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const VehicleSetupScreen(),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.lg),
-      ],
-    );
-  }
-}
-
-class _VehicleCard extends StatelessWidget {
-  const _VehicleCard({
+/// Vehicle row card used in the garage tab.
+class GarageVehicleCard extends StatelessWidget {
+  const GarageVehicleCard({
+    super.key,
     required this.name,
     required this.model,
     required this.odometer,

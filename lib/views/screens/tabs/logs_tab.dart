@@ -5,9 +5,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../widgets/app_card.dart';
 
-/// Logs Tab View displaying 10 dummy refueling entries.
-class LogsView extends StatelessWidget {
-  const LogsView({super.key});
+/// Logs tab displaying 10 dummy refueling entries.
+class LogsTab extends StatelessWidget {
+  const LogsTab({super.key});
 
   static final List<Map<String, String>> _dummyLogs = List.generate(
     10,
