@@ -52,13 +52,33 @@ class _TripLogTabState extends State<TripLogTab>
 
   late final MapController _mapController;
   late final PageController _carouselController;
-  AnimationController? _cameraAnimController;
+  late final AnimationController _cameraAnimController;
+  late final Animation<double> _cameraAnimation;
+  _LatLngTween? _latTween;
+  Tween<double>? _zoomTween;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _carouselController = PageController(viewportFraction: 0.86);
+
+    _cameraAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _cameraAnimation = CurvedAnimation(
+      parent: _cameraAnimController,
+      curve: Curves.easeOutCubic,
+    )..addListener(() {
+        if (!mounted || _latTween == null || _zoomTween == null) return;
+        try {
+          _mapController.move(
+            _latTween!.evaluate(_cameraAnimation),
+            _zoomTween!.evaluate(_cameraAnimation),
+          );
+        } catch (_) {}
+      });
 
     if (widget.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -79,20 +99,17 @@ class _TripLogTabState extends State<TripLogTab>
 
   @override
   void dispose() {
-    _cameraAnimController?.dispose();
+    _cameraAnimController.dispose();
     _mapController.dispose();
     _carouselController.dispose();
     super.dispose();
   }
 
-  /// Silky smooth 60fps camera movement with easeOutCubic curve
+  /// Silky smooth 60fps camera movement with easeOutCubic curve (reusing single controller)
   void _animatedMapMove(LatLng destLocation, double destZoom) {
-    _cameraAnimController?.dispose();
-    final animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-    _cameraAnimController = animController;
+    if (!mounted) return;
+
+    _cameraAnimController.stop();
 
     LatLng startCenter = _userLocation;
     double startZoom = 15.0;
@@ -101,24 +118,11 @@ class _TripLogTabState extends State<TripLogTab>
       startZoom = _mapController.camera.zoom;
     } catch (_) {}
 
-    final latTween = _LatLngTween(begin: startCenter, end: destLocation);
-    final zoomTween = Tween<double>(begin: startZoom, end: destZoom);
+    _latTween = _LatLngTween(begin: startCenter, end: destLocation);
+    _zoomTween = Tween<double>(begin: startZoom, end: destZoom);
 
-    final animation = CurvedAnimation(
-      parent: animController,
-      curve: Curves.easeOutCubic,
-    );
-
-    animation.addListener(() {
-      try {
-        _mapController.move(
-          latTween.evaluate(animation),
-          zoomTween.evaluate(animation),
-        );
-      } catch (_) {}
-    });
-
-    animController.forward();
+    _cameraAnimController.reset();
+    _cameraAnimController.forward();
   }
 
   /// Automatically requests permission and fetches live device GPS coordinates
@@ -497,7 +501,7 @@ class _TripLogTabState extends State<TripLogTab>
           // 3. Compact Floating Map Toolbar (Zoom & Recenter)
           Positioned(
             right: AppSpacing.screenPadding,
-            bottom: _showStations ? 220 : 120,
+            bottom: _showStations ? 172 : 76,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -591,11 +595,11 @@ class _TripLogTabState extends State<TripLogTab>
             ),
           ),
 
-          // 4. Bottom Area: Clean Floating Stations Carousel or Standard FABs
+          // 4. Bottom Area: Clean Floating Stations Carousel or Standard FABs (Resting elegantly at bottom)
           Positioned(
             left: 0,
             right: 0,
-            bottom: 80,
+            bottom: 12,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               switchInCurve: Curves.easeOutCubic,
@@ -621,12 +625,10 @@ class _TripLogTabState extends State<TripLogTab>
                       onPageChanged: (idx) {
                         setState(() => _selectedStationIndex = idx);
                         if (idx < _stations.length) {
-                          try {
-                            _mapController.move(
-                              _stations[idx].location,
-                              15.0,
-                            );
-                          } catch (_) {}
+                          _animatedMapMove(
+                            _stations[idx].location,
+                            15.0,
+                          );
                         }
                       },
                       onStationSelected: _selectStation,
@@ -1024,11 +1026,11 @@ class _NearbyStationsCarousel extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         // Horizontal Carousel
         SizedBox(
-          height: 132,
+          height: 122,
           child: PageView.builder(
             controller: controller,
             itemCount: stations.length,
@@ -1099,7 +1101,7 @@ class _StationCarouselCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
