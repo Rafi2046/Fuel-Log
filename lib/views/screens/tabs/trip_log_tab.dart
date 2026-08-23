@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -10,6 +11,7 @@ import '../../../core/constants/app_shadows.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/gas_station_service.dart';
+import '../../../core/services/navigation_routing_service.dart';
 import '../../widgets/station_list_modal_sheet.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
 
@@ -50,9 +52,18 @@ class _TripLogTabState extends State<TripLogTab>
   bool _isLoadingStations = false;
   bool _showStations = false;
   bool _isFetchingLocation = false;
+  bool _isNavigating = false;
+  MockGasStation? _navigatingStation;
+  NavigationRouteResult? _activeRoute;
   int _selectedStationIndex = 0;
   List<MockGasStation> _stations = [];
   LatLng _userLocation = kDefaultUserLocation;
+  Timer? _gpsPollingTimer;
+  Timer? _tripTimer;
+  Duration _tripDuration = Duration.zero;
+  double _tripDistanceCoveredKm = 0.0;
+  LatLng? _lastGpsPoint;
+  bool _isGeneralTripTracking = false;
 
   late final MapController _mapController;
   late final PageController _carouselController;
@@ -103,6 +114,8 @@ class _TripLogTabState extends State<TripLogTab>
 
   @override
   void dispose() {
+    _tripTimer?.cancel();
+    _gpsPollingTimer?.cancel();
     _cameraAnimController.dispose();
     _mapController.dispose();
     _carouselController.dispose();
@@ -303,31 +316,264 @@ class _TripLogTabState extends State<TripLogTab>
   }
 
   void _onNavigateTo(MockGasStation station) {
-    _animatedMapMove(station.location, 16.2);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              LucideIcons.navigation,
-              color: AppColors.primary,
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Starting navigation to ${station.name} (${station.distance})',
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.textPrimary,
-                  fontSize: 13.5,
-                ),
-              ),
-            ),
-          ],
+    _startNavigation(station);
+  }
+
+  Future<void> _startNavigation(MockGasStation station) async {
+    // Start live trip stopwatch
+    _tripTimer?.cancel();
+    _tripDuration = Duration.zero;
+    _tripDistanceCoveredKm = 0.0;
+    _lastGpsPoint = _userLocation;
+    _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _tripDuration += const Duration(seconds: 1);
+        });
+      }
+    });
+
+    setState(() {
+      _isNavigating = true;
+      _navigatingStation = station;
+      _showStations = false;
+      _activeRoute = null;
+    });
+
+    final midLat = (_userLocation.latitude + station.location.latitude) / 2;
+    final midLng = (_userLocation.longitude + station.location.longitude) / 2;
+    _animatedMapMove(LatLng(midLat, midLng), 15.2);
+
+    final routeResult =
+        await NavigationRoutingService.instance.getDrivingRoute(
+      start: _userLocation,
+      destination: station.location,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _activeRoute = routeResult;
+    });
+
+    _startLiveGpsTracking(station);
+    _chipSnack('Navigation started to ${station.name}');
+  }
+
+  void _cancelGpsTracking() {
+    _gpsPollingTimer?.cancel();
+    _gpsPollingTimer = null;
+  }
+
+  void _startLiveGpsTracking(MockGasStation station) {
+    _cancelGpsTracking();
+    const distanceCalc = Distance();
+
+    // Immediate first check
+    _updateNavLocation(station, distanceCalc);
+
+    // Periodic live check every 2.5 seconds (rock solid, no MissingPluginException)
+    _gpsPollingTimer = Timer.periodic(
+      const Duration(milliseconds: 2500),
+      (_) {
+        if (!mounted || !_isNavigating) return;
+        _updateNavLocation(station, distanceCalc);
+      },
+    );
+  }
+
+  Future<void> _updateNavLocation(
+    MockGasStation station,
+    Distance distanceCalc,
+  ) async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 4),
         ),
-        backgroundColor: AppColors.cardElevated,
-        behavior: SnackBarBehavior.floating,
-      ),
+      );
+
+      if (!mounted || !_isNavigating) return;
+
+      final currentLatLng = LatLng(position.latitude, position.longitude);
+      final remainingMeters = distanceCalc.as(
+        LengthUnit.Meter,
+        currentLatLng,
+        station.location,
+      );
+
+      // Accumulate live distance covered
+      if (_lastGpsPoint != null) {
+        final deltaM = distanceCalc.as(
+          LengthUnit.Meter,
+          _lastGpsPoint!,
+          currentLatLng,
+        );
+        if (deltaM >= 2.0 && deltaM < 500.0) {
+          _tripDistanceCoveredKm += (deltaM / 1000.0);
+          _lastGpsPoint = currentLatLng;
+        }
+      } else {
+        _lastGpsPoint = currentLatLng;
+      }
+
+      // Speed in m/s, fallback to ~25 km/h (6.9 m/s) if moving slow
+      final speedMs = position.speed > 1.0 ? position.speed : 6.9;
+      final remainingSeconds = (remainingMeters / speedMs).round();
+
+      setState(() {
+        _userLocation = currentLatLng;
+        if (_activeRoute != null) {
+          _activeRoute = NavigationRouteResult(
+            points: _activeRoute!.points,
+            distanceMeters: remainingMeters,
+            durationSeconds: remainingSeconds,
+            nextInstruction: _activeRoute!.nextInstruction,
+          );
+        }
+      });
+
+      // Smooth camera follow as you drive
+      try {
+        final currentZoom = _mapController.camera.zoom;
+        _animatedMapMove(currentLatLng, currentZoom);
+      } catch (_) {}
+
+      // Arrival detection within 30 meters
+      if (remainingMeters < 30) {
+        _onArrivedAtStation(station);
+      }
+    } catch (_) {}
+  }
+
+  void _onArrivedAtStation(MockGasStation station) {
+    _cancelGpsTracking();
+    _tripTimer?.cancel();
+    _chipSnack('🎉 You have arrived at ${station.name}!');
+    showTripManualEntrySheet(context);
+  }
+
+  void _exitNavigation() {
+    _tripTimer?.cancel();
+    _tripTimer = null;
+    _cancelGpsTracking();
+    setState(() {
+      _isNavigating = false;
+      _navigatingStation = null;
+      _activeRoute = null;
+      _showStations = true;
+      _tripDuration = Duration.zero;
+      _tripDistanceCoveredKm = 0.0;
+      _lastGpsPoint = null;
+    });
+    _animatedMapMove(_userLocation, 15.0);
+  }
+
+  void _toggleGeneralTripTracking() {
+    if (_isGeneralTripTracking) {
+      _tripTimer?.cancel();
+      _tripTimer = null;
+      _cancelGpsTracking();
+      setState(() {
+        _isGeneralTripTracking = false;
+      });
+      _chipSnack(
+        'Trip finished! Total: ${_tripDistanceCoveredKm.toStringAsFixed(1)} km in ${_tripDuration.inMinutes} mins',
+      );
+      showTripManualEntrySheet(context);
+    } else {
+      _tripTimer?.cancel();
+      _tripDuration = Duration.zero;
+      _tripDistanceCoveredKm = 0.0;
+      _lastGpsPoint = _userLocation;
+      setState(() {
+        _isGeneralTripTracking = true;
+      });
+
+      _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) {
+          setState(() {
+            _tripDuration += const Duration(seconds: 1);
+          });
+        }
+      });
+
+      const distanceCalc = Distance();
+      _gpsPollingTimer?.cancel();
+      _gpsPollingTimer = Timer.periodic(
+        const Duration(milliseconds: 2500),
+        (_) async {
+          if (!mounted || !_isGeneralTripTracking) return;
+          try {
+            final position = await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high,
+                timeLimit: Duration(seconds: 4),
+              ),
+            );
+            if (!mounted || !_isGeneralTripTracking) return;
+            final currentLatLng =
+                LatLng(position.latitude, position.longitude);
+            if (_lastGpsPoint != null) {
+              final deltaM = distanceCalc.as(
+                LengthUnit.Meter,
+                _lastGpsPoint!,
+                currentLatLng,
+              );
+              if (deltaM >= 2.0 && deltaM < 500.0) {
+                _tripDistanceCoveredKm += (deltaM / 1000.0);
+                _lastGpsPoint = currentLatLng;
+              }
+            } else {
+              _lastGpsPoint = currentLatLng;
+            }
+            setState(() {
+              _userLocation = currentLatLng;
+            });
+            try {
+              _animatedMapMove(currentLatLng, _mapController.camera.zoom);
+            } catch (_) {}
+          } catch (_) {}
+        },
+      );
+
+      _chipSnack('Trip tracking started! Live timer & distance active');
+    }
+  }
+
+  Future<void> _onTopNavigateChip() async {
+    if (_isNavigating) {
+      _exitNavigation();
+      return;
+    }
+
+    if (_stations.isEmpty) {
+      setState(() => _isLoadingStations = true);
+      final list = await GasStationService.instance.getNearbyStations(
+        center: _userLocation,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isLoadingStations = false;
+        _stations = list;
+      });
+    }
+
+    if (_stations.isNotEmpty) {
+      final target =
+          _stations[_selectedStationIndex.clamp(0, _stations.length - 1)];
+      _startNavigation(target);
+    } else {
+      _chipSnack('No nearby stations found to navigate');
+    }
+  }
+
+  void _launchExternalVoiceNavigation() {
+    if (_navigatingStation == null) return;
+    NavigationRoutingService.instance.launchExternalMaps(
+      destination: _navigatingStation!.location,
+      stationName: _navigatingStation!.name,
     );
   }
 
@@ -406,6 +652,27 @@ class _TripLogTabState extends State<TripLogTab>
                         );
                       },
                     ),
+
+                    // Turn-by-Turn Route Polyline (Live Navigation Mode)
+                    if (_isNavigating &&
+                        _activeRoute != null &&
+                        _activeRoute!.points.isNotEmpty)
+                      PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: _activeRoute!.points,
+                            strokeWidth: 9.0,
+                            color:
+                                const Color(0xFF00E5FF).withValues(alpha: 0.3),
+                          ),
+                          Polyline(
+                            points: _activeRoute!.points,
+                            strokeWidth: 4.8,
+                            color: const Color(0xFF00E5FF),
+                          ),
+                        ],
+                      ),
+
                     MarkerLayer(
                       markers: [
                         // User Current Location Puck
@@ -418,8 +685,19 @@ class _TripLogTabState extends State<TripLogTab>
                             isLocating: _isFetchingLocation,
                           ),
                         ),
+
+                        // Destination Flag Marker (Live Navigation Mode)
+                        if (_isNavigating && _navigatingStation != null)
+                          Marker(
+                            point: _navigatingStation!.location,
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.topCenter,
+                            child: const _DestinationFlagMarker(),
+                          ),
+
                         // Dynamic Gas Station Markers (Wide horizontal layout)
-                        if (_showStations)
+                        if (!_isNavigating && _showStations)
                           for (var i = 0; i < _stations.length; i++)
                             Marker(
                               point: _stations[i].location,
@@ -440,7 +718,7 @@ class _TripLogTabState extends State<TripLogTab>
             },
           ),
 
-          // 2. Top Floating Controls with Frosted Glass Look
+          // 2. Top Floating Controls: Turn HUD when navigating, standard pills otherwise
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -449,21 +727,41 @@ class _TripLogTabState extends State<TripLogTab>
                 AppSpacing.screenPadding,
                 0,
               ),
-              child: Column(
-                children: [
-                  const _TripStatsPill(
-                    distanceKm: 0,
-                    elapsed: Duration.zero,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _MapActionChips(
-                    isLoadingStations: _isLoadingStations,
-                    isStationsActive: _showStations,
-                    onStations: _onToggleStations,
-                    onNavigate: () =>
-                        _chipSnack('navigateComingSoon'.tr()),
-                  ),
-                ],
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                child: _isNavigating && _navigatingStation != null
+                    ? Column(
+                        key: const ValueKey('nav_top_hud_col'),
+                        children: [
+                          _TripStatsPill(
+                            distanceKm: _tripDistanceCoveredKm,
+                            elapsed: _tripDuration,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _NavigationTopHud(
+                            key: const ValueKey('nav_top_hud'),
+                            station: _navigatingStation!,
+                            route: _activeRoute,
+                            onExit: _exitNavigation,
+                          ),
+                        ],
+                      )
+                    : Column(
+                        key: const ValueKey('standard_top_hud'),
+                        children: [
+                          _TripStatsPill(
+                            distanceKm: _tripDistanceCoveredKm,
+                            elapsed: _tripDuration,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _MapActionChips(
+                            isLoadingStations: _isLoadingStations,
+                            isStationsActive: _showStations,
+                            onStations: _onToggleStations,
+                            onNavigate: _onTopNavigateChip,
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -471,7 +769,9 @@ class _TripLogTabState extends State<TripLogTab>
           // 3. Compact Floating Map Toolbar (Zoom & Recenter)
           Positioned(
             right: AppSpacing.screenPadding,
-            bottom: _showStations ? 172 : 76,
+            bottom: _isNavigating
+                ? 175
+                : (_showStations ? 172 : 76),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -565,7 +865,7 @@ class _TripLogTabState extends State<TripLogTab>
             ),
           ),
 
-          // 4. Bottom Area: Clean Floating Stations Carousel or Standard FABs (Resting elegantly at bottom)
+          // 4. Bottom Area: Active Navigation ETA Card, Stations Carousel, or Standard FABs
           Positioned(
             left: 0,
             right: 0,
@@ -586,59 +886,68 @@ class _TripLogTabState extends State<TripLogTab>
                   ),
                 );
               },
-              child: _showStations && _stations.isNotEmpty
-                  ? _NearbyStationsCarousel(
-                      key: const ValueKey('stations_carousel'),
-                      stations: _stations,
-                      selectedIndex: _selectedStationIndex,
-                      controller: _carouselController,
-                      onPageChanged: (idx) {
-                        setState(() => _selectedStationIndex = idx);
-                        if (idx < _stations.length) {
-                          _animatedMapMove(
-                            _stations[idx].location,
-                            15.0,
-                          );
-                        }
-                      },
-                      onStationSelected: (idx) =>
-                          _selectStation(idx, openModal: true),
-                      onNavigate: _onNavigateTo,
-                      onViewAll: () =>
-                          _openStationModalSheet(_selectedStationIndex),
+              child: _isNavigating && _navigatingStation != null
+                  ? _ActiveNavigationBottomBar(
+                      key: const ValueKey('active_nav_bar'),
+                      station: _navigatingStation!,
+                      route: _activeRoute,
+                      onExit: _exitNavigation,
+                      onExternalMaps: _launchExternalVoiceNavigation,
+                      onLogFuel: () => showTripManualEntrySheet(context),
                     )
-                  : Padding(
-                      key: const ValueKey('default_fabs'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPadding,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          FloatingActionButton(
-                            heroTag: 'trip_manual_entry',
-                            onPressed: () =>
-                                showTripManualEntrySheet(context),
-                            backgroundColor: AppColors.cardElevated,
-                            foregroundColor: AppColors.primary,
-                            elevation: 6,
-                            shape: const CircleBorder(),
-                            tooltip: 'manualTripEntry'.tr(),
-                            child: const Icon(
-                              LucideIcons.mapPin,
-                              size: 20,
-                            ),
+                  : (_showStations && _stations.isNotEmpty
+                      ? _NearbyStationsCarousel(
+                          key: const ValueKey('stations_carousel'),
+                          stations: _stations,
+                          selectedIndex: _selectedStationIndex,
+                          controller: _carouselController,
+                          onPageChanged: (idx) {
+                            setState(() => _selectedStationIndex = idx);
+                            if (idx < _stations.length) {
+                              _animatedMapMove(
+                                _stations[idx].location,
+                                15.0,
+                              );
+                            }
+                          },
+                          onStationSelected: (idx) =>
+                              _selectStation(idx, openModal: true),
+                          onNavigate: _onNavigateTo,
+                          onViewAll: () =>
+                              _openStationModalSheet(_selectedStationIndex),
+                        )
+                      : Padding(
+                          key: const ValueKey('default_fabs'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenPadding,
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: _StartTripFab(
-                              onPressed: () =>
-                                  _chipSnack('tripGpsComingSoon'.tr()),
-                            ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              FloatingActionButton(
+                                heroTag: 'trip_manual_entry',
+                                onPressed: () =>
+                                    showTripManualEntrySheet(context),
+                                backgroundColor: AppColors.cardElevated,
+                                foregroundColor: AppColors.primary,
+                                elevation: 6,
+                                shape: const CircleBorder(),
+                                tooltip: 'manualTripEntry'.tr(),
+                                child: const Icon(
+                                  LucideIcons.mapPin,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: _StartTripFab(
+                                  isTracking: _isGeneralTripTracking,
+                                  onPressed: _toggleGeneralTripTracking,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        )),
             ),
           ),
         ],
@@ -1390,9 +1699,13 @@ class _TripStatsPill extends StatelessWidget {
 }
 
 class _StartTripFab extends StatelessWidget {
-  const _StartTripFab({required this.onPressed});
+  const _StartTripFab({
+    required this.onPressed,
+    this.isTracking = false,
+  });
 
   final VoidCallback onPressed;
+  final bool isTracking;
 
   static final _radius = BorderRadius.circular(AppSpacing.radiusXl);
 
@@ -1403,7 +1716,9 @@ class _StartTripFab extends StatelessWidget {
         borderRadius: _radius,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.45),
+            color: isTracking
+                ? const Color(0xFFD32F2F).withValues(alpha: 0.55)
+                : Colors.black.withValues(alpha: 0.45),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -1415,7 +1730,7 @@ class _StartTripFab extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: AppColors.primary,
+        color: isTracking ? const Color(0xFFD32F2F) : AppColors.primary,
         elevation: 0,
         shadowColor: Colors.transparent,
         borderRadius: _radius,
@@ -1429,15 +1744,16 @@ class _StartTripFab extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  LucideIcons.play,
-                  color: AppColors.textPrimary,
-                  size: 20,
+                Icon(
+                  isTracking ? LucideIcons.square : LucideIcons.play,
+                  color: Colors.white,
+                  size: 18,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  'startTrip'.tr(),
+                  isTracking ? 'End Trip & Log' : 'startTrip'.tr(),
                   style: AppTextStyles.button.copyWith(
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
                   ),
@@ -1460,6 +1776,321 @@ class _LatLngTween extends Tween<LatLng> {
     final lat = begin!.latitude + (end!.latitude - begin!.latitude) * t;
     final lng = begin!.longitude + (end!.longitude - begin!.longitude) * t;
     return LatLng(lat, lng);
+  }
+}
+
+class _DestinationFlagMarker extends StatelessWidget {
+  const _DestinationFlagMarker();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00E5FF),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
+                blurRadius: 14,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: const Icon(
+            LucideIcons.flag,
+            size: 16,
+            color: Colors.black,
+          ),
+        ),
+        Container(
+          width: 2.5,
+          height: 10,
+          color: const Color(0xFF00E5FF),
+        ),
+      ],
+    );
+  }
+}
+
+class _NavigationTopHud extends StatelessWidget {
+  const _NavigationTopHud({
+    super.key,
+    required this.station,
+    required this.route,
+    required this.onExit,
+  });
+
+  final MockGasStation station;
+  final NavigationRouteResult? route;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF14141C).withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.12),
+            blurRadius: 16,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Turn Maneuver Icon Box
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
+              ),
+            ),
+            child: const Icon(
+              LucideIcons.arrowUpRight,
+              color: Color(0xFF00E5FF),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Maneuver instruction + destination
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  route?.nextInstruction ?? 'Calculating optimal route...',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Towards ${station.name}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(
+                    color: const Color(0xFF80DEEA),
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Exit button
+          IconButton(
+            onPressed: onExit,
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E1A1A),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFE53935).withValues(alpha: 0.5),
+                ),
+              ),
+              child: const Icon(
+                LucideIcons.x,
+                size: 14,
+                color: Color(0xFFFF8A80),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveNavigationBottomBar extends StatelessWidget {
+  const _ActiveNavigationBottomBar({
+    super.key,
+    required this.station,
+    required this.route,
+    required this.onExit,
+    required this.onExternalMaps,
+    required this.onLogFuel,
+  });
+
+  final MockGasStation station;
+  final NavigationRouteResult? route;
+  final VoidCallback onExit;
+  final VoidCallback onExternalMaps;
+  final VoidCallback onLogFuel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF14141C).withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF2C2C3A),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.6),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Top Row: Big Duration, Distance, and ETA
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        route?.formattedDuration ?? '...',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF00E5FF),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '(${route?.formattedDistance ?? station.distance})',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'Estimated Arrival: ${route?.formattedEta ?? '...'}',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ],
+              ),
+
+              // End Navigation Red Button
+              Material(
+                color: const Color(0xFFD32F2F),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: onExit,
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.x, size: 16, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text(
+                          'Exit',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFF262634), height: 1),
+          const SizedBox(height: 10),
+
+          // Bottom actions: Open in Google Maps voice nav + Log Fuel
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onExternalMaps,
+                  icon: const Icon(LucideIcons.externalLink, size: 14),
+                  label: const Text(
+                    'Voice Nav (Maps)',
+                    style:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF80DEEA),
+                    side: const BorderSide(color: Color(0xFF00838F)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onLogFuel,
+                  icon: const Icon(LucideIcons.fuel, size: 14),
+                  label: const Text(
+                    'Log Fuel Here',
+                    style:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: Color(0xFF4E2C1A)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
