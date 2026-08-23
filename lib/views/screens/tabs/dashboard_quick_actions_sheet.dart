@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -5,8 +6,11 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../refueling_form_screen.dart';
 
-/// Quick-actions sheet opened from the dashboard FAB.
-Future<void> showDashboardQuickActionsSheet(BuildContext context) {
+/// Contextual quick actions from the center FAB (no grid menu).
+Future<void> showDashboardQuickActionsSheet(
+  BuildContext context, {
+  VoidCallback? onRecordTrip,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: AppColors.card,
@@ -16,14 +20,34 @@ Future<void> showDashboardQuickActionsSheet(BuildContext context) {
         top: Radius.circular(AppSpacing.radiusLg),
       ),
     ),
-    builder: (BuildContext context) {
-      return const _DashboardQuickActionsSheet();
-    },
+    builder: (context) => _DashboardQuickActionsSheet(
+      onRecordTrip: onRecordTrip,
+    ),
   );
 }
 
 class _DashboardQuickActionsSheet extends StatelessWidget {
-  const _DashboardQuickActionsSheet();
+  const _DashboardQuickActionsSheet({this.onRecordTrip});
+
+  final VoidCallback? onRecordTrip;
+
+  static const Color _tripBlue = Color(0xFF4A9EFF);
+  static const Color _costGreen = Color(0xFF2ECC71);
+  static const Color _reminderYellow = Color(0xFFF5A623);
+
+  void _comingSoon(BuildContext context, String messageKey) {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          messageKey.tr(),
+          style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
+        ),
+        backgroundColor: AppColors.cardElevated,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,33 +72,15 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Quick Actions',
-              style: AppTextStyles.title.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              'quickActions'.tr(),
+              style: AppTextStyles.title.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.md),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.local_gas_station_rounded,
-                  color: AppColors.primary,
-                ),
-              ),
-              title: Text('Refueling', style: AppTextStyles.body),
-              subtitle: Text(
-                'Log fuel purchase and odometer',
-                style: AppTextStyles.caption,
-              ),
-              trailing: const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textTertiary,
-              ),
+            const SizedBox(height: AppSpacing.sm),
+            _ActionTile(
+              icon: Icons.local_gas_station_rounded,
+              color: AppColors.primary,
+              title: 'actionRefueling'.tr(),
+              subtitle: 'actionRefuelingSubtitle'.tr(),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
@@ -84,58 +90,75 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
                 );
               },
             ),
-            const Divider(color: AppColors.divider),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.attach_money_rounded,
-                  color: AppColors.secondary,
-                ),
-              ),
-              title: Text('Add Cost', style: AppTextStyles.body),
-              subtitle: Text(
-                'Track maintenance, parking, service fees',
-                style: AppTextStyles.caption,
-              ),
-              trailing: const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textTertiary,
-              ),
-              onTap: () => Navigator.of(context).pop(),
+            const Divider(color: AppColors.divider, height: 1),
+            _ActionTile(
+              icon: Icons.route_rounded,
+              color: _tripBlue,
+              title: 'actionRecordTrip'.tr(),
+              subtitle: 'actionRecordTripSubtitle'.tr(),
+              onTap: () {
+                Navigator.of(context).pop();
+                onRecordTrip?.call();
+              },
             ),
-            const Divider(color: AppColors.divider),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.notifications_rounded,
-                  color: AppColors.warning,
-                ),
-              ),
-              title: Text('Add Reminder', style: AppTextStyles.body),
-              subtitle: Text(
-                'Set oil change or insurance alert',
-                style: AppTextStyles.caption,
-              ),
-              trailing: const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textTertiary,
-              ),
-              onTap: () => Navigator.of(context).pop(),
+            const Divider(color: AppColors.divider, height: 1),
+            _ActionTile(
+              icon: Icons.build_circle_outlined,
+              color: _costGreen,
+              title: 'actionAddCost'.tr(),
+              subtitle: 'actionAddCostSubtitle'.tr(),
+              onTap: () => _comingSoon(context, 'costServiceComingSoon'),
+            ),
+            const Divider(color: AppColors.divider, height: 1),
+            _ActionTile(
+              icon: Icons.notifications_active_outlined,
+              color: _reminderYellow,
+              title: 'actionAddReminder'.tr(),
+              subtitle: 'actionAddReminderSubtitle'.tr(),
+              onTap: () => _comingSoon(context, 'remindersComingSoon'),
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 2),
+      leading: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(title, style: AppTextStyles.body),
+      subtitle: Text(subtitle, style: AppTextStyles.caption),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textTertiary,
+      ),
+      onTap: onTap,
     );
   }
 }

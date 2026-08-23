@@ -53,6 +53,37 @@ PreferredSizeWidget buildDashboardAppBar({
             ),
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: IconButton(
+              tooltip: 'reminders'.tr(),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'remindersComingSoon'.tr(),
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    backgroundColor: AppColors.cardElevated,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              icon: Badge(
+                isLabelVisible: true,
+                smallSize: 8,
+                backgroundColor: AppColors.error,
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     case 1:
       return AppBar(

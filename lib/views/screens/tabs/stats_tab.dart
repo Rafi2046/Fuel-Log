@@ -10,7 +10,10 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/analytics_carousel.dart';
 import '../../widgets/monthly_cost_breakdown.dart';
 
-/// Dedicated analytics: chart carousel (expandable) + monthly costs.
+/// Dedicated analytics home for advanced charts.
+///
+/// Keeps Home light (summaries only). Heavy fl_chart widgets live here:
+/// efficiency trend, fuel price, monthly distance, expense donut + costs.
 class StatsTab extends ConsumerWidget {
   const StatsTab({super.key});
 
@@ -37,6 +40,7 @@ class StatsTab extends ConsumerWidget {
           AnalyticsCarousel(
             logs: logs,
             mileageUnit: mileageUnit,
+            isElectric: isEV,
             chartHeight: 240,
           ),
           const SizedBox(height: AppSpacing.lg),

@@ -7,9 +7,10 @@ import 'tabs/dashboard_nav_item.dart';
 import 'tabs/dashboard_quick_actions_sheet.dart';
 import 'tabs/garage_tab.dart';
 import 'tabs/home_tab.dart';
-import 'tabs/logs_tab.dart';
 import 'tabs/settings_tab.dart';
 import 'tabs/stats_tab.dart';
+import 'tabs/trip_log_tab.dart';
+import '../widgets/trip_manual_entry_sheet.dart';
 
 /// Main shell: IndexedStack tabs + notched FAB bottom bar.
 class DashboardScreen extends StatefulWidget {
@@ -23,13 +24,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final String _selectedVehicle = 'Toyota Axio 🚘';
 
-  /// Home · Logs · Stats · Settings — Garage opens from the vehicle chip.
+  /// Home · Trip · Stats · Settings — fuel Logs via Quick Actions.
   static const List<Widget> _tabs = [
     HomeTab(),
-    LogsTab(),
+    TripLogTab(),
     StatsTab(),
     SettingsTab(),
   ];
+
+  bool get _isTripTab => _currentIndex == 1;
+
+  /// App bar index map: Trip has no bar; Stats/Settings keep their titles.
+  int get _appBarIndex {
+    switch (_currentIndex) {
+      case 0:
+        return 0;
+      case 2:
+        return 2;
+      case 3:
+        return 3;
+      default:
+        return 0;
+    }
+  }
 
   void _onTabTapped(int index) => setState(() => _currentIndex = index);
 
@@ -49,31 +66,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: buildDashboardAppBar(
-        context: context,
-        currentIndex: _currentIndex,
-        selectedVehicle: _selectedVehicle,
-        onVehicleTap: _openGarage,
-      ),
+      appBar: _isTripTab
+          ? null
+          : buildDashboardAppBar(
+              context: context,
+              currentIndex: _appBarIndex,
+              selectedVehicle: _selectedVehicle,
+              onVehicleTap: _openGarage,
+            ),
       body: IndexedStack(
         index: _currentIndex,
         children: _tabs,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showDashboardQuickActionsSheet(context),
-        backgroundColor: AppColors.primary,
-        elevation: 6,
-        shape: const CircleBorder(),
-        child: const Icon(
-          Icons.local_gas_station_rounded,
-          color: AppColors.textPrimary,
-          size: 28,
-        ),
-      ),
+      floatingActionButton: _isTripTab
+          ? null
+          : FloatingActionButton(
+              onPressed: () => showDashboardQuickActionsSheet(
+                context,
+                onRecordTrip: () {
+                  setState(() => _currentIndex = 1);
+                  // Open manual entry after switching to Trip.
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    showTripManualEntrySheet(context);
+                  });
+                },
+              ),
+              backgroundColor: AppColors.primary,
+              elevation: 6,
+              shape: const CircleBorder(),
+              child: const Icon(
+                Icons.local_gas_station_rounded,
+                color: AppColors.textPrimary,
+                size: 28,
+              ),
+            ),
       bottomNavigationBar: BottomAppBar(
         color: AppColors.surface,
-        shape: const CircularNotchedRectangle(),
+        shape: _isTripTab ? null : const CircularNotchedRectangle(),
         notchMargin: 8,
         elevation: 10,
         padding: EdgeInsets.zero,
@@ -92,15 +123,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => _onTabTapped(0),
                     ),
                     DashboardNavItem(
-                      icon: Icons.receipt_long_rounded,
-                      label: 'navLogs'.tr(),
+                      icon: Icons.route_rounded,
+                      label: 'navTrip'.tr(),
                       isSelected: _currentIndex == 1,
                       onTap: () => _onTabTapped(1),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 48),
+              if (!_isTripTab) const SizedBox(width: 48),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,

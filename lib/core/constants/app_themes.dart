@@ -95,6 +95,14 @@ abstract final class AppThemes {
         thickness: 1,
         space: 1,
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.cardElevated,
+        contentTextStyle: AppTextStyles.body.copyWith(
+          color: AppColors.textPrimary,
+        ),
+        behavior: SnackBarBehavior.floating,
+        actionTextColor: AppColors.primary,
+      ),
     );
   }
 }
