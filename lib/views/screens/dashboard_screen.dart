@@ -27,13 +27,12 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
 
-  /// Home · Trip · Stats · Settings — fuel Logs via Quick Actions.
-  static const List<Widget> _tabs = [
-    HomeTab(),
-    TripLogTab(),
-    StatsTab(),
-    SettingsTab(),
-  ];
+  List<Widget> get _tabs => [
+        const HomeTab(),
+        TripLogTab(isActive: _isTripTab),
+        const StatsTab(),
+        const SettingsTab(),
+      ];
 
   bool get _isTripTab => _currentIndex == 1;
 
@@ -214,20 +213,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final activeVehicle = ref.watch(activeVehicleProvider).valueOrNull;
-    final String selectedVehicleDisplay;
-    if (activeVehicle != null) {
-      final type = activeVehicle.type.toLowerCase();
-      final isBike = type == 'bike' ||
-          type.contains('bike') ||
-          type.contains('motorcycle') ||
-          type.contains('scooter') ||
-          activeVehicle.name.toLowerCase().contains('bike') ||
-          activeVehicle.name.toLowerCase().contains('r15');
-      final emoji = isBike ? '🏍️' : '🚘';
-      selectedVehicleDisplay = '${activeVehicle.name} $emoji';
-    } else {
-      selectedVehicleDisplay = 'My Garage 🚘';
-    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -236,8 +221,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           : buildDashboardAppBar(
               context: context,
               currentIndex: _appBarIndex,
-              selectedVehicle: selectedVehicleDisplay,
+              activeVehicle: activeVehicle,
               onVehicleTap: _openVehicleSwitcher,
+              onGarageTap: _openGarage,
             ),
       body: IndexedStack(
         index: _currentIndex,

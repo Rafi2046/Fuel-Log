@@ -8,6 +8,10 @@
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
 		<string>Fuel Log</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Fuel Log needs access to your location to find nearby gas stations and log trips accurately.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Fuel Log needs access to your location to track your trip mileage and locate fuel pumps.</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
