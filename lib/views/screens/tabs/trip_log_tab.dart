@@ -9,6 +9,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_shadows.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/services/gas_station_service.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
 
 class MockGasStation {
@@ -18,6 +19,7 @@ class MockGasStation {
   final String fuelTypes;
   final double rating;
   final LatLng location;
+  final String? imageUrl;
 
   const MockGasStation({
     required this.id,
@@ -26,6 +28,7 @@ class MockGasStation {
     required this.fuelTypes,
     required this.rating,
     required this.location,
+    this.imageUrl,
   });
 }
 
@@ -190,69 +193,6 @@ class _TripLogTabState extends State<TripLogTab>
     }
   }
 
-  /// Generates dynamic gas stations with real area/landmark addresses
-  List<MockGasStation> _generateStationsForLocation(LatLng center) {
-    const distanceCalc = Distance();
-
-    final templates = [
-      (
-        latOffset: 0.0032,
-        lngOffset: 0.0025,
-        name: 'Navana CNG & Petrol',
-        area: 'Kamal Ataturk Ave',
-        fuels: 'Octane • Petrol • CNG',
-        rating: 4.8,
-      ),
-      (
-        latOffset: -0.0035,
-        lngOffset: 0.0045,
-        name: 'Trust Filling Station',
-        area: 'Gulshan Avenue',
-        fuels: 'Diesel • Octane • EV',
-        rating: 4.6,
-      ),
-      (
-        latOffset: 0.0048,
-        lngOffset: -0.0038,
-        name: 'Clean Fuel & Power',
-        area: 'Airport Expressway',
-        fuels: 'Super Octane • EV Fast',
-        rating: 4.9,
-      ),
-      (
-        latOffset: -0.0028,
-        lngOffset: -0.0042,
-        name: 'City Express Fuel Hub',
-        area: 'Mohakhali Link Rd',
-        fuels: 'Octane • Diesel • LPG',
-        rating: 4.7,
-      ),
-    ];
-
-    return List.generate(templates.length, (i) {
-      final t = templates[i];
-      final stationLoc = LatLng(
-        center.latitude + t.latOffset,
-        center.longitude + t.lngOffset,
-      );
-      final distMeters =
-          distanceCalc.as(LengthUnit.Meter, center, stationLoc);
-
-      final distStr = distMeters < 1000
-          ? '${t.area} • ${distMeters.round()} m'
-          : '${t.area} • ${(distMeters / 1000).toStringAsFixed(1)} km';
-
-      return MockGasStation(
-        id: 'st_$i',
-        name: t.name,
-        distance: distStr,
-        fuelTypes: t.fuels,
-        rating: t.rating,
-        location: stationLoc,
-      );
-    });
-  }
-
   Future<void> _onToggleStations() async {
     if (_isLoadingStations) return;
 
@@ -262,9 +202,6 @@ class _TripLogTabState extends State<TripLogTab>
     }
 
     setState(() => _isLoadingStations = true);
-    await Future.delayed(const Duration(milliseconds: 550));
-
-    if (!mounted) return;
 
     LatLng currentCenter = _userLocation;
     try {
@@ -273,7 +210,11 @@ class _TripLogTabState extends State<TripLogTab>
       currentCenter = _userLocation;
     }
 
-    final newStations = _generateStationsForLocation(currentCenter);
+    final newStations = await GasStationService.instance.getNearbyStations(
+      center: currentCenter,
+    );
+
+    if (!mounted) return;
 
     setState(() {
       _isLoadingStations = false;
@@ -1030,7 +971,7 @@ class _NearbyStationsCarousel extends StatelessWidget {
 
         // Horizontal Carousel
         SizedBox(
-          height: 122,
+          height: 126,
           child: PageView.builder(
             controller: controller,
             itemCount: stations.length,
@@ -1101,120 +1042,211 @@ class _StationCarouselCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.all(9),
+            child: Row(
               children: [
-                // Top row: Title & Star Rating
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        station.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.5,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                // 1. Left Squircle Station Image Thumbnail
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 78,
+                    height: double.infinity,
+                    color: const Color(0xFF20202A),
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        const Icon(
-                          LucideIcons.star,
-                          size: 11,
-                          color: Color(0xFFFFB74D),
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          station.rating.toString(),
-                          style: AppTextStyles.caption.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 10.5,
-                            color: AppColors.textPrimary,
+                        if (station.imageUrl != null)
+                          station.imageUrl!.startsWith('http')
+                              ? Image.network(
+                                  station.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) =>
+                                          const _StationPlaceholder(),
+                                )
+                              : Image.asset(
+                                  station.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) =>
+                                          const _StationPlaceholder(),
+                                )
+                        else
+                          const _StationPlaceholder(),
+                        // Bottom subtle OPEN badge
+                        Positioned(
+                          left: 4,
+                          bottom: 4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF101014)
+                                  .withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: const Text(
+                              'OPEN',
+                              style: TextStyle(
+                                color: Color(0xFF81C784),
+                                fontSize: 8,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-
-                // Fuel types
-                Text(
-                  station.fuelTypes,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textTertiary,
-                    fontSize: 11,
                   ),
                 ),
+                const SizedBox(width: 10),
 
-                // Bottom row: Distance & Navigate Action
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          LucideIcons.mapPin,
-                          size: 13,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          station.distance,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11.5,
+                // 2. Right Details Column
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top row: Title & Star Rating
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              station.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.body.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13.5,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Material(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
-                      child: InkWell(
-                        onTap: onNavigate,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 11,
-                            vertical: 5.5,
-                          ),
-                          child: Row(
+                          const SizedBox(width: 4),
+                          Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                LucideIcons.navigation,
-                                size: 12,
-                                color: Colors.white,
+                                LucideIcons.star,
+                                size: 10.5,
+                                color: Color(0xFFFFB74D),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 2.5),
                               Text(
-                                'navigate'.tr(),
+                                station.rating.toString(),
                                 style: AppTextStyles.caption.copyWith(
-                                  color: Colors.white,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 11,
+                                  fontSize: 10.5,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ],
                           ),
+                        ],
+                      ),
+
+                      // Fuel types
+                      Text(
+                        station.fuelTypes,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textTertiary,
+                          fontSize: 10.5,
                         ),
                       ),
-                    ),
-                  ],
+
+                      // Bottom row: Distance & Navigate Action
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  LucideIcons.mapPin,
+                                  size: 11.5,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 3.5),
+                                Flexible(
+                                  child: Text(
+                                    station.distance,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Material(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(7),
+                            child: InkWell(
+                              onTap: onNavigate,
+                              borderRadius: BorderRadius.circular(7),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 4.5,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      LucideIcons.navigation,
+                                      size: 10.5,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 3.5),
+                                    Text(
+                                      'navigate'.tr(),
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 10.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StationPlaceholder extends StatelessWidget {
+  const _StationPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF20202A),
+      child: const Center(
+        child: Icon(
+          LucideIcons.fuel,
+          color: AppColors.textTertiary,
+          size: 22,
         ),
       ),
     );
