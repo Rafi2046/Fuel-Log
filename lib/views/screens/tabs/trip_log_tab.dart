@@ -10,6 +10,7 @@ import '../../../core/constants/app_shadows.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/gas_station_service.dart';
+import '../../widgets/station_list_modal_sheet.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
 
 class MockGasStation {
@@ -236,7 +237,7 @@ class _TripLogTabState extends State<TripLogTab>
     _animatedMapMove(_userLocation, 14.8);
   }
 
-  void _selectStation(int index) {
+  void _selectStation(int index, {bool openModal = false}) {
     if (index >= _stations.length) return;
     setState(() => _selectedStationIndex = index);
     if (_carouselController.hasClients) {
@@ -247,6 +248,34 @@ class _TripLogTabState extends State<TripLogTab>
       );
     }
     _animatedMapMove(_stations[index].location, 15.4);
+    if (openModal) {
+      _openStationModalSheet(index);
+    }
+  }
+
+  void _openStationModalSheet([int initialIndex = 0]) {
+    if (_stations.isEmpty) return;
+    StationListModalSheet.show(
+      context,
+      stations: _stations,
+      initialIndex: initialIndex,
+      onStationSelected: (idx) {
+        setState(() => _selectedStationIndex = idx);
+        if (_carouselController.hasClients) {
+          _carouselController.animateToPage(
+            idx,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+          );
+        }
+        if (idx < _stations.length) {
+          _animatedMapMove(_stations[idx].location, 15.4);
+        }
+      },
+      onNavigate: (station) {
+        _onNavigateTo(station);
+      },
+    );
   }
 
   void _zoomIn() {
@@ -572,9 +601,11 @@ class _TripLogTabState extends State<TripLogTab>
                           );
                         }
                       },
-                      onStationSelected: _selectStation,
+                      onStationSelected: (idx) =>
+                          _selectStation(idx, openModal: true),
                       onNavigate: _onNavigateTo,
-                      onClose: _closeStations,
+                      onViewAll: () =>
+                          _openStationModalSheet(_selectedStationIndex),
                     )
                   : Padding(
                       key: const ValueKey('default_fabs'),
@@ -894,7 +925,7 @@ class _NearbyStationsCarousel extends StatelessWidget {
     required this.onPageChanged,
     required this.onStationSelected,
     required this.onNavigate,
-    required this.onClose,
+    required this.onViewAll,
   });
 
   final List<MockGasStation> stations;
@@ -903,14 +934,15 @@ class _NearbyStationsCarousel extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
   final ValueChanged<int> onStationSelected;
   final ValueChanged<MockGasStation> onNavigate;
-  final VoidCallback onClose;
+  final VoidCallback onViewAll;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Clean Header Bar: "4 Stations Found" + Minimal Close (X)
+        // Clean Header Bar (Tap to open full list modal sheet)
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
@@ -918,49 +950,82 @@ class _NearbyStationsCarousel extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF18181F).withValues(alpha: 0.95),
+              // 1. Station count badge
+              Material(
+                color: const Color(0xFF18181F).withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                child: InkWell(
+                  onTap: onViewAll,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                  border: Border.all(color: const Color(0xFF2E2E38)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.fuel,
-                      size: 13,
-                      color: AppColors.primary,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4.5,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${stations.length} Stations Found',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusPill),
+                      border: Border.all(color: const Color(0xFF2E2E38)),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          LucideIcons.fuel,
+                          size: 13,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${stations.length} Stations Found',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              GestureDetector(
-                onTap: onClose,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF18181F).withValues(alpha: 0.95),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF2E2E38)),
-                  ),
-                  child: const Icon(
-                    LucideIcons.x,
-                    size: 14,
-                    color: AppColors.textSecondary,
+
+              // 2. "View List" pill button
+              Material(
+                color: const Color(0xFF18181F).withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                child: InkWell(
+                  onTap: onViewAll,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4.5,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusPill),
+                      border: Border.all(color: const Color(0xFF2E2E38)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          LucideIcons.list,
+                          size: 13,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'View List',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1159,11 +1224,11 @@ class _StationCarouselCard extends StatelessWidget {
                         ),
                       ),
 
-                      // Bottom row: Distance & Navigate Action
+                      // Bottom row: Distance & Details Indicator
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Flexible(
+                          Expanded(
                             child: Row(
                               children: [
                                 const Icon(
@@ -1172,7 +1237,7 @@ class _StationCarouselCard extends StatelessWidget {
                                   color: AppColors.primary,
                                 ),
                                 const SizedBox(width: 3.5),
-                                Flexible(
+                                Expanded(
                                   child: Text(
                                     station.distance,
                                     maxLines: 1,
@@ -1180,7 +1245,7 @@ class _StationCarouselCard extends StatelessWidget {
                                     style: AppTextStyles.caption.copyWith(
                                       color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 10.5,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ),
@@ -1196,8 +1261,8 @@ class _StationCarouselCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(7),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                  vertical: 4.5,
+                                  horizontal: 8,
+                                  vertical: 4,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1207,7 +1272,7 @@ class _StationCarouselCard extends StatelessWidget {
                                       size: 10.5,
                                       color: Colors.white,
                                     ),
-                                    const SizedBox(width: 3.5),
+                                    const SizedBox(width: 3),
                                     Text(
                                       'navigate'.tr(),
                                       style: AppTextStyles.caption.copyWith(
