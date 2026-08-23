@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_motion.dart';
-import '../../core/constants/app_spacing.dart';
+import '../../core/utils/fuel_options.dart';
+import '../../viewmodels/vehicle_viewmodel.dart';
 import '../widgets/app_scaffold.dart';
-import '../widgets/app_step_indicator.dart';
 import 'dashboard_screen.dart';
 import 'setup_widgets/setup_bottom_action.dart';
+import 'setup_widgets/setup_wizard_header.dart';
 import 'setup_widgets/vehicle_identity_step.dart';
 import 'setup_widgets/vehicle_specs_step.dart';
 
-/// 2-step first-run vehicle setup wizard (UI shell).
-class VehicleSetupScreen extends StatefulWidget {
+/// 2-step first-run vehicle setup — saves via Drift + Riverpod.
+class VehicleSetupScreen extends ConsumerStatefulWidget {
   const VehicleSetupScreen({super.key});
 
   @override
-  State<VehicleSetupScreen> createState() => _VehicleSetupScreenState();
+  ConsumerState<VehicleSetupScreen> createState() =>
+      _VehicleSetupScreenState();
 }
 
-class _VehicleSetupScreenState extends State<VehicleSetupScreen> {
-  final PageController _pageController = PageController();
+class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
+  final _pageController = PageController();
   int _currentStep = 0;
 
   VehicleType _selectedType = VehicleType.car;
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _modelController = TextEditingController();
-  final TextEditingController _odometerController = TextEditingController();
-  final TextEditingController _tankController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _modelController = TextEditingController();
+  final _odometerController = TextEditingController();
+  final _capacityController = TextEditingController();
   String _selectedFuelType = 'Petrol';
-
-  static const List<String> _fuelTypes = ['Petrol', 'Diesel', 'Octane', 'CNG'];
 
   @override
   void dispose() {
@@ -37,31 +37,91 @@ class _VehicleSetupScreenState extends State<VehicleSetupScreen> {
     _nameController.dispose();
     _modelController.dispose();
     _odometerController.dispose();
-    _tankController.dispose();
+    _capacityController.dispose();
     super.dispose();
   }
 
+  void _onTypeChanged(VehicleType type) {
+    setState(() {
+      _selectedType = type;
+      final options = FuelOptions.forVehicleType(type);
+      if (!options.contains(_selectedFuelType)) {
+        _selectedFuelType = options.first;
+      }
+    });
+  }
+
+  void _onFuelTypeChanged(String? type) {
+    if (type == null) return;
+    setState(() => _selectedFuelType = type);
+  }
+
+  void _goTo(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: AppMotion.normal,
+      curve: AppMotion.emphasized,
+    );
+  }
+
   void _goNext() {
-    _pageController.animateToPage(
-      1,
-      duration: AppMotion.normal,
-      curve: AppMotion.emphasized,
-    );
+    if (_nameController.text.trim().isEmpty) {
+      _showMessage('Please enter a vehicle name.');
+      return;
+    }
+    _goTo(1);
   }
 
-  void _goBack() {
-    _pageController.animateToPage(
-      0,
-      duration: AppMotion.normal,
-      curve: AppMotion.emphasized,
-    );
+  Future<void> _onSaveVehicle() async {
+    final name = _nameController.text.trim();
+    final model = _modelController.text.trim();
+    final startOdo = double.tryParse(_odometerController.text.trim());
+    final capacity = double.tryParse(_capacityController.text.trim());
+    final isElectric = FuelOptions.isElectric(_selectedFuelType);
+
+    if (name.isEmpty) {
+      _showMessage('Please enter a vehicle name.');
+      return;
+    }
+    if (startOdo == null || startOdo < 0) {
+      _showMessage('Enter a valid starting odometer.');
+      return;
+    }
+    if (capacity == null || capacity <= 0) {
+      _showMessage(
+        isElectric
+            ? 'Enter a valid battery capacity.'
+            : 'Enter a valid tank capacity.',
+      );
+      return;
+    }
+
+    final success = await ref.read(vehicleProvider.notifier).addVehicle(
+          type: _selectedType == VehicleType.car ? 'Car' : 'Bike',
+          name: name,
+          model: model.isEmpty ? null : model,
+          startOdo: startOdo,
+          capacity: capacity,
+          fuelType: _selectedFuelType,
+          isElectric: isElectric,
+        );
+
+    if (!mounted) return;
+
+    if (success) {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const DashboardScreen()),
+      );
+    } else {
+      final err = ref.read(vehicleProvider);
+      final detail = err.hasError ? ' (${err.error})' : '';
+      _showMessage('Could not save vehicle$detail');
+    }
   }
 
-  void _onSaveVehicle() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => const DashboardScreen(),
-      ),
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -70,36 +130,9 @@ class _VehicleSetupScreenState extends State<VehicleSetupScreen> {
     return AppScaffold(
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.screenPadding,
-              right: AppSpacing.screenPadding,
-              top: AppSpacing.md,
-              bottom: AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                AnimatedOpacity(
-                  duration: AppMotion.fast,
-                  opacity: _currentStep > 0 ? 1 : 0,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                    color: AppColors.textPrimary,
-                    onPressed: _currentStep > 0 ? _goBack : null,
-                    tooltip: 'Back to Step 1',
-                  ),
-                ),
-                Expanded(
-                  child: AppStepIndicator(
-                    currentStep: _currentStep + 1,
-                    totalSteps: 2,
-                    stepTitle: _currentStep == 0
-                        ? 'Machine Identity'
-                        : 'Technical Specs',
-                  ),
-                ),
-              ],
-            ),
+          SetupWizardHeader(
+            currentStep: _currentStep,
+            onBack: () => _goTo(0),
           ),
           Expanded(
             child: PageView(
@@ -109,21 +142,16 @@ class _VehicleSetupScreenState extends State<VehicleSetupScreen> {
               children: [
                 VehicleIdentityStep(
                   selectedType: _selectedType,
-                  onTypeChanged: (type) =>
-                      setState(() => _selectedType = type),
+                  onTypeChanged: _onTypeChanged,
                   nameController: _nameController,
                   modelController: _modelController,
                 ),
                 VehicleSpecsStep(
+                  vehicleType: _selectedType,
                   odometerController: _odometerController,
-                  tankController: _tankController,
+                  capacityController: _capacityController,
                   selectedFuelType: _selectedFuelType,
-                  fuelTypes: _fuelTypes,
-                  onFuelTypeChanged: (type) {
-                    if (type != null) {
-                      setState(() => _selectedFuelType = type);
-                    }
-                  },
+                  onFuelTypeChanged: _onFuelTypeChanged,
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -9,7 +10,9 @@ void main() {
   });
 
   testWidgets('onboarding leads to vehicle setup', (tester) async {
-    await tester.pumpWidget(const FuelLogApp());
+    await tester.pumpWidget(
+      const ProviderScope(child: FuelLogApp()),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 

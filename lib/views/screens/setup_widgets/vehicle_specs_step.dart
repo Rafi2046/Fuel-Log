@@ -3,29 +3,39 @@ import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/utils/fuel_options.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_dropdown_field.dart';
 import '../../widgets/app_text_field.dart';
+import 'vehicle_identity_step.dart';
 
-/// Step 2 — odometer, fuel type, tank capacity.
+/// Step 2 — odometer, fuel/energy type, capacity (tank or battery).
 class VehicleSpecsStep extends StatelessWidget {
   const VehicleSpecsStep({
     super.key,
+    required this.vehicleType,
     required this.odometerController,
-    required this.tankController,
+    required this.capacityController,
     required this.selectedFuelType,
-    required this.fuelTypes,
     required this.onFuelTypeChanged,
   });
 
+  final VehicleType vehicleType;
   final TextEditingController odometerController;
-  final TextEditingController tankController;
+  final TextEditingController capacityController;
   final String selectedFuelType;
-  final List<String> fuelTypes;
   final ValueChanged<String?> onFuelTypeChanged;
 
   @override
   Widget build(BuildContext context) {
+    final fuelTypes = FuelOptions.forVehicleType(vehicleType);
+    final isEV = FuelOptions.isElectric(selectedFuelType);
+    final capacityLabel = isEV ? 'Battery Capacity' : 'Tank Capacity';
+    final capacitySuffix = isEV ? 'kWh' : 'Liters';
+    final capacityHint = isEV ? '40' : '40';
+    final capacityIcon =
+        isEV ? Icons.battery_charging_full_rounded : Icons.opacity_rounded;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.screenPadding,
@@ -43,7 +53,7 @@ class VehicleSpecsStep extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Odometer and fuel details.',
+            isEV ? 'Odometer and battery details.' : 'Odometer and fuel details.',
             style: AppTextStyles.bodySecondary,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -65,7 +75,9 @@ class VehicleSpecsStep extends StatelessWidget {
                 AppDropdownField<String>(
                   label: 'Fuel Type',
                   value: selectedFuelType,
-                  prefixIcon: Icons.local_gas_station_rounded,
+                  prefixIcon: isEV
+                      ? Icons.ev_station_rounded
+                      : Icons.local_gas_station_rounded,
                   items: fuelTypes
                       .map(
                         (type) => DropdownMenuItem<String>(
@@ -78,14 +90,14 @@ class VehicleSpecsStep extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppTextField(
-                  label: 'Tank Capacity',
-                  hint: '40',
-                  controller: tankController,
+                  label: capacityLabel,
+                  hint: capacityHint,
+                  controller: capacityController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  prefixIcon: Icons.opacity_rounded,
-                  suffixText: 'Liters',
+                  prefixIcon: capacityIcon,
+                  suffixText: capacitySuffix,
                   textInputAction: TextInputAction.done,
                 ),
               ],
