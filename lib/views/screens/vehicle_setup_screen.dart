@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_motion.dart';
 import '../../core/utils/fuel_options.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
@@ -128,39 +129,66 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      body: Column(
-        children: [
-          SetupWizardHeader(
-            currentStep: _currentStep,
-            onBack: () => _goTo(0),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (page) => setState(() => _currentStep = page),
-              children: [
-                VehicleIdentityStep(
-                  selectedType: _selectedType,
-                  onTypeChanged: _onTypeChanged,
-                  nameController: _nameController,
-                  modelController: _modelController,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            // Subtle ambient warm glow in background
+            Positioned(
+              top: -80,
+              right: -40,
+              child: Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.08),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
-                VehicleSpecsStep(
-                  vehicleType: _selectedType,
-                  odometerController: _odometerController,
-                  capacityController: _capacityController,
-                  selectedFuelType: _selectedFuelType,
-                  onFuelTypeChanged: _onFuelTypeChanged,
+              ),
+            ),
+
+            Column(
+              children: [
+                SetupWizardHeader(
+                  currentStep: _currentStep,
+                  onBack: () => _goTo(0),
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (page) =>
+                        setState(() => _currentStep = page),
+                    children: [
+                      VehicleIdentityStep(
+                        selectedType: _selectedType,
+                        onTypeChanged: _onTypeChanged,
+                        nameController: _nameController,
+                        modelController: _modelController,
+                      ),
+                      VehicleSpecsStep(
+                        vehicleType: _selectedType,
+                        odometerController: _odometerController,
+                        capacityController: _capacityController,
+                        selectedFuelType: _selectedFuelType,
+                        onFuelTypeChanged: _onFuelTypeChanged,
+                      ),
+                    ],
+                  ),
+                ),
+                SetupBottomAction(
+                  currentStep: _currentStep,
+                  onPressed: _currentStep == 0 ? _goNext : _onSaveVehicle,
                 ),
               ],
             ),
-          ),
-          SetupBottomAction(
-            currentStep: _currentStep,
-            onPressed: _currentStep == 0 ? _goNext : _onSaveVehicle,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

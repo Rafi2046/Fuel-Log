@@ -112,5 +112,19 @@
   "nearbyStations": "Nearby Stations",
   "navigate": "Navigate",
   "nearbyStationsComingSoon": "Nearby stations coming soon",
-  "navigateComingSoon": "Navigation coming soon"
+  "navigateComingSoon": "Navigation coming soon",
+  "addNewVehicle": "Add New Vehicle",
+  "garageEmpty": "No vehicles yet. Add your first one below.",
+  "vehicleLimitTitle": "Garage is full",
+  "vehicleLimitMessage": "You can keep up to {count} vehicles for now. Delete one of your existing vehicles to add a new one.",
+  "vehicleLimitGotIt": "Got it",
+  "vehicleLimitHint": "Limit reached ({count}). Delete one to add another.",
+  "vehicleTypeCar": "Car",
+  "vehicleTypeBike": "Bike",
+  "deleteVehicleTitle": "Delete vehicle?",
+  "deleteVehicleMessage": "“{name}” and its fuel logs will be removed.",
+  "vehicleDeleted": "Vehicle deleted",
+  "vehicleDeleteFailed": "Could not delete vehicle",
+  "delete": "Delete",
+  "cancel": "Cancel"
 }

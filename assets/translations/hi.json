@@ -112,5 +112,19 @@
   "nearbyStations": "नज़दीकी स्टेशन",
   "navigate": "नेविगेट",
   "nearbyStationsComingSoon": "नज़दीकी स्टेशन जल्द",
-  "navigateComingSoon": "नेविगेशन जल्द"
+  "navigateComingSoon": "नेविगेशन जल्द",
+  "addNewVehicle": "नया वाहन जोड़ें",
+  "garageEmpty": "अभी कोई वाहन नहीं। नीचे से पहला जोड़ें।",
+  "vehicleLimitTitle": "गैरेज भरा हुआ है",
+  "vehicleLimitMessage": "अभी अधिकतम {count} वाहन रख सकते हैं। नया जोड़ने के लिए मौजूदा में से एक हटाएँ।",
+  "vehicleLimitGotIt": "समझ गया",
+  "vehicleLimitHint": "सीमा पूरी ({count})। नया जोड़ने के लिए एक हटाएँ।",
+  "vehicleTypeCar": "कार",
+  "vehicleTypeBike": "बाइक",
+  "deleteVehicleTitle": "वाहन हटाएँ?",
+  "deleteVehicleMessage": "“{name}” और इसके ईंधन लॉग हट जाएँगे।",
+  "vehicleDeleted": "वाहन हटा दिया गया",
+  "vehicleDeleteFailed": "वाहन हटाया नहीं जा सका",
+  "delete": "हटाएँ",
+  "cancel": "रद्द"
 }

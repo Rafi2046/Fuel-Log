@@ -6,7 +6,7 @@ import '../../core/constants/app_shadows.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 
-/// Reusable selectable card with neon accent border, subtle glow, and icon.
+/// Reusable selectable card with modern compact styling, squircle icon badge, and active indicator.
 class AppSelectableCard extends StatelessWidget {
   const AppSelectableCard({
     super.key,
@@ -32,14 +32,25 @@ class AppSelectableCard extends StatelessWidget {
       curve: AppMotion.emphasized,
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.primary.withValues(alpha: 0.12)
+            ? AppColors.primary.withValues(alpha: 0.08)
             : AppColors.card,
         borderRadius: borderRadius,
         border: Border.all(
-          color: isSelected ? AppColors.primary : AppColors.border,
-          width: isSelected ? 2.0 : 1.0,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.85)
+              : AppColors.border,
+          width: isSelected ? 1.5 : 1.0,
         ),
-        boxShadow: isSelected ? AppShadows.floating : AppShadows.card,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+                ...AppShadows.card,
+              ]
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -49,50 +60,90 @@ class AppSelectableCard extends StatelessWidget {
           borderRadius: borderRadius,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.lg,
-              horizontal: AppSpacing.md,
+              vertical: 14,
+              horizontal: 14,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Stack(
               children: [
-                AnimatedContainer(
-                  duration: AppMotion.fast,
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.surface,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 28,
-                    color: isSelected
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  title,
-                  style: AppTextStyles.title.copyWith(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    subtitle!,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textTertiary,
+                if (isSelected)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                ],
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: AppMotion.fast,
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.surface,
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 22,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      title,
+                      style: AppTextStyles.title.copyWith(
+                        fontSize: 15,
+                        color: isSelected
+                            ? AppColors.textPrimary
+                            : AppColors.textPrimary,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w600,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 11,
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.9)
+                              : AppColors.textTertiary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),

@@ -81,6 +81,17 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertVehicle(VehiclesCompanion vehicle) =>
       into(vehicles).insert(vehicle);
 
+  Future<int> vehicleCount() async {
+    final rows = await select(vehicles).get();
+    return rows.length;
+  }
+
+  /// Removes a vehicle and its fuel logs.
+  Future<void> deleteVehicle(int id) async {
+    await (delete(fuelLogs)..where((t) => t.vehicleId.equals(id))).go();
+    await (delete(vehicles)..where((t) => t.id.equals(id))).go();
+  }
+
   Future<int> insertFuelLog(FuelLogsCompanion log) =>
       into(fuelLogs).insert(log);
 

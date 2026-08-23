@@ -112,5 +112,19 @@
   "nearbyStations": "কাছের স্টেশন",
   "navigate": "ন্যাভিগেট",
   "nearbyStationsComingSoon": "কাছের স্টেশন শীঘ্রই আসছে",
-  "navigateComingSoon": "ন্যাভিগেশন শীঘ্রই আসছে"
+  "navigateComingSoon": "ন্যাভিগেশন শীঘ্রই আসছে",
+  "addNewVehicle": "নতুন গাড়ি যোগ করুন",
+  "garageEmpty": "এখনো কোনো গাড়ি নেই। নিচে থেকে প্রথমটি যোগ করুন।",
+  "vehicleLimitTitle": "গ্যারেজ পূর্ণ",
+  "vehicleLimitMessage": "আপাতত সর্বোচ্চ {count}টি গাড়ি রাখা যাবে। নতুন যোগ করতে আগে বিদ্যমান গাড়িগুলোর মধ্যে একটি ডিলিট করুন।",
+  "vehicleLimitGotIt": "বুঝেছি",
+  "vehicleLimitHint": "সীমা পূর্ণ ({count})। নতুন যোগ করতে একটি ডিলিট করুন।",
+  "vehicleTypeCar": "কার",
+  "vehicleTypeBike": "বাইক",
+  "deleteVehicleTitle": "গাড়ি ডিলিট করবেন?",
+  "deleteVehicleMessage": "“{name}” এবং এর জ্বালানি লগ মুছে যাবে।",
+  "vehicleDeleted": "গাড়ি ডিলিট হয়েছে",
+  "vehicleDeleteFailed": "গাড়ি ডিলিট করা যায়নি",
+  "delete": "ডিলিট",
+  "cancel": "বাতিল"
 }

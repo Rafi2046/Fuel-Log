@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../widgets/app_card.dart';
 import '../../widgets/app_selectable_card.dart';
-import '../../widgets/app_text_field.dart';
 
 enum VehicleType { car, bike }
 
-/// Step 1 — type, name, and model.
+/// Step 1 — vehicle type, name, and model with sleek grouped luxury layout.
 class VehicleIdentityStep extends StatelessWidget {
   const VehicleIdentityStep({
     super.key,
@@ -35,25 +34,40 @@ class VehicleIdentityStep extends StatelessWidget {
         children: [
           Text(
             'Add Vehicle',
-            style: AppTextStyles.display.copyWith(
-              fontSize: 30,
+            style: AppTextStyles.headline.copyWith(
+              fontSize: 26,
               fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: 4),
           Text(
-            "Set your vehicle's basic identity.",
-            style: AppTextStyles.bodySecondary,
+            'Choose vehicle type and set basic identity.',
+            style: AppTextStyles.bodySecondary.copyWith(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Text('Select Machine Type', style: AppTextStyles.label),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 1: Type Selection
+          Text(
+            'VEHICLE TYPE',
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(
                 child: AppSelectableCard(
                   title: 'Car',
-                  icon: Icons.directions_car_rounded,
+                  subtitle: 'Sedan, SUV, EV',
+                  icon: Icons.directions_car_filled_rounded,
                   isSelected: selectedType == VehicleType.car,
                   onTap: () => onTypeChanged(VehicleType.car),
                 ),
@@ -62,6 +76,7 @@ class VehicleIdentityStep extends StatelessWidget {
               Expanded(
                 child: AppSelectableCard(
                   title: 'Bike',
+                  subtitle: 'Motorcycle, Scooter',
                   icon: Icons.two_wheeler_rounded,
                   isSelected: selectedType == VehicleType.bike,
                   onTap: () => onTypeChanged(VehicleType.bike),
@@ -69,29 +84,135 @@ class VehicleIdentityStep extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
-          AppCard(
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 2: Identity Form (Grouped Luxury Card)
+          Text(
+            'VEHICLE DETAILS',
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
-                AppTextField(
+                _IdentityInputRow(
                   label: 'Vehicle Name',
-                  hint: 'e.g., Family SUV',
+                  hint: 'e.g., Family SUV, Daily Ride',
                   controller: nameController,
-                  prefixIcon: Icons.directions_car_outlined,
+                  icon: selectedType == VehicleType.car
+                      ? Icons.directions_car_outlined
+                      : Icons.two_wheeler_outlined,
                   textInputAction: TextInputAction.next,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                AppTextField(
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.border.withValues(alpha: 0.6),
+                  indent: 64,
+                ),
+                _IdentityInputRow(
                   label: 'Model',
-                  hint: 'e.g., Toyota Axio',
+                  hint: 'e.g., Toyota Axio, Yamaha R15',
                   controller: modelController,
-                  prefixIcon: Icons.badge_outlined,
+                  icon: Icons.badge_outlined,
                   textInputAction: TextInputAction.done,
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
+  }
+}
+
+class _IdentityInputRow extends StatelessWidget {
+  const _IdentityInputRow({
+    required this.label,
+    required this.hint,
+    required this.controller,
+    required this.icon,
+    this.textInputAction = TextInputAction.next,
+  });
+
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final IconData icon;
+  final TextInputAction textInputAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                TextField(
+                  controller: controller,
+                  textInputAction: textInputAction,
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  cursorColor: AppColors.primary,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    hintText: hint,
+                    hintStyle: AppTextStyles.bodySecondary.copyWith(
+                      color: AppColors.textTertiary.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

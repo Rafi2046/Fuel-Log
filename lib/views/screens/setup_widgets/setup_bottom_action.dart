@@ -6,7 +6,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_primary_button.dart';
 
-/// Sticky bottom CTA — watches save loading from [vehicleProvider].
+/// Floating bottom CTA with subtle gradient fade — watches save loading from [vehicleProvider].
 class SetupBottomAction extends ConsumerWidget {
   const SetupBottomAction({
     super.key,
@@ -23,11 +23,22 @@ class SetupBottomAction extends ConsumerWidget {
         currentStep == 1 && ref.watch(vehicleProvider).isLoading;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.screenPadding),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          top: BorderSide(color: AppColors.divider, width: 1),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.sm,
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.background.withValues(alpha: 0.0),
+            AppColors.background.withValues(alpha: 0.9),
+            AppColors.background,
+          ],
+          stops: const [0.0, 0.2, 1.0],
         ),
       ),
       child: SafeArea(
