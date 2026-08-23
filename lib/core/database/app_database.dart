@@ -81,7 +81,22 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertVehicle(VehiclesCompanion vehicle) =>
       into(vehicles).insert(vehicle);
 
+  Future<int> insertFuelLog(FuelLogsCompanion log) =>
+      into(fuelLogs).insert(log);
+
+  Future<int> deleteFuelLog(int id) {
+    return (delete(fuelLogs)..where((t) => t.id.equals(id))).go();
+  }
+
   Stream<List<Vehicle>> watchAllVehicles() => select(vehicles).watch();
+
+  /// Fuel logs for one vehicle, newest first.
+  Stream<List<FuelLog>> watchLogsForVehicle(int vehicleId) {
+    return (select(fuelLogs)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
+  }
 }
 
 LazyDatabase _openConnection() {

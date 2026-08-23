@@ -1,16 +1,18 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
+import 'core/constants/app_locales.dart';
 import 'core/constants/app_themes.dart';
-import 'views/screens/splash_screen.dart';
-import 'views/screens/vehicle_setup_screen.dart';
+import 'views/screens/app_startup_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
   // Ensure the sqlite3_flutter_libs plugin is registered / linked.
   if (Platform.isAndroid) {
@@ -19,8 +21,13 @@ Future<void> main() async {
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
   runApp(
-    const ProviderScope(
-      child: FuelLogApp(),
+    EasyLocalization(
+      supportedLocales: supportedAppLocales,
+      path: translationsPath,
+      fallbackLocale: const Locale('en'),
+      child: const ProviderScope(
+        child: FuelLogApp(),
+      ),
     ),
   );
 }
@@ -35,7 +42,10 @@ class FuelLogApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppThemes.dark,
       themeMode: ThemeMode.dark,
-      home: const SplashScreen(next: VehicleSetupScreen()),
+      locale: context.locale,
+      supportedLocales: context.supportedLocales,
+      localizationsDelegates: context.localizationDelegates,
+      home: const AppStartupGate(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -8,6 +9,7 @@ import 'tabs/garage_tab.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/logs_tab.dart';
 import 'tabs/settings_tab.dart';
+import 'tabs/stats_tab.dart';
 
 /// Main shell: IndexedStack tabs + notched FAB bottom bar.
 class DashboardScreen extends StatefulWidget {
@@ -21,22 +23,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final String _selectedVehicle = 'Toyota Axio 🚘';
 
+  /// Home · Logs · Stats · Settings — Garage opens from the vehicle chip.
   static const List<Widget> _tabs = [
     HomeTab(),
     LogsTab(),
-    GarageTab(),
+    StatsTab(),
     SettingsTab(),
   ];
 
   void _onTabTapped(int index) => setState(() => _currentIndex = index);
+
+  void _openGarage() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(title: Text('garageTitle'.tr())),
+          body: const GarageTab(),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: buildDashboardAppBar(
+        context: context,
         currentIndex: _currentIndex,
         selectedVehicle: _selectedVehicle,
+        onVehicleTap: _openGarage,
       ),
       body: IndexedStack(
         index: _currentIndex,
@@ -70,13 +87,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     DashboardNavItem(
                       icon: Icons.home_rounded,
-                      label: 'Home',
+                      label: 'navHome'.tr(),
                       isSelected: _currentIndex == 0,
                       onTap: () => _onTabTapped(0),
                     ),
                     DashboardNavItem(
                       icon: Icons.receipt_long_rounded,
-                      label: 'Logs',
+                      label: 'navLogs'.tr(),
                       isSelected: _currentIndex == 1,
                       onTap: () => _onTabTapped(1),
                     ),
@@ -89,14 +106,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     DashboardNavItem(
-                      icon: Icons.directions_car_rounded,
-                      label: 'Garage',
+                      icon: Icons.bar_chart_rounded,
+                      label: 'navStats'.tr(),
                       isSelected: _currentIndex == 2,
                       onTap: () => _onTabTapped(2),
                     ),
                     DashboardNavItem(
                       icon: Icons.settings_rounded,
-                      label: 'Settings',
+                      label: 'navSettings'.tr(),
                       isSelected: _currentIndex == 3,
                       onTap: () => _onTabTapped(3),
                     ),

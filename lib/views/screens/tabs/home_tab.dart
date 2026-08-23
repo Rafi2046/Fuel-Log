@@ -1,136 +1,185 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/utils/app_formatters.dart';
+import '../../../core/utils/mileage_calculator.dart';
+import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/efficiency_gauge.dart';
 import '../../widgets/summary_stat_card.dart';
 
-/// Home tab View displaying stats summary and chart placeholder.
-class HomeTab extends StatelessWidget {
+/// Home tab — compact overview (gauge, month cards, recent log).
+class HomeTab extends ConsumerWidget {
   const HomeTab({super.key});
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final logsAsync = ref.watch(vehicleLogsProvider);
+    final vehicleAsync = ref.watch(activeVehicleProvider);
+    final isEV = vehicleAsync.valueOrNull?.isElectric ?? false;
+    final unit = isEV ? 'kWh' : 'L';
+    final mileageUnit = isEV ? 'km/kWh' : 'km/L';
+
+    return logsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
+      ),
+      data: (logs) => _HomeContent(
+        logs: logs,
+        isEV: isEV,
+        unit: unit,
+        mileageUnit: mileageUnit,
+        vehicleName: vehicleAsync.valueOrNull?.name,
+      ),
+    );
+  }
+}
+
+class _HomeContent extends StatelessWidget {
+  const _HomeContent({
+    required this.logs,
+    required this.isEV,
+    required this.unit,
+    required this.mileageUnit,
+    required this.vehicleName,
+  });
+
+  final List<FuelLog> logs;
+  final bool isEV;
+  final String unit;
+  final String mileageUnit;
+  final String? vehicleName;
+
+  double get _monthSpend {
+    final now = DateTime.now();
+    return logs
+        .where((l) => l.date.year == now.year && l.date.month == now.month)
+        .fold<double>(0, (sum, l) => sum + l.cost);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final recent = logs.isEmpty ? null : logs.first;
+    final avgMileage = calculateAverageMileage(logs);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.screenPadding),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.sm,
+        AppSpacing.screenPadding,
+        AppSpacing.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Section: 2 Summary Stat Cards
+          Center(
+            child: EfficiencyGauge(
+              value: avgMileage,
+              unit: mileageUnit,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: SummaryStatCard(
-                  label: 'This Month',
-                  value: '\$120',
-                  icon: Icons.attach_money_rounded,
-                  accent: AppColors.primary,
+                  label: 'monthCost'.tr(),
+                  value: AppCurrency.format(_monthSpend),
+                  icon: Icons.receipt_long_rounded,
+                  accent: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: SummaryStatCard(
-                  label: 'Avg Mileage',
-                  value: '14 km/L',
-                  icon: Icons.speed_rounded,
-                  accent: AppColors.secondary,
+                  label: isEV ? 'lastCharge'.tr() : 'lastFill'.tr(),
+                  value: recent == null
+                      ? '—'
+                      : '${recent.amount.toStringAsFixed(0)} $unit',
+                  icon: Icons.history_rounded,
+                  accent: AppColors.primary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Middle Section: Large Chart Placeholder Container (height 250)
-          Container(
-            height: 250,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.cardElevated,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.show_chart_rounded,
-                    size: 44,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Chart Widget Placeholder',
-                  style: AppTextStyles.title.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Fuel consumption & cost analytics coming soon',
-                  style: AppTextStyles.caption,
-                ),
-              ],
-            ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            isEV ? 'recentCharge'.tr() : 'recentRefueling'.tr(),
+            style: AppTextStyles.label.copyWith(fontSize: 12),
           ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Quick Recent Entry Card Preview
-          Text('Recent Refueling', style: AppTextStyles.label),
-          const SizedBox(height: AppSpacing.sm),
-          AppCard(
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+          const SizedBox(height: AppSpacing.xs),
+          if (recent == null)
+            AppCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                'noLogsYet'.tr(),
+                style: AppTextStyles.bodySecondary.copyWith(fontSize: 14),
+              ),
+            )
+          else
+            AppCard(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm + 2,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isEV
+                          ? Icons.battery_charging_full_rounded
+                          : Icons.local_gas_station_rounded,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.local_gas_station_rounded,
-                    color: AppColors.primary,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Toyota Axio • 35.5 L',
-                        style: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${vehicleName ?? 'Vehicle'} • '
+                          '${recent.amount.toStringAsFixed(1)} $unit',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '21 Aug 2026 • 45,210 km',
-                        style: AppTextStyles.caption,
-                      ),
-                    ],
+                        const SizedBox(height: 1),
+                        Text(
+                          '${AppDateFormats.formatLogDate(recent.date)} • '
+                          '${recent.odometer.toStringAsFixed(0)} km',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  '\$120.50',
-                  style: AppTextStyles.title.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
+                  Text(
+                    AppCurrency.format(recent.cost),
+                    style: AppTextStyles.title.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
         ],
       ),
     );

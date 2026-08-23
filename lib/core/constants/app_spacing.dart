@@ -7,10 +7,10 @@ abstract final class AppSpacing {
   static const double xl = 32.0;
   static const double xxl = 48.0;
 
-  static const double radiusSm = 12.0;
-  static const double radiusMd = 18.0;
-  static const double radiusLg = 24.0;
-  static const double radiusXl = 32.0;
+  static const double radiusSm = 8.0;
+  static const double radiusMd = 12.0;
+  static const double radiusLg = 14.0;
+  static const double radiusXl = 18.0;
   static const double radiusPill = 40.0;
 
   static const double screenPadding = 20.0;
