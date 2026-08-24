@@ -37,7 +37,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.textContaining('Track'), findsOneWidget);
+    expect(find.textContaining('Master', findRichText: true), findsOneWidget);
     expect(find.text('GET STARTED'), findsOneWidget);
 
     await tester.tap(find.text('GET STARTED'));

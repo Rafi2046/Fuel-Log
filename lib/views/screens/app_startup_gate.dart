@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import 'dashboard_screen.dart';
 import 'splash_screen.dart';
 import 'vehicle_setup_screen.dart';
 
-/// App startup gate displaying Splash Screen with animated WebM video on launch,
-/// then routing to Dashboard or Vehicle Setup based on existing vehicle data.
+/// App startup gate:
+/// - Loading        → plain dark screen (no spinner flicker)
+/// - No vehicles    → straight to VehicleSetupScreen (first-run onboarding wizard)
+/// - Has vehicles   → branded SplashScreen intro → DashboardScreen
 class AppStartupGate extends ConsumerWidget {
   const AppStartupGate({super.key});
 
@@ -17,12 +18,13 @@ class AppStartupGate extends ConsumerWidget {
     final vehiclesAsync = ref.watch(vehiclesProvider);
 
     return vehiclesAsync.when(
+      // Silent loading — no spinner, just the same dark background
       loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: Color(0xFF121212),
+        body: SizedBox.expand(),
       ),
       error: (error, _) => Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: const Color(0xFF121212),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -35,13 +37,16 @@ class AppStartupGate extends ConsumerWidget {
         ),
       ),
       data: (vehicles) {
-        final targetScreen = vehicles.isEmpty
-            ? const VehicleSetupScreen()
-            : const DashboardScreen();
+        if (vehicles.isEmpty) {
+          // First-time / no data: skip splash, go directly to setup wizard
+          return const VehicleSetupScreen();
+        }
 
-        return SplashScreen(
-          next: targetScreen,
-          autoNavigate: vehicles.isNotEmpty,
+        // Returning user: show branded 1.8s splash → Dashboard
+        return const SplashScreen(
+          next: DashboardScreen(),
+          autoNavigate: true,
+          splashDuration: Duration(milliseconds: 1800),
         );
       },
     );
