@@ -75,6 +75,15 @@ enum FuelTypeGrade {
     defaultBpcPrice: 68.50,
     unit: '৳/L',
   ),
+  ev(
+    code: 'EV',
+    label: 'EV Fast Charging',
+    shortCode: 'EV',
+    category: 'EV',
+    badgeColor: Color(0xFF262632),
+    defaultBpcPrice: 18.50,
+    unit: '৳/kWh',
+  ),
   e85(
     code: 'E85',
     label: 'Ethanol E85',

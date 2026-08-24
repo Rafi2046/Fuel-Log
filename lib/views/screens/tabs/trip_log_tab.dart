@@ -966,23 +966,39 @@ class _TripLogTabState extends State<TripLogTab>
                             horizontal: AppSpacing.screenPadding,
                           ),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              FloatingActionButton(
-                                heroTag: 'trip_manual_entry',
-                                onPressed: () =>
-                                    showTripManualEntrySheet(context),
-                                backgroundColor: AppColors.cardElevated,
-                                foregroundColor: AppColors.primary,
-                                elevation: 6,
-                                shape: const CircleBorder(),
-                                tooltip: 'manualTripEntry'.tr(),
-                                child: const Icon(
-                                  LucideIcons.mapPin,
-                                  size: 20,
+                              Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  color: AppColors.cardElevated,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: const Color(0xFF2E2E3C)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.35),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    onTap: () => showTripManualEntrySheet(context),
+                                    child: const Center(
+                                      child: Icon(
+                                        LucideIcons.mapPin,
+                                        size: 18,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: AppSpacing.md),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: _StartTripFab(
                                   isTracking: _isGeneralTripTracking,
@@ -1766,7 +1782,7 @@ class _StartTripFab extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isTracking;
 
-  static final _radius = BorderRadius.circular(AppSpacing.radiusXl);
+  static final _radius = BorderRadius.circular(14);
 
   @override
   Widget build(BuildContext context) {
@@ -1776,15 +1792,10 @@ class _StartTripFab extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isTracking
-                ? const Color(0xFFD32F2F).withValues(alpha: 0.55)
-                : Colors.black.withValues(alpha: 0.45),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+                ? const Color(0xFFD32F2F).withValues(alpha: 0.5)
+                : AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -1797,23 +1808,24 @@ class _StartTripFab extends StatelessWidget {
           onTap: onPressed,
           borderRadius: _radius,
           child: Container(
-            height: AppSpacing.buttonHeight,
+            height: 46,
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   isTracking ? LucideIcons.square : LucideIcons.play,
                   color: Colors.white,
-                  size: 18,
+                  size: 16,
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: 8),
                 Text(
                   isTracking ? 'End Trip & Log' : 'startTrip'.tr(),
                   style: AppTextStyles.button.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
+                    fontSize: 14,
                     letterSpacing: 0.2,
                   ),
                 ),

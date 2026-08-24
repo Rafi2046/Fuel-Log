@@ -247,6 +247,40 @@ class FuelPriceRepository {
         ),
       ],
     ),
+    StationInfo(
+      id: 'bd_desco_ev',
+      name: 'Desco Smart EV Charging Hub',
+      banglaName: 'ডেসকো স্মার্ট ইভি চার্জিং হাব',
+      address: 'Mohakhali C/A, Bir Uttam AK Khandakar Rd, Dhaka',
+      location: const LatLng(23.7795, 90.4050),
+      distanceMeters: 850,
+      upvotes: 42,
+      availableCategories: ['EV'],
+      prices: [
+        StationPriceItem(
+          fuelGradeCode: 'EV',
+          price: 18.50,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+      ],
+    ),
+    StationInfo(
+      id: 'bd_genex_ev',
+      name: 'Genex EV Fast Charger Point',
+      banglaName: 'জেনে directo ইভি ফাস্ট চার্জার',
+      address: 'Gulshan-2, Circle 2, Dhaka',
+      location: const LatLng(23.7942, 90.4145),
+      distanceMeters: 920,
+      upvotes: 28,
+      availableCategories: ['EV'],
+      prices: [
+        StationPriceItem(
+          fuelGradeCode: 'EV',
+          price: 19.00,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      ],
+    ),
   ];
 
   /// Loads all stations, merges OSM nearby stations, and applies user overrides from SharedPreferences.

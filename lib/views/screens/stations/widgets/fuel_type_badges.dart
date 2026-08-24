@@ -29,6 +29,8 @@ class FuelTypeBadges extends StatelessWidget {
           label = 'LPG / AutoGas';
         } else if (category == 'CNG') {
           label = 'CNG';
+        } else if (category == 'EV') {
+          label = 'EV Charging';
         }
 
         return Container(

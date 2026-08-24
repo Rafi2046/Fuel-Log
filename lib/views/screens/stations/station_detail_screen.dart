@@ -21,13 +21,28 @@ class StationDetailScreen extends ConsumerWidget {
   final StationInfo station;
 
   Future<void> _openGoogleMaps(StationInfo s) async {
-    final url = Uri.parse(
+    final googleMapsUrl = Uri.parse(
       'https://www.google.com/maps/dir/?api=1&destination=${s.location.latitude},${s.location.longitude}',
     );
+    final geoUrl = Uri.parse(
+      'geo:${s.location.latitude},${s.location.longitude}?q=${s.location.latitude},${s.location.longitude}(${Uri.encodeComponent(s.displayName)})',
+    );
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+        return;
       }
+    } catch (_) {}
+
+    try {
+      if (await canLaunchUrl(geoUrl)) {
+        await launchUrl(geoUrl);
+        return;
+      }
+    } catch (_) {}
+
+    try {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.platformDefault);
     } catch (_) {}
   }
 

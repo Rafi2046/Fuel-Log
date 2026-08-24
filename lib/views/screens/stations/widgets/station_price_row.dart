@@ -17,6 +17,9 @@ class StationPriceRow extends StatelessWidget {
 
   IconData _getFuelIcon(String code) {
     final c = code.toUpperCase();
+    if (c.contains('EV') || c.contains('ELECTRIC') || c.contains('KWH')) {
+      return Icons.electric_bolt_rounded;
+    }
     if (c.contains('CNG') || c.contains('LPG')) {
       return Icons.propane_tank_rounded;
     }
