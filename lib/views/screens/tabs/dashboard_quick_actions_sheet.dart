@@ -6,6 +6,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../mileage/mileage_log_screen.dart';
 import '../refueling_form_screen.dart';
+import '../reminders/reminders_screen.dart';
 
 /// Contextual quick actions from the center FAB (no grid menu).
 Future<void> showDashboardQuickActionsSheet(
@@ -156,7 +157,14 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
               color: _reminderYellow,
               title: 'actionAddReminder'.tr(),
               subtitle: 'actionAddReminderSubtitle'.tr(),
-              onTap: () => _comingSoon(context, 'remindersComingSoon'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RemindersScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.sm),
           ],

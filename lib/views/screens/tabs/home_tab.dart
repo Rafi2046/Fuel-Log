@@ -9,10 +9,12 @@ import '../../../core/database/app_database.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/utils/mileage_calculator.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/efficiency_gauge.dart';
 import '../../widgets/summary_stat_card.dart';
+import '../reminders/reminders_screen.dart';
 
 /// Home tab — compact overview (gauge, month cards, recent log).
 class HomeTab extends ConsumerWidget {
@@ -109,6 +111,8 @@ class _HomeContent extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: AppSpacing.sm),
+          const _HomeServiceStatusCard(),
           const SizedBox(height: AppSpacing.md),
           Text(
             isEV ? 'recentCharge'.tr() : 'recentRefueling'.tr(),
@@ -181,6 +185,109 @@ class _HomeContent extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Compact Service & Maintenance Health Card for Home Dashboard
+class _HomeServiceStatusCard extends ConsumerWidget {
+  const _HomeServiceStatusCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(remindersProvider);
+    final urgent = state.mostUrgentReminder;
+
+    if (urgent == null) return const SizedBox.shrink();
+
+    final status = urgent.status(state.currentOdometer);
+    final statusMsg = urgent.statusMessage(state.currentOdometer);
+
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const RemindersScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161620),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: status.color.withValues(alpha: 0.25),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: status.color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                urgent.serviceType.icon,
+                color: status.color,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        urgent.title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: status.color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          status.label,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: status.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusMsg,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: AppColors.textTertiary,
+              size: 13,
+            ),
+          ],
+        ),
       ),
     );
   }

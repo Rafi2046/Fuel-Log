@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
+import '../reminders/reminders_screen.dart';
 
 /// Tab-aware app bar for [DashboardScreen] with modern luxury styling.
 PreferredSizeWidget buildDashboardAppBar({
@@ -171,16 +172,9 @@ PreferredSizeWidget buildDashboardAppBar({
               tooltip: 'reminders'.tr(),
               iconSize: 18,
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'remindersComingSoon'.tr(),
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    backgroundColor: AppColors.cardElevated,
-                    behavior: SnackBarBehavior.floating,
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RemindersScreen(),
                   ),
                 );
               },
