@@ -37,7 +37,7 @@ class StationDetailScreen extends ConsumerWidget {
       backgroundColor: AppColors.cardElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
+          top: Radius.circular(AppSpacing.radiusLg),
         ),
       ),
       builder: (ctx) => Padding(
@@ -60,14 +60,14 @@ class StationDetailScreen extends ConsumerWidget {
             Text(
               'Report Station Information',
               style: GoogleFonts.inter(
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
-              'Help the community keep station info up to date for ${station.displayName}.',
+              'Help keep pump info up to date for ${station.displayName}.',
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -133,7 +133,7 @@ class StationDetailScreen extends ConsumerWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
@@ -141,7 +141,7 @@ class StationDetailScreen extends ConsumerWidget {
             icon: Icon(
               currentStation.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
               color: currentStation.isFavorite ? const Color(0xFFFBBF24) : AppColors.textSecondary,
-              size: 26,
+              size: 22,
             ),
             onPressed: () {
               ref.read(gasStationsProvider.notifier).toggleFavorite(
@@ -162,7 +162,7 @@ class StationDetailScreen extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.directions_rounded, color: AppColors.primary),
+            icon: const Icon(Icons.directions_rounded, color: AppColors.primary, size: 22),
             onPressed: () => _openGoogleMaps(currentStation),
           ),
         ],
@@ -170,151 +170,202 @@ class StationDetailScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.screenPadding,
-          vertical: AppSpacing.sm,
+          vertical: 4,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── STATION HEADER ────────────────────────────────────────────────
-            Text(
-              currentStation.displayName,
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              currentStation.address.isNotEmpty ? currentStation.address : 'Nearby Station',
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.local_gas_station_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        currentStation.displayName,
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        currentStation.address.isNotEmpty
+                            ? currentStation.address
+                            : 'Nearby Fuel Station',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
 
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 14),
 
             // ── ACTION ROW: Report Changes & Upvote ───────────────────────────
             Row(
               children: [
-                OutlinedButton.icon(
-                  onPressed: () => _showReportChangesSheet(context),
-                  icon: const Icon(
-                    Icons.edit_note_rounded,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  label: const Text(
-                    'Report changes',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.card,
-                    side: const BorderSide(color: AppColors.border),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                Material(
+                  color: const Color(0xFF1B1B24),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  child: InkWell(
+                    onTap: () => _showReportChangesSheet(context),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                        border: Border.all(color: const Color(0xFF2C2C3A)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.edit_note_rounded,
+                            size: 15,
+                            color: AppColors.primary,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Report changes',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
                 const Spacer(),
 
-                // Upvote Button
-                InkWell(
-                  onTap: () {
-                    ref.read(gasStationsProvider.notifier).toggleUpvote(
-                          currentStation.id,
-                          fallbackStation: currentStation,
-                        );
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          currentStation.isUserUpvoted
-                              ? 'Upvote removed'
-                              : 'Upvoted! Thank you for confirming pump rates 👍',
-                        ),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
+                // Sleek Upvote Button
+                Material(
+                  color: currentStation.isUserUpvoted
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : const Color(0xFF1B1B24),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: currentStation.isUserUpvoted ? AppColors.primaryMuted : AppColors.card,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                      border: Border.all(
-                        color: currentStation.isUserUpvoted ? AppColors.primary : AppColors.border,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          currentStation.isUserUpvoted
-                              ? Icons.thumb_up_alt_rounded
-                              : Icons.thumb_up_alt_outlined,
-                          color: currentStation.isUserUpvoted ? AppColors.primary : AppColors.textSecondary,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${currentStation.upvotes}',
-                          style: TextStyle(
-                            color: currentStation.isUserUpvoted ? AppColors.primary : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                  child: InkWell(
+                    onTap: () {
+                      ref.read(gasStationsProvider.notifier).toggleUpvote(
+                            currentStation.id,
+                            fallbackStation: currentStation,
+                          );
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            currentStation.isUserUpvoted
+                                ? 'Upvote removed'
+                                : 'Upvoted! Thank you for confirming rates 👍',
                           ),
+                          duration: const Duration(seconds: 1),
                         ),
-                      ],
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6.5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                        border: Border.all(
+                          color: currentStation.isUserUpvoted
+                              ? AppColors.primary.withValues(alpha: 0.5)
+                              : const Color(0xFF2C2C3A),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            currentStation.isUserUpvoted
+                                ? Icons.thumb_up_alt_rounded
+                                : Icons.thumb_up_alt_outlined,
+                            color: currentStation.isUserUpvoted
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${currentStation.upvotes}',
+                            style: TextStyle(
+                              color: currentStation.isUserUpvoted
+                                  ? AppColors.primary
+                                  : AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 18),
 
-            // ── AVAILABLE FUEL TYPES (Modular Badges) ─────────────────────────
+            // ── AVAILABLE FUEL TYPES (Minimalist Chips) ───────────────────────
             Text(
               'AVAILABLE FUEL TYPES',
               style: GoogleFonts.inter(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
                 color: AppColors.textTertiary,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 8),
             FuelTypeBadges(categories: currentStation.availableCategories),
 
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: 20),
 
-            // ── GAS PRICES SECTION (Modular Rows) ─────────────────────────────
+            // ── GAS PRICES SECTION ────────────────────────────────────────────
             Text(
               'CURRENT PUMP PRICES',
               style: GoogleFonts.inter(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
                 color: AppColors.textTertiary,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 8),
 
             if (currentStation.prices.isEmpty)
               Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: AppColors.card,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: const Center(
                   child: Text(
@@ -328,7 +379,7 @@ class StationDetailScreen extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: currentStation.prices.length,
-                separatorBuilder: (context, _) => const SizedBox(height: 8),
+                separatorBuilder: (context, _) => const SizedBox(height: 6),
                 itemBuilder: (context, index) {
                   final item = currentStation.prices[index];
                   return StationPriceRow(
@@ -344,7 +395,7 @@ class StationDetailScreen extends ConsumerWidget {
                 },
               ),
 
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: 24),
           ],
         ),
       ),

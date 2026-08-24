@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 
-/// Badges row showing available fuel types at the station (e.g. G, D, E, LPG, CNG)
+/// Minimalist, luxury horizontal tags for available fuel types
 class FuelTypeBadges extends StatelessWidget {
   const FuelTypeBadges({
     super.key,
@@ -15,56 +15,49 @@ class FuelTypeBadges extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 6,
+      runSpacing: 6,
       children: categories.map((category) {
-        Color bg = AppColors.primary;
-        Color textCol = Colors.white;
-        String fullTitle = category;
-
+        String label = category;
         if (category == 'G') {
-          bg = const Color(0xFF22C55E);
-          fullTitle = 'Gasoline';
+          label = 'Petrol';
         } else if (category == 'D') {
-          bg = const Color(0xFF475569);
-          fullTitle = 'Diesel';
+          label = 'Diesel';
         } else if (category == 'E') {
-          bg = const Color(0xFFEAB308);
-          textCol = Colors.black;
-          fullTitle = 'Octane';
+          label = 'Octane';
         } else if (category == 'LPG') {
-          bg = const Color(0xFFDC2626);
-          fullTitle = 'LPG';
+          label = 'LPG / AutoGas';
         } else if (category == 'CNG') {
-          bg = const Color(0xFF0284C7);
-          fullTitle = 'CNG';
+          label = 'CNG';
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
           decoration: BoxDecoration(
-            color: bg.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: bg.withValues(alpha: 0.6)),
+            color: const Color(0xFF1A1A22),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+            border: Border.all(
+              color: const Color(0xFF2C2C38),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: bg,
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
-                '$category ($fullTitle)',
-                style: TextStyle(
-                  color: textCol == Colors.black ? const Color(0xFFFDE047) : Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+                label,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
                 ),
               ),
             ],

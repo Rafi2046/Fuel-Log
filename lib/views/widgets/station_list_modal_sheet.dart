@@ -5,9 +5,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../screens/refueling_form_screen.dart';
 import '../screens/stations/station_detail_screen.dart';
 import '../screens/tabs/trip_log_tab.dart';
-import 'trip_manual_entry_sheet.dart';
 
 /// Luxury frosted glass modal sheet showing all nearby stations in rich detail
 class StationListModalSheet extends StatefulWidget {
@@ -203,61 +203,71 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                     child: Row(
                       children: [
-                        // Quick Fuel Log Button
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            showTripManualEntrySheet(context);
-                          },
-                          icon: const Icon(LucideIcons.plus, size: 16),
-                          label: const Text('Log Fuel'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.textPrimary,
-                            side: const BorderSide(color: Color(0xFF3A3A4A)),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        // Symmetrical Log Fuel Button
+                        Expanded(
+                          child: SizedBox(
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const RefuelingFormScreen(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.local_gas_station_rounded,
+                                size: 16,
+                                color: AppColors.primary,
+                              ),
+                              label: const Text(
+                                'Log Fuel',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13.5,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF3A3A4A)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 10),
 
-                        // Full-Width Primary Navigate Button
+                        // Symmetrical Navigate Button
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              widget.onNavigate(selectedStation);
-                            },
-                            icon: const Icon(
-                              LucideIcons.navigation,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              'Navigate to ${selectedStation.name.split(' ').first}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                          child: SizedBox(
+                            height: 48,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                widget.onNavigate(selectedStation);
+                              },
+                              icon: const Icon(
+                                LucideIcons.navigation,
+                                size: 16,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13.5,
                               ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                                horizontal: 12,
+                              label: const Text(
+                                'Navigate',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
                               ),
-                              elevation: 4,
-                              shadowColor:
-                                  AppColors.primary.withValues(alpha: 0.4),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
