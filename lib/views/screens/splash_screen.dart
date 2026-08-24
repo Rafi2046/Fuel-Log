@@ -14,16 +14,18 @@ class SplashScreen extends StatefulWidget {
     super.key,
     required this.next,
     this.autoNavigate = true,
-    this.isCheckingData = false,
     this.splashDuration = const Duration(milliseconds: 1800),
     this.getNextScreen,
+    this.onGetStarted,
   });
 
   final Widget next;
   final bool autoNavigate;
-  final bool isCheckingData;
   final Duration splashDuration;
   final Widget Function()? getNextScreen;
+
+  /// Optional async callback to run BEFORE navigation (e.g. mark onboarding done).
+  final Future<void> Function()? onGetStarted;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -100,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen>
     _entranceController.forward();
     _initVideoPlayer();
 
-    if (widget.autoNavigate && !widget.isCheckingData) {
+    if (widget.autoNavigate) {
       _startAutoNavigateTimer();
     }
   }
@@ -109,19 +111,9 @@ class _SplashScreenState extends State<SplashScreen>
     _autoNavigateTimer?.cancel();
     _autoNavigateTimer = Timer(widget.splashDuration, () {
       if (mounted && !_hasNavigated) {
-        _continue(context);
+        _navigate(context);
       }
     });
-  }
-
-  @override
-  void didUpdateWidget(SplashScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!widget.isCheckingData) {
-      if (widget.autoNavigate && _autoNavigateTimer == null && !_hasNavigated) {
-        _startAutoNavigateTimer();
-      }
-    }
   }
 
   Future<void> _initVideoPlayer() async {
@@ -155,19 +147,29 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _continue(BuildContext context) {
+  /// Called either by the auto-timer (returning users) or GET STARTED button (first-time).
+  Future<void> _navigate(BuildContext context) async {
     if (_hasNavigated) return;
     _hasNavigated = true;
     _autoNavigateTimer?.cancel();
 
+    // Run any pre-navigation side effects (e.g. persist onboarding-seen flag)
+    // Capture navigator BEFORE the await gap
+    final navigator = Navigator.of(context);
+    if (widget.onGetStarted != null) {
+      await widget.onGetStarted!();
+    }
+
+    if (!mounted) return;
+
     final target = widget.getNextScreen?.call() ?? widget.next;
 
-    Navigator.of(context).pushReplacement(
+    await navigator.pushReplacement(
       PageRouteBuilder<void>(
         transitionDuration: const Duration(milliseconds: 650),
         reverseTransitionDuration: const Duration(milliseconds: 450),
-        pageBuilder: (_, animation, secondaryAnimation) => target,
-        transitionsBuilder: (_, animation, secondaryAnimation, child) {
+        pageBuilder: (ctx, animation, secondary) => target,
+        transitionsBuilder: (ctx, animation, secondary, child) {
           final curved = CurvedAnimation(
             parent: animation,
             curve: Curves.easeInOutCubic,
@@ -189,200 +191,190 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final showOnboardingControls = !widget.isCheckingData && !widget.autoNavigate;
-
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      body: GestureDetector(
-        onTap: () => _continue(context),
-        behavior: HitTestBehavior.opaque,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Layer 1: Solid Base Background
-            const ColoredBox(color: Color(0xFF121212)),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Layer 1: Solid Base Background
+          const ColoredBox(color: Color(0xFF121212)),
 
-            // Layer 2: High-resolution static poster image (seamless instant background while video decodes)
+          // Layer 2: High-resolution static poster (instant while video decodes)
+          Positioned.fill(
+            child: Image.asset(
+              AppImages.onboardingHero,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              errorBuilder: (context, error, _) => const SizedBox.shrink(),
+            ),
+          ),
+
+          // Layer 3: Video Player with smooth 1000ms GPU crossfade
+          if (_videoController != null && _videoController!.value.isInitialized)
             Positioned.fill(
-              child: Image.asset(
-                AppImages.onboardingHero,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              child: FadeTransition(
+                opacity: _videoFadeController,
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: _videoController!.value.size.width,
+                    height: _videoController!.value.size.height,
+                    child: VideoPlayer(_videoController!),
+                  ),
+                ),
               ),
             ),
 
-            // Layer 3: Video Player Layer with smooth 1000ms GPU crossfade
-            if (_videoController != null && _videoController!.value.isInitialized)
-              Positioned.fill(
-                child: FadeTransition(
-                  opacity: _videoFadeController,
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: _videoController!.value.size.width,
-                      height: _videoController!.value.size.height,
-                      child: VideoPlayer(_videoController!),
+          // Layer 4: Gradient overlay for perfect text contrast
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.35, 0.65, 1.0],
+                  colors: [
+                    Colors.transparent,
+                    Color(0x22121212),
+                    Color(0xDD121212),
+                    Color(0xFF121212),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Layer 5: Foreground Content
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                AppSpacing.md,
+                AppSpacing.screenPadding,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Spacer(flex: 5),
+
+                  // Typography with smooth entrance animation
+                  FadeTransition(
+                    opacity: _textFadeAnimation,
+                    child: SlideTransition(
+                      position: _textSlideAnimation,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              style: GoogleFonts.inter(
+                                fontSize: 38,
+                                fontWeight: FontWeight.w800,
+                                height: 1.12,
+                                letterSpacing: -0.8,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Master ',
+                                  style: TextStyle(color: AppColors.primary),
+                                ),
+                                const TextSpan(
+                                  text: 'Your Mileage.',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Precision tracking for every drop of fuel and every mile you drive.',
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              color: Colors.white70,
+                              height: 1.4,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
 
-            // Layer 4: Linear Gradient Overlay for perfect typography contrast
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.0, 0.35, 0.65, 1.0],
-                    colors: [
-                      Colors.transparent,
-                      Color(0x22121212),
-                      Color(0xDD121212),
-                      Color(0xFF121212),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                  const Spacer(),
 
-            // Layer 5: Foreground Content with Typography & Modern Controls
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPadding,
-                  AppSpacing.md,
-                  AppSpacing.screenPadding,
-                  AppSpacing.lg,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Spacer(flex: 5),
-
-                    // Typography Column with smooth entrance animation
+                  // Onboarding controls — only for first-time users (autoNavigate == false)
+                  if (!widget.autoNavigate) ...[
                     FadeTransition(
-                      opacity: _textFadeAnimation,
+                      opacity: _dotsFadeAnimation,
                       child: SlideTransition(
-                        position: _textSlideAnimation,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text.rich(
-                              TextSpan(
-                                style: GoogleFonts.inter(
-                                  fontSize: 38,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.12,
-                                  letterSpacing: -0.8,
-                                ),
-                                children: [
-                                  TextSpan(
-                                    text: 'Master ',
-                                    style: TextStyle(
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  const TextSpan(
-                                    text: 'Your Mileage.',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              'Precision tracking for every drop of fuel and every mile you drive.',
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                color: Colors.white70,
-                                height: 1.4,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
+                        position: _dotsSlideAnimation,
+                        child: Row(
+                          children: const [
+                            _Dot(active: true),
+                            SizedBox(width: 6),
+                            _Dot(active: false),
+                            SizedBox(width: 6),
+                            _Dot(active: false),
                           ],
                         ),
                       ),
                     ),
 
-                    const Spacer(),
+                    const SizedBox(height: AppSpacing.lg),
 
-                    if (showOnboardingControls) ...[
-                      // Left-aligned modern dot indicators
-                      FadeTransition(
-                        opacity: _dotsFadeAnimation,
-                        child: SlideTransition(
-                          position: _dotsSlideAnimation,
-                          child: Row(
-                            children: const [
-                              _Dot(active: true),
-                              SizedBox(width: 6),
-                              _Dot(active: false),
-                              SizedBox(width: 6),
-                              _Dot(active: false),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // Solid Neon Orange CTA spanning full width with padding
-                      FadeTransition(
-                        opacity: _buttonFadeAnimation,
-                        child: SlideTransition(
-                          position: _buttonSlideAnimation,
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: () => _continue(context),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                elevation: 6,
-                                shadowColor:
-                                    AppColors.primary.withValues(alpha: 0.45),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                    FadeTransition(
+                      opacity: _buttonFadeAnimation,
+                      child: SlideTransition(
+                        position: _buttonSlideAnimation,
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () => _navigate(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 6,
+                              shadowColor:
+                                  AppColors.primary.withValues(alpha: 0.45),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'GET STARTED',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.1,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 20,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'GET STARTED',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.1,
                                     color: Colors.white,
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

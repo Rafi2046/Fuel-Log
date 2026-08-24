@@ -52,11 +52,11 @@ dependencies:
   http: ^1.6.0
   url_launcher: ^6.3.2
   video_player: ^2.11.1
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  shared_preferences: ^2.5.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
