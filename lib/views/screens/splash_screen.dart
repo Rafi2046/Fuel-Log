@@ -96,72 +96,63 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 1. Hero Video Player (Entrance Slide & Swoop Animation from outside screen)
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              opacity: (_isVideoInitialized && _videoController.value.isInitialized) ? 1.0 : 0.0,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  height: MediaQuery.of(context).size.height * 0.55,
-                  width: double.infinity,
-                  child: ShaderMask(
-                    shaderCallback: (rect) {
-                      return const RadialGradient(
-                        center: Alignment.center,
-                        radius: 0.82,
-                        colors: [
-                          Colors.black,
-                          Colors.black,
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.60, 1.0],
-                      ).createShader(rect);
-                    },
-                    blendMode: BlendMode.dstIn,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(
-                        width: _videoController.value.isInitialized
-                            ? _videoController.value.size.width
-                            : 300,
-                        height: _videoController.value.isInitialized
-                            ? _videoController.value.size.height
-                            : 300,
-                        child: _videoController.value.isInitialized
-                            ? VideoPlayer(_videoController)
-                            : const SizedBox.shrink(),
-                      ),
+          // 1. Hero Video Player (Clean, fluid entrance from outside the left screen edge)
+          if (_isVideoInitialized && _videoController.value.isInitialized)
+            Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                margin: const EdgeInsets.only(top: 10),
+                height: MediaQuery.of(context).size.height * 0.55,
+                width: double.infinity,
+                child: ShaderMask(
+                  shaderCallback: (rect) {
+                    return const RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.82,
+                      colors: [
+                        Colors.black,
+                        Colors.black,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.60, 1.0],
+                    ).createShader(rect);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: _videoController.value.size.width,
+                      height: _videoController.value.size.height,
+                      child: VideoPlayer(_videoController),
                     ),
                   ),
                 ),
-              )
-                  .animate(target: (_isVideoInitialized && _videoController.value.isInitialized) ? 1 : 0)
-                  .moveY(
-                    begin: -100,
-                    end: 0,
-                    duration: const Duration(milliseconds: 1000),
-                    curve: Curves.easeOutCubic,
-                  )
-                  .moveX(
-                    begin: 40,
-                    end: 0,
-                    duration: const Duration(milliseconds: 1000),
-                    curve: Curves.easeOutCubic,
-                  )
-                  .scale(
-                    begin: const Offset(0.85, 0.85),
-                    end: const Offset(1.0, 1.0),
-                    duration: const Duration(milliseconds: 1000),
-                    curve: Curves.easeOutCubic,
-                  )
-                  .fadeIn(
-                    duration: const Duration(milliseconds: 800),
-                  ),
-            ),
+              ),
+            )
+                .animate()
+                .slideX(
+                  begin: -0.85,
+                  end: 0,
+                  duration: const Duration(milliseconds: 950),
+                  curve: Curves.easeOutCubic,
+                )
+                .slideY(
+                  begin: -0.15,
+                  end: 0,
+                  duration: const Duration(milliseconds: 950),
+                  curve: Curves.easeOutCubic,
+                )
+                .scale(
+                  begin: const Offset(0.8, 0.8),
+                  end: const Offset(1.0, 1.0),
+                  duration: const Duration(milliseconds: 950),
+                  curve: Curves.easeOutCubic,
+                )
+                .fadeIn(
+                  duration: const Duration(milliseconds: 450),
+                  curve: Curves.easeOut,
+                ),
 
             // 2. Smooth Vignette Gradient Overlay dissolving video edges seamlessly
             const DecoratedBox(
