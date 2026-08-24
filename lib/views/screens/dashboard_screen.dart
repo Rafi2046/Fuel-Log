@@ -224,6 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               activeVehicle: activeVehicle,
               onVehicleTap: _openVehicleSwitcher,
               onGarageTap: _openGarage,
+              onFuelStationsTap: () => setState(() => _currentIndex = 1),
             ),
       body: IndexedStack(
         index: _currentIndex,
@@ -235,6 +236,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           : FloatingActionButton(
               onPressed: () => showDashboardQuickActionsSheet(
                 context,
+                onExploreStations: () => setState(() => _currentIndex = 1),
                 onRecordTrip: () {
                   setState(() => _currentIndex = 1);
                   // Open manual entry after switching to Trip.

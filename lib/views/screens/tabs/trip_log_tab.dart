@@ -12,6 +12,8 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/gas_station_service.dart';
 import '../../../core/services/navigation_routing_service.dart';
+import '../../../models/fuel_price_model.dart';
+import '../stations/station_detail_screen.dart';
 import '../../widgets/station_list_modal_sheet.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
 
@@ -23,6 +25,8 @@ class MockGasStation {
   final double rating;
   final LatLng location;
   final String? imageUrl;
+  final double primaryPrice;
+  final StationInfo? stationInfo;
 
   const MockGasStation({
     required this.id,
@@ -32,7 +36,47 @@ class MockGasStation {
     required this.rating,
     required this.location,
     this.imageUrl,
+    this.primaryPrice = 125.00,
+    this.stationInfo,
   });
+
+  StationInfo toStationInfo() {
+    if (stationInfo != null) return stationInfo!;
+    return StationInfo(
+      id: id,
+      name: name,
+      address: distance,
+      location: location,
+      availableCategories: ['G', 'D', 'E', 'CNG', 'LPG'],
+      prices: [
+        StationPriceItem(
+          fuelGradeCode: '95',
+          price: primaryPrice,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+        StationPriceItem(
+          fuelGradeCode: '91',
+          price: primaryPrice - 4,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+        StationPriceItem(
+          fuelGradeCode: 'D',
+          price: 105.00,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 5)),
+        ),
+        StationPriceItem(
+          fuelGradeCode: 'CNG',
+          price: 43.00,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+        StationPriceItem(
+          fuelGradeCode: 'LPG',
+          price: 68.50,
+          lastUpdated: DateTime.now().subtract(const Duration(days: 3)),
+        ),
+      ],
+    );
+  }
 }
 
 const LatLng kDefaultUserLocation = LatLng(23.7925, 90.4078);
@@ -1168,7 +1212,7 @@ class _MapStationMarker extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    station.name.split(' ').first,
+                    '${station.name.split(' ').first} • ৳${station.primaryPrice.toStringAsFixed(0)}',
                     maxLines: 1,
                     softWrap: false,
                     style: AppTextStyles.caption.copyWith(
@@ -1326,7 +1370,7 @@ class _NearbyStationsCarousel extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          'View List',
+                          'View List & Rates',
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
@@ -1345,7 +1389,7 @@ class _NearbyStationsCarousel extends StatelessWidget {
 
         // Horizontal Carousel
         SizedBox(
-          height: 126,
+          height: 132,
           child: PageView.builder(
             controller: controller,
             itemCount: stations.length,
@@ -1359,6 +1403,15 @@ class _NearbyStationsCarousel extends StatelessWidget {
                 isSelected: isSelected,
                 onTap: () => onStationSelected(index),
                 onNavigate: () => onNavigate(station),
+                onViewRates: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => StationDetailScreen(
+                        station: station.toStationInfo(),
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -1374,12 +1427,14 @@ class _StationCarouselCard extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.onNavigate,
+    required this.onViewRates,
   });
 
   final MockGasStation station;
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback onNavigate;
+  final VoidCallback onViewRates;
 
   @override
   Widget build(BuildContext context) {
@@ -1484,7 +1539,7 @@ class _StationCarouselCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Top row: Title & Star Rating
+                      // Top row: Title & Star Rating & Price
                       Row(
                         children: [
                           Expanded(
@@ -1500,24 +1555,13 @@ class _StationCarouselCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                LucideIcons.star,
-                                size: 10.5,
-                                color: Color(0xFFFFB74D),
-                              ),
-                              const SizedBox(width: 2.5),
-                              Text(
-                                station.rating.toString(),
-                                style: AppTextStyles.caption.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 10.5,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '৳${station.primaryPrice.toStringAsFixed(0)}',
+                            style: AppTextStyles.caption.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ],
                       ),
@@ -1533,35 +1577,50 @@ class _StationCarouselCard extends StatelessWidget {
                         ),
                       ),
 
-                      // Bottom row: Distance & Details Indicator
+                      // Bottom row: Distance & Action Buttons (Rates + Navigate)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  LucideIcons.mapPin,
-                                  size: 11.5,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: 3.5),
-                                Expanded(
-                                  child: Text(
-                                    station.distance,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              station.distance,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
+                          // View Rates button
+                          InkWell(
+                            onTap: onViewRates,
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryMuted,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: const Text(
+                                'Rates',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           Material(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(7),

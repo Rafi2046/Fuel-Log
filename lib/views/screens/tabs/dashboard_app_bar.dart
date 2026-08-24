@@ -13,6 +13,7 @@ PreferredSizeWidget buildDashboardAppBar({
   required Vehicle? activeVehicle,
   VoidCallback? onVehicleTap,
   VoidCallback? onGarageTap,
+  VoidCallback? onFuelStationsTap,
 }) {
   switch (currentIndex) {
     case 0:
@@ -111,6 +112,28 @@ PreferredSizeWidget buildDashboardAppBar({
           ),
         ),
         actions: [
+          // Gas Stations & Live Fuel Rates Button
+          Container(
+            width: 38,
+            height: 38,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              tooltip: 'Gas Stations & Prices',
+              iconSize: 18,
+              icon: const Icon(
+                Icons.local_gas_station_rounded,
+                color: AppColors.primary,
+              ),
+              onPressed: onFuelStationsTap,
+            ),
+          ),
+
           // Garage Quick Access Button
           Container(
             width: 38,

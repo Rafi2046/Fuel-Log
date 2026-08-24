@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../screens/stations/station_detail_screen.dart';
 import '../screens/tabs/trip_log_tab.dart';
 import 'trip_manual_entry_sheet.dart';
 
@@ -450,30 +451,58 @@ class _StationListRowItem extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // 3. Selection Check / Arrow Indicator
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.15)
-                        : Colors.transparent,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : const Color(0xFF333342),
+                // 3. Price & Details View Button
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '৳${station.primaryPrice.toStringAsFixed(2)}',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    isSelected
-                        ? LucideIcons.check
-                        : LucideIcons.chevronRight,
-                    size: 14,
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textTertiary,
-                  ),
+                    const SizedBox(height: 3),
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => StationDetailScreen(
+                              station: station.toStationInfo(),
+                            ),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryMuted,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(LucideIcons.info, size: 10, color: AppColors.primary),
+                            SizedBox(width: 3),
+                            Text(
+                              'Rates',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

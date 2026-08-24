@@ -11,6 +11,7 @@ import '../refueling_form_screen.dart';
 Future<void> showDashboardQuickActionsSheet(
   BuildContext context, {
   VoidCallback? onRecordTrip,
+  VoidCallback? onExploreStations,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -24,14 +25,19 @@ Future<void> showDashboardQuickActionsSheet(
     ),
     builder: (context) => _DashboardQuickActionsSheet(
       onRecordTrip: onRecordTrip,
+      onExploreStations: onExploreStations,
     ),
   );
 }
 
 class _DashboardQuickActionsSheet extends StatelessWidget {
-  const _DashboardQuickActionsSheet({this.onRecordTrip});
+  const _DashboardQuickActionsSheet({
+    this.onRecordTrip,
+    this.onExploreStations,
+  });
 
   final VoidCallback? onRecordTrip;
+  final VoidCallback? onExploreStations;
 
   static const Color _tripBlue = Color(0xFF4A9EFF);
   static const Color _costGreen = Color(0xFF2ECC71);
@@ -94,6 +100,17 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
                     ),
                   );
                 });
+              },
+            ),
+            const Divider(color: AppColors.divider, height: 1),
+            _ActionTile(
+              icon: Icons.local_gas_station_rounded,
+              color: AppColors.primary,
+              title: 'Gas Stations & Prices',
+              subtitle: 'Live Bangladesh fuel rates, nearby pumps & map',
+              onTap: () {
+                Navigator.of(context).pop();
+                onExploreStations?.call();
               },
             ),
             const Divider(color: AppColors.divider, height: 1),
