@@ -41,13 +41,16 @@ class AppToggleRow extends StatelessWidget {
               ],
             ),
           ),
-          Switch.adaptive(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.textPrimary,
-            activeTrackColor: AppColors.primary,
-            inactiveThumbColor: AppColors.textSecondary,
-            inactiveTrackColor: AppColors.surface,
+          Transform.scale(
+            scale: 0.75,
+            child: Switch.adaptive(
+              value: value,
+              onChanged: onChanged,
+              activeThumbColor: AppColors.textPrimary,
+              activeTrackColor: AppColors.primary,
+              inactiveThumbColor: AppColors.textSecondary,
+              inactiveTrackColor: AppColors.surface,
+            ),
           ),
         ],
       ),

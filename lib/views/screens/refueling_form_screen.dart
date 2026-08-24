@@ -20,36 +20,101 @@ class RefuelingFormScreen extends ConsumerStatefulWidget {
 
 class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   final _odometerController = TextEditingController();
+  final _tripOdometerController = TextEditingController();
   final _amountController = TextEditingController();
+  final _pricePerUnitController = TextEditingController();
   final _totalCostController = TextEditingController();
   final _noteController = TextEditingController();
-  bool _isFullTank = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _amountController.addListener(_refresh);
-    _totalCostController.addListener(_refresh);
-  }
+  bool _isFullTank = true;
+  bool _isSetupTankLevel = false;
+  double _beforeLevelPercent = 20.0;
+  double _afterLevelPercent = 100.0;
+  bool _isUpdating = false;
 
   @override
   void dispose() {
-    _amountController.removeListener(_refresh);
-    _totalCostController.removeListener(_refresh);
     _odometerController.dispose();
+    _tripOdometerController.dispose();
     _amountController.dispose();
+    _pricePerUnitController.dispose();
     _totalCostController.dispose();
     _noteController.dispose();
     super.dispose();
   }
 
-  void _refresh() => setState(() {});
+  void _onOdometerChanged(double? lastOdo) {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    final total = double.tryParse(_odometerController.text.trim());
+    if (total != null && lastOdo != null && lastOdo > 0) {
+      final trip = total - lastOdo;
+      if (trip >= 0) {
+        _tripOdometerController.text =
+            trip.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+      }
+    }
+    _isUpdating = false;
+  }
 
-  String? get _pricePerUnit {
+  void _onTripOdometerChanged(double? lastOdo) {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    final trip = double.tryParse(_tripOdometerController.text.trim());
+    final baseOdo = lastOdo ?? 0.0;
+    if (trip != null && trip >= 0) {
+      final total = baseOdo + trip;
+      _odometerController.text =
+          total.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+    }
+    _isUpdating = false;
+  }
+
+  void _onAmountChanged() {
+    if (_isUpdating) return;
+    _isUpdating = true;
     final amount = double.tryParse(_amountController.text.trim());
+    final price = double.tryParse(_pricePerUnitController.text.trim());
+    if (amount != null && price != null && amount > 0) {
+      final cost = amount * price;
+      _totalCostController.text = cost.toStringAsFixed(2);
+    }
+    _isUpdating = false;
+  }
+
+  void _onPriceChanged() {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    final amount = double.tryParse(_amountController.text.trim());
+    final price = double.tryParse(_pricePerUnitController.text.trim());
+    if (amount != null && price != null && amount > 0) {
+      final cost = amount * price;
+      _totalCostController.text = cost.toStringAsFixed(2);
+    }
+    _isUpdating = false;
+  }
+
+  void _onTotalCostChanged() {
+    if (_isUpdating) return;
+    _isUpdating = true;
     final cost = double.tryParse(_totalCostController.text.trim());
-    if (amount == null || cost == null || amount <= 0) return null;
-    return (cost / amount).toStringAsFixed(2);
+    final amount = double.tryParse(_amountController.text.trim());
+    if (cost != null && amount != null && amount > 0) {
+      final price = cost / amount;
+      _pricePerUnitController.text = price.toStringAsFixed(2);
+    }
+    _isUpdating = false;
+  }
+
+  void _recalculateFromSliders(double capacity) {
+    final cap = capacity > 0 ? capacity : 50.0;
+    final addedPercent = (_afterLevelPercent - _beforeLevelPercent).clamp(0.0, 100.0);
+    final calculatedLiters = (addedPercent / 100.0) * cap;
+
+    _isUpdating = true;
+    _amountController.text = calculatedLiters.toStringAsFixed(1);
+    _isUpdating = false;
+    _onAmountChanged();
   }
 
   Future<void> _onSave(Vehicle vehicle) async {
@@ -105,7 +170,11 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   @override
   Widget build(BuildContext context) {
     final activeAsync = ref.watch(activeVehicleProvider);
+    final logsAsync = ref.watch(vehicleLogsProvider);
     final isSaving = ref.watch(fuelLogProvider).isLoading;
+
+    final logs = logsAsync.valueOrNull ?? [];
+    final lastOdometer = logs.isNotEmpty ? logs.first.odometer : null;
 
     return AppScaffold(
       title: 'Refueling',
@@ -119,19 +188,55 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
               child: Text('No vehicle found. Add a vehicle first.'),
             );
           }
+
           return Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   child: RefuelingFormFields(
                     vehicle: vehicle,
                     odometerController: _odometerController,
+                    tripOdometerController: _tripOdometerController,
                     amountController: _amountController,
+                    pricePerUnitController: _pricePerUnitController,
                     totalCostController: _totalCostController,
                     noteController: _noteController,
+                    lastOdometer: lastOdometer,
                     isFullTank: _isFullTank,
-                    onFullTankChanged: (v) => setState(() => _isFullTank = v),
-                    pricePerUnit: _pricePerUnit,
+                    isSetupTankLevel: _isSetupTankLevel,
+                    beforeLevelPercent: _beforeLevelPercent,
+                    afterLevelPercent: _afterLevelPercent,
+                    onOdometerChanged: () => _onOdometerChanged(lastOdometer),
+                    onTripOdometerChanged: () => _onTripOdometerChanged(lastOdometer),
+                    onAmountChanged: _onAmountChanged,
+                    onPriceChanged: _onPriceChanged,
+                    onTotalCostChanged: _onTotalCostChanged,
+                    onFullTankChanged: (val) {
+                      setState(() {
+                        _isFullTank = val;
+                        if (val) {
+                          _isSetupTankLevel = false;
+                          _afterLevelPercent = 100.0;
+                        }
+                      });
+                    },
+                    onSetupTankLevelChanged: (val) {
+                      setState(() {
+                        _isSetupTankLevel = val;
+                        if (val) {
+                          _recalculateFromSliders(vehicle.capacity);
+                        }
+                      });
+                    },
+                    onBeforeLevelChanged: (val) {
+                      setState(() => _beforeLevelPercent = val);
+                      _recalculateFromSliders(vehicle.capacity);
+                    },
+                    onAfterLevelChanged: (val) {
+                      setState(() => _afterLevelPercent = val);
+                      _recalculateFromSliders(vehicle.capacity);
+                    },
                   ),
                 ),
               ),

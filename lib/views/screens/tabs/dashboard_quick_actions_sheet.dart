@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../mileage/mileage_log_screen.dart';
 import '../refueling_form_screen.dart';
 
 /// Contextual quick actions from the center FAB (no grid menu).
@@ -13,6 +14,7 @@ Future<void> showDashboardQuickActionsSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    isScrollControlled: true,
     backgroundColor: AppColors.card,
     elevation: 8,
     shape: const RoundedRectangleBorder(
@@ -52,14 +54,15 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Center(
               child: Container(
                 width: 40,
@@ -82,12 +85,33 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
               title: 'actionRefueling'.tr(),
               subtitle: 'actionRefuelingSubtitle'.tr(),
               onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RefuelingFormScreen(),
-                  ),
-                );
+                final nav = Navigator.of(context);
+                nav.pop();
+                Future.microtask(() {
+                  nav.push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const RefuelingFormScreen(),
+                    ),
+                  );
+                });
+              },
+            ),
+            const Divider(color: AppColors.divider, height: 1),
+            _ActionTile(
+              icon: Icons.speed_rounded,
+              color: AppColors.secondary,
+              title: 'Mileage Log',
+              subtitle: 'View average consumption & distance stats',
+              onTap: () {
+                final nav = Navigator.of(context);
+                nav.pop();
+                Future.microtask(() {
+                  nav.push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MileageLogScreen(),
+                    ),
+                  );
+                });
               },
             ),
             const Divider(color: AppColors.divider, height: 1),
@@ -121,8 +145,9 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _ActionTile extends StatelessWidget {
