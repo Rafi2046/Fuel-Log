@@ -13,7 +13,7 @@ class GasStationService {
   /// Fetches real nearby gas stations for ANY location in Bangladesh or worldwide
   Future<List<MockGasStation>> getNearbyStations({
     required LatLng center,
-    double radiusMeters = 5000,
+    double radiusMeters = 8000,
   }) async {
     // 1. Try fetching live real-world stations from OpenStreetMap Overpass API (Fast, Free, No API Key needed)
     try {
@@ -29,17 +29,19 @@ class GasStationService {
     return _generateRegionalStations(center);
   }
 
-  /// Queries OpenStreetMap Overpass API for real fuel stations
+  /// Queries OpenStreetMap Overpass API for real fuel stations (nodes, ways, and relations)
   Future<List<MockGasStation>> _fetchFromOverpass(
     LatLng center,
     double radiusMeters,
   ) async {
     final query = '''
-[out:json][timeout:3];
+[out:json][timeout:5];
 (
   node["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
+  way["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
+  relation["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
 );
-out body 6;
+out center 30;
 ''';
 
     final url = Uri.parse(
@@ -47,7 +49,7 @@ out body 6;
     );
 
     final response = await http.get(url).timeout(
-      const Duration(milliseconds: 2800),
+      const Duration(milliseconds: 6000),
     );
 
     if (response.statusCode != 200) return [];
@@ -59,13 +61,21 @@ out body 6;
 
     final stations = <MockGasStation>[];
 
-    for (var i = 0; i < elements.length && i < 6; i++) {
+    for (var i = 0; i < elements.length && i < 25; i++) {
       final el = elements[i] as Map<String, dynamic>;
-      final lat = (el['lat'] as num?)?.toDouble() ?? center.latitude;
-      final lon = (el['lon'] as num?)?.toDouble() ?? center.longitude;
+      final lat = (el['lat'] as num?)?.toDouble() ??
+          (el['center']?['lat'] as num?)?.toDouble() ??
+          center.latitude;
+      final lon = (el['lon'] as num?)?.toDouble() ??
+          (el['center']?['lon'] as num?)?.toDouble() ??
+          center.longitude;
       final tags = (el['tags'] as Map<String, dynamic>?) ?? {};
 
-      final name = tags['name'] ?? tags['brand'] ?? 'Filling Station';
+      final rawName = tags['name'] ?? tags['brand'] ?? tags['operator'];
+      final name = rawName != null && rawName.toString().trim().isNotEmpty
+          ? rawName.toString()
+          : 'Filling Station';
+
       final stationLoc = LatLng(lat, lon);
       final distMeters =
           _distanceCalc.as(LengthUnit.Meter, center, stationLoc);
@@ -85,15 +95,21 @@ out body 6;
       stations.add(
         MockGasStation(
           id: el['id']?.toString() ?? 'osm_$i',
-          name: name.toString(),
+          name: name,
           distance: distStr,
           fuelTypes: fuels,
-          rating: (4.4 + (i % 5) * 0.1).clamp(4.0, 5.0),
+          rating: (4.2 + (i % 8) * 0.1).clamp(4.0, 5.0),
           location: stationLoc,
           imageUrl: imagePath,
         ),
       );
     }
+
+    stations.sort((a, b) {
+      final distA = _distanceCalc.as(LengthUnit.Meter, center, a.location);
+      final distB = _distanceCalc.as(LengthUnit.Meter, center, b.location);
+      return distA.compareTo(distB);
+    });
 
     return stations;
   }
@@ -151,6 +167,15 @@ out body 6;
           rating: 4.9,
           image: 'assets/images/station_clean_fuel.jpg',
         ),
+        _StationTemplate(
+          latOffset: 0.0062,
+          lngOffset: 0.0051,
+          name: 'Jamuna Oil Service Station',
+          area: 'Sholashahar Gate 2',
+          fuels: 'Octane • Petrol • Diesel',
+          rating: 4.6,
+          image: 'assets/images/station_trust.jpg',
+        ),
       ];
     } else if (isSylhet) {
       templates = const [
@@ -180,6 +205,15 @@ out body 6;
           fuels: 'Diesel • Octane • CNG',
           rating: 4.8,
           image: 'assets/images/station_meghna.jpg',
+        ),
+        _StationTemplate(
+          latOffset: -0.0052,
+          lngOffset: 0.0061,
+          name: 'Greenland CNG & Filling',
+          area: 'Subidbazar Main Rd',
+          fuels: 'Octane • CNG • Petrol',
+          rating: 4.6,
+          image: 'assets/images/station_clean_fuel.jpg',
         ),
       ];
     } else {
@@ -220,6 +254,78 @@ out body 6;
           fuels: 'Octane • Diesel • LPG',
           rating: 4.7,
           image: 'assets/images/station_meghna.jpg',
+        ),
+        _StationTemplate(
+          latOffset: 0.0061,
+          lngOffset: 0.0038,
+          name: 'CSD Filling Station',
+          area: 'Shaheed Sharani',
+          fuels: 'Octane • Petrol • Diesel',
+          rating: 4.8,
+          image: 'assets/images/station_city_express.jpg',
+        ),
+        _StationTemplate(
+          latOffset: 0.0022,
+          lngOffset: 0.0065,
+          name: 'Gulshan Service Station',
+          area: 'Bir Uttam AK Khandakar Rd',
+          fuels: 'Octane • Petrol',
+          rating: 4.7,
+          image: 'assets/images/station_navana.jpg',
+        ),
+        _StationTemplate(
+          latOffset: -0.0051,
+          lngOffset: 0.0032,
+          name: 'Clean Fuel Filling Station Ltd',
+          area: 'Shaheed Tajuddin Ahmed Ave',
+          fuels: 'Octane • Diesel • CNG',
+          rating: 4.9,
+          image: 'assets/images/station_clean_fuel.jpg',
+        ),
+        _StationTemplate(
+          latOffset: -0.0042,
+          lngOffset: -0.0055,
+          name: 'TASHOFA Filling Station',
+          area: 'Mohakhali Tajuddin Ahmed Ave',
+          fuels: 'Octane • Diesel',
+          rating: 4.6,
+          image: 'assets/images/station_trust.jpg',
+        ),
+        _StationTemplate(
+          latOffset: 0.0075,
+          lngOffset: -0.0021,
+          name: 'Diganta Filling Station',
+          area: 'Mirpur Road',
+          fuels: 'Octane • Petrol • CNG',
+          rating: 4.5,
+          image: 'assets/images/station_padma.jpg',
+        ),
+        _StationTemplate(
+          latOffset: -0.0065,
+          lngOffset: 0.0062,
+          name: 'M/s Eureka-Nitol CNG Station',
+          area: 'Ziaur Rahman Rd',
+          fuels: 'CNG • Octane • Diesel',
+          rating: 4.8,
+          image: 'assets/images/station_meghna.jpg',
+        ),
+        _StationTemplate(
+          latOffset: 0.0018,
+          lngOffset: -0.0072,
+          name: 'Royal Filling Station',
+          area: 'Shaheed Tajuddin Ahmed Sarani',
+          fuels: 'Octane • Petrol • CNG',
+          rating: 4.7,
+          image: 'assets/images/station_city_express.jpg',
+        ),
+        _StationTemplate(
+          latOffset: -0.0078,
+          lngOffset: -0.0031,
+          name: 'Ideal Filling Station',
+          area: 'Bir Uttam Mir Shawkat Sarak',
+          fuels: 'Octane • Diesel',
+          rating: 4.6,
+          image: 'assets/images/station_trust.jpg',
         ),
       ];
     }
