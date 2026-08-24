@@ -39,7 +39,10 @@ class AppStartupGate extends ConsumerWidget {
             ? const VehicleSetupScreen()
             : const DashboardScreen();
 
-        return SplashScreen(next: targetScreen);
+        return SplashScreen(
+          next: targetScreen,
+          autoNavigate: vehicles.isNotEmpty,
+        );
       },
     );
   }

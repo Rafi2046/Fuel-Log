@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:video_player/video_player.dart';
@@ -10,9 +12,16 @@ import '../widgets/app_outline_button.dart';
 import '../widgets/outline_headline.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key, required this.next});
+  const SplashScreen({
+    super.key,
+    required this.next,
+    this.autoNavigate = true,
+    this.splashDuration = const Duration(milliseconds: 2600),
+  });
 
   final Widget next;
+  final bool autoNavigate;
+  final Duration splashDuration;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -21,11 +30,21 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _videoController;
   bool _isVideoInitialized = false;
+  Timer? _autoNavigateTimer;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
     _initVideoPlayer();
+
+    if (widget.autoNavigate) {
+      _autoNavigateTimer = Timer(widget.splashDuration, () {
+        if (mounted && !_hasNavigated) {
+          _continue(context);
+        }
+      });
+    }
   }
 
   Future<void> _initVideoPlayer() async {
@@ -40,17 +59,22 @@ class _SplashScreenState extends State<SplashScreen> {
         _isVideoInitialized = true;
       });
     } catch (_) {
-      // Fallback gracefully to hero image if video fails to load
+      // Fallback gracefully if video fails to load
     }
   }
 
   @override
   void dispose() {
+    _autoNavigateTimer?.cancel();
     _videoController.dispose();
     super.dispose();
   }
 
   void _continue(BuildContext context) {
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+    _autoNavigateTimer?.cancel();
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
         transitionDuration: AppMotion.slow,
@@ -65,105 +89,160 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background WebM Video Player or Fallback Image
-          if (_isVideoInitialized && _videoController.value.isInitialized)
-            FittedBox(
-              fit: BoxFit.fitWidth,
-              clipBehavior: Clip.hardEdge,
-              child: SizedBox(
-                width: _videoController.value.size.width,
-                height: _videoController.value.size.height,
-                child: VideoPlayer(_videoController),
-              ),
-            )
-          else
-            Image.asset(
-              AppImages.onboardingHero,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-
-          // Gradient Overlay to ensure premium dark styling & crisp text readability
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x22121212),
-                  Color(0xB3121212),
-                  AppColors.background,
-                  AppColors.background,
-                ],
-                stops: [0.0, 0.35, 0.65, 1.0],
-              ),
-            ),
-          ),
-
-          // Foreground Content
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                AppSpacing.md,
-                AppSpacing.screenPadding,
-                AppSpacing.lg,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Spacer(flex: 5),
-                  const OutlineHeadline(accent: 'Track ', outline: '& Save')
-                      .animate()
-                      .fadeIn(duration: AppMotion.slow, curve: AppMotion.entrance)
-                      .moveY(
-                        begin: 18,
-                        end: 0,
-                        duration: AppMotion.slow,
-                        curve: AppMotion.entrance,
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTap: () => _continue(context),
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 1. Hero Video Player (Entrance Slide & Swoop Animation from outside screen)
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              opacity: (_isVideoInitialized && _videoController.value.isInitialized) ? 1.0 : 0.0,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  height: MediaQuery.of(context).size.height * 0.55,
+                  width: double.infinity,
+                  child: ShaderMask(
+                    shaderCallback: (rect) {
+                      return const RadialGradient(
+                        center: Alignment.center,
+                        radius: 0.82,
+                        colors: [
+                          Colors.black,
+                          Colors.black,
+                          Colors.transparent,
+                        ],
+                        stops: [0.0, 0.60, 1.0],
+                      ).createShader(rect);
+                    },
+                    blendMode: BlendMode.dstIn,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: _videoController.value.isInitialized
+                            ? _videoController.value.size.width
+                            : 300,
+                        height: _videoController.value.isInitialized
+                            ? _videoController.value.size.height
+                            : 300,
+                        child: _videoController.value.isInitialized
+                            ? VideoPlayer(_videoController)
+                            : const SizedBox.shrink(),
                       ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'Log fuel, watch mileage, and keep every trip offline.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.45,
-                        ),
-                  )
-                      .animate()
-                      .fadeIn(
-                        delay: AppMotion.fast,
-                        duration: AppMotion.normal,
-                      ),
-                  const Spacer(),
-                  Row(
-                    children: const [
-                      _Dot(active: true),
-                      SizedBox(width: 6),
-                      _Dot(active: false),
-                      SizedBox(width: 6),
-                      _Dot(active: false),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AppOutlineButton(
-                    label: 'Get Started',
-                    onPressed: () => _continue(context),
+                ),
+              )
+                  .animate(target: (_isVideoInitialized && _videoController.value.isInitialized) ? 1 : 0)
+                  .moveY(
+                    begin: -100,
+                    end: 0,
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
                   )
-                      .animate()
-                      .fadeIn(
-                        delay: AppMotion.normal,
-                        duration: AppMotion.normal,
-                      ),
-                ],
+                  .moveX(
+                    begin: 40,
+                    end: 0,
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
+                  )
+                  .scale(
+                    begin: const Offset(0.85, 0.85),
+                    end: const Offset(1.0, 1.0),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
+                  )
+                  .fadeIn(
+                    duration: const Duration(milliseconds: 800),
+                  ),
+            ),
+
+            // 2. Smooth Vignette Gradient Overlay dissolving video edges seamlessly
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black87,
+                    Colors.black,
+                  ],
+                  stops: [0.0, 0.45, 0.72, 1.0],
+                ),
               ),
             ),
-          ),
-        ],
+
+            // Foreground Content
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.md,
+                  AppSpacing.screenPadding,
+                  AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Spacer(flex: 5),
+                    const OutlineHeadline(accent: 'Track ', outline: '& Save')
+                        .animate()
+                        .fadeIn(duration: AppMotion.slow, curve: AppMotion.entrance)
+                        .moveY(
+                          begin: 18,
+                          end: 0,
+                          duration: AppMotion.slow,
+                          curve: AppMotion.entrance,
+                        ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Log fuel, watch mileage, and keep every trip offline.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            height: 1.45,
+                          ),
+                    )
+                        .animate()
+                        .fadeIn(
+                          delay: AppMotion.fast,
+                          duration: AppMotion.normal,
+                        ),
+                    const Spacer(),
+                    if (!widget.autoNavigate) ...[
+                      Row(
+                        children: const [
+                          _Dot(active: true),
+                          SizedBox(width: 6),
+                          _Dot(active: false),
+                          SizedBox(width: 6),
+                          _Dot(active: false),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      AppOutlineButton(
+                        label: 'Get Started',
+                        onPressed: () => _continue(context),
+                      )
+                          .animate()
+                          .fadeIn(
+                            delay: AppMotion.normal,
+                            duration: AppMotion.normal,
+                          ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
