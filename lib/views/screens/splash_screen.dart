@@ -96,37 +96,16 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-          // 1. Hero Video Player (Clean, fluid entrance from outside the left screen edge)
+          // 1. Full Screen Video Background (100% Full Screen, No Half-Screen Boundaries)
           if (_isVideoInitialized && _videoController.value.isInitialized)
-            Align(
-              alignment: Alignment.topCenter,
-              child: Container(
-                margin: const EdgeInsets.only(top: 10),
-                height: MediaQuery.of(context).size.height * 0.55,
-                width: double.infinity,
-                child: ShaderMask(
-                  shaderCallback: (rect) {
-                    return const RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.82,
-                      colors: [
-                        Colors.black,
-                        Colors.black,
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.60, 1.0],
-                    ).createShader(rect);
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: _videoController.value.size.width,
-                      height: _videoController.value.size.height,
-                      child: VideoPlayer(_videoController),
-                    ),
-                  ),
+            SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: _videoController.value.size.width,
+                  height: _videoController.value.size.height,
+                  child: VideoPlayer(_videoController),
                 ),
               ),
             )
@@ -154,22 +133,22 @@ class _SplashScreenState extends State<SplashScreen> {
                   curve: Curves.easeOut,
                 ),
 
-            // 2. Smooth Vignette Gradient Overlay dissolving video edges seamlessly
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.transparent,
-                    Colors.black87,
-                    Colors.black,
-                  ],
-                  stops: [0.0, 0.45, 0.72, 1.0],
-                ),
+          // 2. Smooth Full Screen Dark Gradient Overlay for text readability
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Color(0x33000000),
+                  Color(0xDD000000),
+                  Colors.black,
+                ],
+                stops: [0.0, 0.45, 0.72, 1.0],
               ),
             ),
+          ),
 
             // Foreground Content
             SafeArea(
