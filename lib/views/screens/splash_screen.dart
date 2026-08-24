@@ -42,6 +42,7 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<Offset> _dotsSlideAnimation;
   late final Animation<double> _buttonFadeAnimation;
   late final Animation<Offset> _buttonSlideAnimation;
+  late final Animation<double> _videoScaleAnimation;
 
   Timer? _autoNavigateTimer;
   bool _hasNavigated = false;
@@ -57,8 +58,18 @@ class _SplashScreenState extends State<SplashScreen>
 
     _videoFadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      // Slow, luxurious 2.2s fade — premium feel (Apple Music / Spotify style)
+      duration: const Duration(milliseconds: 2200),
     );
+
+    // Subtle Ken Burns settle: video starts 6% larger and gently zooms to 1.0
+    _videoScaleAnimation = Tween<double>(
+      begin: 1.06,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _videoFadeController,
+      curve: Curves.easeOutCubic,
+    ));
 
     _textFadeAnimation = CurvedAnimation(
       parent: _entranceController,
@@ -129,12 +140,27 @@ class _SplashScreenState extends State<SplashScreen>
       await controller.setVolume(0.0);
       await controller.play();
 
-      if (mounted) {
-        _videoFadeController.forward();
-        setState(() {});
+      // Wait for the first actual rendered frame — not just "initialized".
+      // This eliminates the black flash that happens when animation starts
+      // before the GPU has decoded the first video frame.
+      void onFirstFrame() {
+        if (!mounted) return;
+        if (controller.value.isPlaying &&
+            controller.value.position > Duration.zero) {
+          controller.removeListener(onFirstFrame);
+          // Tiny extra buffer so the frame is composited on-screen
+          Future.delayed(const Duration(milliseconds: 80), () {
+            if (mounted) {
+              setState(() {});
+              _videoFadeController.forward();
+            }
+          });
+        }
       }
+
+      controller.addListener(onFirstFrame);
     } catch (_) {
-      // Fallback gracefully to poster image
+      // Fallback gracefully to dark background
     }
   }
 
@@ -199,28 +225,21 @@ class _SplashScreenState extends State<SplashScreen>
           // Layer 1: Solid Base Background
           const ColoredBox(color: Color(0xFF121212)),
 
-          // Layer 2: High-resolution static poster (instant while video decodes)
-          Positioned.fill(
-            child: Image.asset(
-              AppImages.onboardingHero,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              errorBuilder: (context, error, _) => const SizedBox.shrink(),
-            ),
-          ),
-
-          // Layer 3: Video Player with smooth 1000ms GPU crossfade
+          // Layer 2: Video — slow fade + subtle scale settle (Ken Burns)
           if (_videoController != null && _videoController!.value.isInitialized)
             Positioned.fill(
               child: FadeTransition(
                 opacity: _videoFadeController,
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: _videoController!.value.size.width,
-                    height: _videoController!.value.size.height,
-                    child: VideoPlayer(_videoController!),
+                child: ScaleTransition(
+                  scale: _videoScaleAnimation,
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: _videoController!.value.size.width,
+                      height: _videoController!.value.size.height,
+                      child: VideoPlayer(_videoController!),
+                    ),
                   ),
                 ),
               ),
