@@ -10,6 +10,7 @@ import '../../../core/utils/app_formatters.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../reports/reports_screen.dart';
 import '../../widgets/advanced_efficiency_chart.dart';
 import '../../widgets/analytics_carousel.dart';
 import '../../widgets/cost_per_km_chart.dart';
@@ -50,12 +51,36 @@ class _StatsTabState extends ConsumerState<StatsTab> {
           ),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+          data: ThemeData.dark().copyWith(
+            scaffoldBackgroundColor: const Color(0xFF12121A),
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1E2A),
+              secondary: AppColors.primary,
+              onSecondary: Colors.white,
+              secondaryContainer: AppColors.primary.withValues(alpha: 0.25),
+              onSecondaryContainer: Colors.white,
+              surface: const Color(0xFF1E1E2C),
               onSurface: AppColors.textPrimary,
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: const Color(0xFF12121A),
+              headerBackgroundColor: const Color(0xFF1A1A26),
+              headerForegroundColor: AppColors.textPrimary,
+              rangePickerBackgroundColor: const Color(0xFF12121A),
+              rangePickerHeaderBackgroundColor: const Color(0xFF1A1A26),
+              rangePickerHeaderForegroundColor: AppColors.textPrimary,
+              rangeSelectionBackgroundColor:
+                  AppColors.primary.withValues(alpha: 0.25),
+              rangeSelectionOverlayColor: WidgetStateProperty.all(
+                  AppColors.primary.withValues(alpha: 0.3)),
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.white;
+                }
+                return AppColors.textPrimary;
+              }),
+              dayStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           child: child!,
@@ -145,12 +170,44 @@ class _StatsTabState extends ConsumerState<StatsTab> {
               const Icon(Icons.analytics_rounded,
                   size: 20, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(
-                'Advanced Metric Explorer',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Advanced Metric Explorer',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => ReportsScreen.open(context),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.description_rounded,
+                          size: 14, color: AppColors.primary),
+                      SizedBox(width: 4),
+                      Text(
+                        'Report',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

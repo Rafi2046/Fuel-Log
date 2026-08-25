@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_locales.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../reports/reports_screen.dart';
 
 /// Settings tab with natural, clean layout and Lucide icons.
 class SettingsTab extends StatefulWidget {
@@ -259,6 +260,12 @@ class _SettingsTabState extends State<SettingsTab> {
         _SettingsGroup(
           title: 'dataStorage'.tr(),
           children: [
+            _SettingsTile(
+              icon: LucideIcons.fileText,
+              title: 'Create Vehicle Report',
+              subtitle: 'Export PDF & CSV history for buyer or tax',
+              onTap: () => ReportsScreen.open(context),
+            ),
             _SettingsTile(
               icon: LucideIcons.fileDown,
               title: 'exportData'.tr(),

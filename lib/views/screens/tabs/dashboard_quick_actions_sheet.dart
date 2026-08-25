@@ -10,6 +10,7 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../mileage/mileage_log_screen.dart';
 import '../refueling_form_screen.dart';
 import '../reminders/reminders_screen.dart';
+import '../reports/reports_screen.dart';
 import '../services/widgets/add_cost_service_sheet.dart';
 
 /// Contextual quick actions from the center FAB (no grid menu).
@@ -166,6 +167,17 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
                     builder: (_) => const RemindersScreen(),
                   ),
                 );
+              },
+            ),
+            const Divider(color: AppColors.divider, height: 1),
+            _ActionTile(
+              icon: Icons.description_outlined,
+              color: const Color(0xFF38BDF8),
+              title: 'Create Report',
+              subtitle: 'Generate free PDF & CSV history report',
+              onTap: () {
+                Navigator.of(context).pop();
+                ReportsScreen.open(context);
               },
             ),
             const SizedBox(height: AppSpacing.sm),

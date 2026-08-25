@@ -1,0 +1,137 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../../models/vehicle_report_model.dart';
+import '../database/app_database.dart';
+import '../utils/app_formatters.dart';
+
+class ReportGeneratorService {
+  static final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+  static final DateFormat _dateTimeFormat = DateFormat('yyyy-MM-dd HH:mm');
+
+  static VehicleReportData generateReport({
+    required VehicleReportType type,
+    required Vehicle activeVehicle,
+    required List<FuelLog> fuelLogs,
+    required List<ServiceLog> serviceLogs,
+    DateTimeRange? dateRange,
+  }) {
+    final now = DateTime.now();
+    final startDate = dateRange?.start ??
+        (fuelLogs.isNotEmpty
+            ? fuelLogs.last.date
+            : now.subtract(const Duration(days: 365)));
+    final endDate = dateRange?.end ?? now;
+
+    final filteredFuel = fuelLogs.where((log) {
+      return (log.date.isAfter(startDate) ||
+              log.date.isAtSameMomentAs(startDate)) &&
+          (log.date.isBefore(endDate.add(const Duration(days: 1))));
+    }).toList();
+
+    final filteredService = serviceLogs.where((log) {
+      return (log.date.isAfter(startDate) ||
+              log.date.isAtSameMomentAs(startDate)) &&
+          (log.date.isBefore(endDate.add(const Duration(days: 1))));
+    }).toList();
+
+    final totalFuelSpend = filteredFuel.fold(0.0, (s, l) => s + l.cost);
+    final totalServiceSpend = filteredService.fold(0.0, (s, l) => s + l.cost);
+    final grandTotal = totalFuelSpend + totalServiceSpend;
+
+    double totalDistanceKm = 0.0;
+    if (filteredFuel.length >= 2) {
+      final sorted = List<FuelLog>.from(filteredFuel)
+        ..sort((a, b) => a.date.compareTo(b.date));
+      totalDistanceKm = sorted.last.odometer - sorted.first.odometer;
+    } else if (filteredFuel.isNotEmpty) {
+      totalDistanceKm = filteredFuel.first.odometer;
+    }
+
+    final avgCostPerKm =
+        totalDistanceKm > 0 ? (grandTotal / totalDistanceKm) : 0.0;
+
+    // Average efficiency
+    double totalLitres = filteredFuel.fold(0.0, (s, l) => s + l.amount);
+    final avgEfficiency =
+        totalLitres > 0 ? (totalDistanceKm / totalLitres) : 0.0;
+
+    final vehicleModelText =
+        activeVehicle.model != null && activeVehicle.model!.isNotEmpty
+            ? activeVehicle.model!
+            : activeVehicle.type;
+
+    // CSV Generation
+    final StringBuffer csv = StringBuffer();
+    csv.writeln('FUEL LOG REPORT - ${type.title.toUpperCase()}');
+    csv.writeln('Vehicle,${activeVehicle.name}');
+    csv.writeln('Type/Model,$vehicleModelText');
+    csv.writeln(
+        'Period,${_dateFormat.format(startDate)} to ${_dateFormat.format(endDate)}');
+    csv.writeln('Generated Date,${_dateTimeFormat.format(now)}');
+    csv.writeln('');
+    csv.writeln('--- SUMMARY METRICS ---');
+    csv.writeln('Total Fuel Spend,${AppCurrency.format(totalFuelSpend)}');
+    csv.writeln('Total Service Spend,${AppCurrency.format(totalServiceSpend)}');
+    csv.writeln('Grand Total Spend,${AppCurrency.format(grandTotal)}');
+    csv.writeln('Total Distance,${totalDistanceKm.toStringAsFixed(1)} km');
+    csv.writeln('Cost Per KM,${AppCurrency.format(avgCostPerKm)} / km');
+    csv.writeln('Average Efficiency,${avgEfficiency.toStringAsFixed(2)} km/L');
+    csv.writeln('');
+    csv.writeln('--- REFUELING LOGS ---');
+    csv.writeln(
+        'Date,Odometer (km),Amount (L/kWh),Cost,Price/Unit,Full Tank,Note');
+    for (final l in filteredFuel) {
+      final unitPrice = l.amount > 0 ? (l.cost / l.amount) : 0.0;
+      csv.writeln(
+        '${_dateFormat.format(l.date)},${l.odometer},${l.amount},${l.cost},${unitPrice.toStringAsFixed(2)},${l.isFullTank},"${l.note ?? ''}"',
+      );
+    }
+    csv.writeln('');
+    csv.writeln('--- SERVICE & MAINTENANCE LOGS ---');
+    csv.writeln('Date,Category,Title,Cost,Odometer (km),Note');
+    for (final s in filteredService) {
+      csv.writeln(
+        '${_dateFormat.format(s.date)},"${s.category}","${s.title}",${s.cost},${s.odometer ?? 0},"${s.note ?? ''}"',
+      );
+    }
+
+    // Text Summary Report
+    final StringBuffer textReport = StringBuffer();
+    textReport.writeln('📋 ${type.title.toUpperCase()}');
+    textReport.writeln(
+        '🚗 Vehicle: ${activeVehicle.name} ($vehicleModelText)');
+    textReport.writeln(
+        '📅 Period: ${_dateFormat.format(startDate)} - ${_dateFormat.format(endDate)}');
+    textReport.writeln('──────────────────────────────');
+    textReport.writeln('💰 Total Spend: ${AppCurrency.format(grandTotal)}');
+    textReport.writeln(
+        '⛽ Fuel Cost: ${AppCurrency.format(totalFuelSpend)} (${filteredFuel.length} fill-ups)');
+    textReport.writeln(
+        '🛠️ Service Cost: ${AppCurrency.format(totalServiceSpend)} (${filteredService.length} services)');
+    textReport.writeln('dt Distance: ${totalDistanceKm.toStringAsFixed(0)} km');
+    textReport.writeln('📊 Cost/km: ${AppCurrency.format(avgCostPerKm)} / km');
+    textReport.writeln(
+        '🚀 Avg Mileage: ${avgEfficiency.toStringAsFixed(1)} km/L');
+    textReport.writeln('──────────────────────────────');
+    textReport.writeln('Generated via Fuel-Log App on ${_dateFormat.format(now)}');
+
+    return VehicleReportData(
+      type: type,
+      vehicleName: activeVehicle.name,
+      licensePlate: vehicleModelText,
+      dateGenerated: now,
+      startDate: startDate,
+      endDate: endDate,
+      totalFuelSpend: totalFuelSpend,
+      totalServiceSpend: totalServiceSpend,
+      totalDistanceKm: totalDistanceKm,
+      avgEfficiency: avgEfficiency,
+      avgCostPerKm: avgCostPerKm,
+      fuelLogCount: filteredFuel.length,
+      serviceLogCount: filteredService.length,
+      rawCsvData: csv.toString(),
+      formattedTextReport: textReport.toString(),
+    );
+  }
+}
