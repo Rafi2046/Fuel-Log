@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/database/app_database.dart';
+import '../core/utils/notification_service.dart';
 import 'vehicle_viewmodel.dart';
 
 /// Fuel / charge logs for the active vehicle (newest first).
@@ -43,6 +44,22 @@ class FuelLogViewModel extends StateNotifier<AsyncValue<void>> {
               : Value(note),
         ),
       );
+
+      // Fetch incomplete reminders for active vehicle to check odometer triggers
+      final incompleteReminders =
+          await _db.getIncompleteRemindersForVehicle(vehicleId);
+      for (final reminder in incompleteReminders) {
+        if (reminder.targetOdometer != null &&
+            odometer >= (reminder.targetOdometer! - 100)) {
+          await NotificationService().showNotification(
+            id: reminder.id,
+            title: 'Maintenance Due Soon: ${reminder.title}',
+            body:
+                'Vehicle odometer reached ${odometer.toStringAsFixed(0)} km (Target: ${reminder.targetOdometer!.toStringAsFixed(0)} km).',
+          );
+        }
+      }
+
       state = const AsyncData(null);
       return true;
     } catch (error, stackTrace) {

@@ -8,11 +8,13 @@ import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
 import 'core/constants/app_locales.dart';
 import 'core/constants/app_themes.dart';
+import 'core/utils/notification_service.dart';
 import 'views/screens/app_startup_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+  await NotificationService().init();
 
   // Ensure the sqlite3_flutter_libs plugin is registered / linked.
   if (Platform.isAndroid) {

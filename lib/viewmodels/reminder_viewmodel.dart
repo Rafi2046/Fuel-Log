@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/services/reminder_repository.dart';
+import '../core/database/app_database.dart';
 import '../models/reminder_model.dart';
 import 'fuel_log_viewmodel.dart';
 import 'vehicle_viewmodel.dart';
@@ -79,14 +79,53 @@ class RemindersState {
   }
 }
 
-/// StateNotifier managing vehicle reminders
+/// StateNotifier managing vehicle reminders backed by Drift AppDatabase
 class RemindersNotifier extends StateNotifier<RemindersState> {
   RemindersNotifier(this.ref) : super(const RemindersState()) {
     loadReminders();
   }
 
   final Ref ref;
-  final _repo = ReminderRepository.instance;
+
+  ServiceType _mapServiceType(String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('oil')) return ServiceType.engineOil;
+    if (lower.contains('tire') || lower.contains('tyre')) {
+      return ServiceType.tireRotation;
+    }
+    if (lower.contains('air') || lower.contains('filter')) {
+      return ServiceType.airFilter;
+    }
+    if (lower.contains('brake')) return ServiceType.brakeFluid;
+    if (lower.contains('spark') || lower.contains('plug')) {
+      return ServiceType.sparkPlug;
+    }
+    if (lower.contains('coolant') || lower.contains('radiator')) {
+      return ServiceType.coolant;
+    }
+    if (lower.contains('battery')) return ServiceType.battery;
+    if (lower.contains('tax') || lower.contains('token')) {
+      return ServiceType.taxToken;
+    }
+    if (lower.contains('insurance')) return ServiceType.insurance;
+    if (lower.contains('service')) return ServiceType.generalService;
+    return ServiceType.custom;
+  }
+
+  ServiceReminder _mapDriftToModel(Reminder r, double currentOdo) {
+    final serviceType = _mapServiceType(r.title);
+    return ServiceReminder(
+      id: r.id.toString(),
+      vehicleId: r.vehicleId,
+      title: r.title,
+      serviceType: serviceType,
+      lastServiceOdo: currentOdo,
+      lastServiceDate: DateTime.now(),
+      targetOdo: r.targetOdometer,
+      targetDate: r.targetDate,
+      isCompleted: r.isCompleted,
+    );
+  }
 
   Future<void> loadReminders() async {
     final vehicle = ref.read(activeVehicleProvider).valueOrNull;
@@ -96,27 +135,20 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     }
 
     final logs = ref.read(vehicleLogsProvider).valueOrNull ?? const [];
-    final currentOdo = logs.isNotEmpty ? logs.first.odometer : vehicle.startOdo;
+    final currentOdo =
+        logs.isNotEmpty ? logs.first.odometer : vehicle.startOdo;
 
-    final type = vehicle.type.toLowerCase();
-    final isBike = type == 'bike' ||
-        type.contains('bike') ||
-        type.contains('motorcycle') ||
-        type.contains('scooter') ||
-        vehicle.name.toLowerCase().contains('bike') ||
-        vehicle.name.toLowerCase().contains('r15');
-
-    state = state.copyWith(isLoading: true, currentOdometer: currentOdo, error: null);
+    state = state.copyWith(
+        isLoading: true, currentOdometer: currentOdo, error: null);
 
     try {
-      final list = await _repo.getReminders(
-        vehicleId: vehicle.id,
-        isBike: isBike,
-        currentOdo: currentOdo,
-      );
+      final db = ref.read(databaseProvider);
+      final driftList = await db.getRemindersForVehicle(vehicle.id);
+      final mappedList =
+          driftList.map((r) => _mapDriftToModel(r, currentOdo)).toList();
       state = state.copyWith(
         isLoading: false,
-        reminders: list,
+        reminders: mappedList,
         currentOdometer: currentOdo,
       );
     } catch (e) {
@@ -124,28 +156,21 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     }
   }
 
-  Future<void> addReminder(ServiceReminder reminder) async {
-    await _repo.addReminder(reminder);
-    await loadReminders();
-  }
-
-  Future<void> updateReminder(ServiceReminder reminder) async {
-    await _repo.updateReminder(reminder);
-    await loadReminders();
-  }
-
   Future<void> deleteReminder(String id) async {
-    await _repo.deleteReminder(id);
+    final numId = int.tryParse(id);
+    if (numId != null) {
+      final db = ref.read(databaseProvider);
+      await db.deleteReminder(numId);
+    }
     await loadReminders();
   }
 
   Future<void> markAsDone(String id, {double? cost, String? notes}) async {
-    await _repo.markAsCompleted(
-      id: id,
-      currentOdometer: state.currentOdometer,
-      cost: cost,
-      notes: notes,
-    );
+    final numId = int.tryParse(id);
+    if (numId != null) {
+      final db = ref.read(databaseProvider);
+      await db.markReminderCompleted(numId);
+    }
     await loadReminders();
   }
 }

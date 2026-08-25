@@ -8,6 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/utils/mileage_calculator.dart';
+import '../../../models/reminder_model.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
@@ -202,6 +203,8 @@ class _HomeServiceStatusCard extends ConsumerWidget {
     if (urgent == null) return const SizedBox.shrink();
 
     final status = urgent.status(state.currentOdometer);
+    // Show alert banner on home dashboard ONLY when maintenance is Due Soon or Overdue
+    if (status == ReminderStatus.healthy) return const SizedBox.shrink();
     final statusMsg = urgent.statusMessage(state.currentOdometer);
 
     return InkWell(

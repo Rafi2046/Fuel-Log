@@ -9,7 +9,6 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import 'widgets/add_reminder_sheet.dart';
 import 'widgets/reminder_card.dart';
-import 'widgets/reminder_health_overview.dart';
 
 /// Main Vehicle Maintenance & Service Reminders Hub
 class RemindersScreen extends ConsumerWidget {
@@ -26,98 +25,140 @@ class RemindersScreen extends ConsumerWidget {
 
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF181824),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                color: AppColors.primary,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Mark as Completed',
+      builder: (ctx) => Dialog(
+        backgroundColor: const Color(0xFF161622),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF262638)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Reset Maintenance Cycle',
                 style: GoogleFonts.inter(
-                  fontSize: 16,
+                  fontSize: 17,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Reset cycle for "${reminder.title}" at current odometer: ${currentOdo.toStringAsFixed(0)} km.',
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: costController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                prefixText: '৳ ',
-                labelText: 'Service Cost (Optional)',
-                labelStyle: const TextStyle(color: AppColors.textTertiary),
-                filled: true,
-                fillColor: const Color(0xFF222230),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF333345)),
+              const SizedBox(height: 6),
+              Text(
+                'Reset cycle for "${reminder.title}" at current odometer: ${currentOdo.toStringAsFixed(0)} km.',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.35,
                 ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final cost = double.tryParse(costController.text.trim());
-              ref.read(remindersProvider.notifier).markAsDone(
-                    reminder.id,
-                    cost: cost,
-                    notes: notesController.text.trim().isEmpty
-                        ? null
-                        : notesController.text.trim(),
-                  );
-              Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: const Color(0xFF1E1E2C),
-                  content: Text(
-                    '✅ ${reminder.title} marked as completed & cycle reset!',
-                    style: const TextStyle(color: Colors.white),
+              const SizedBox(height: 16),
+              TextField(
+                controller: costController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                decoration: InputDecoration(
+                  prefixText: '৳ ',
+                  prefixStyle: const TextStyle(
+                      color: AppColors.primary, fontWeight: FontWeight.bold),
+                  labelText: 'Service Cost (Optional)',
+                  labelStyle:
+                      const TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                  filled: true,
+                  fillColor: const Color(0xFF1E1E2A),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
                   ),
-                  behavior: SnackBarBehavior.floating,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Confirm Reset', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF2E2E3E)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final cost = double.tryParse(costController.text.trim());
+                          ref.read(remindersProvider.notifier).markAsDone(
+                                reminder.id,
+                                cost: cost,
+                                notes: notesController.text.trim().isEmpty
+                                    ? null
+                                    : notesController.text.trim(),
+                              );
+                          Navigator.of(ctx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: const Color(0xFF1E1E2C),
+                              content: Text(
+                                '✅ ${reminder.title} reset successfully!',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Confirm',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -168,8 +209,8 @@ class RemindersScreen extends ConsumerWidget {
                 context,
                 vehicleId: vehicle.id,
                 currentOdometer: state.currentOdometer,
-                onSave: (newReminder) {
-                  ref.read(remindersProvider.notifier).addReminder(newReminder);
+                onSave: () {
+                  ref.read(remindersProvider.notifier).loadReminders();
                 },
               );
             },
@@ -185,17 +226,9 @@ class RemindersScreen extends ConsumerWidget {
               backgroundColor: AppColors.cardElevated,
               onRefresh: () => ref.read(remindersProvider.notifier).loadReminders(),
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 40),
+                padding: const EdgeInsets.only(top: 8, bottom: 40),
                 children: [
-                  // 1. Vehicle Maintenance Health Overview
-                  ReminderHealthOverview(
-                    state: state,
-                    vehicleName: vehicle?.name ?? 'My Vehicle',
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // 2. Section Header
+                  // 1. Section Header
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.screenPadding,
@@ -284,8 +317,8 @@ class RemindersScreen extends ConsumerWidget {
                                     context,
                                     vehicleId: vehicle.id,
                                     currentOdometer: state.currentOdometer,
-                                    onSave: (newReminder) {
-                                      ref.read(remindersProvider.notifier).addReminder(newReminder);
+                                    onSave: () {
+                                      ref.read(remindersProvider.notifier).loadReminders();
                                     },
                                   );
                                 },
@@ -302,8 +335,8 @@ class RemindersScreen extends ConsumerWidget {
                                     context,
                                     vehicleId: vehicle.id,
                                     currentOdometer: state.currentOdometer,
-                                    onSave: (newReminder) {
-                                      ref.read(remindersProvider.notifier).addReminder(newReminder);
+                                    onSave: () {
+                                      ref.read(remindersProvider.notifier).loadReminders();
                                     },
                                   );
                                 },
@@ -330,11 +363,10 @@ class RemindersScreen extends ConsumerWidget {
                             context,
                             vehicleId: vehicle.id,
                             currentOdometer: state.currentOdometer,
-                            existingReminder: reminder,
-                            onSave: (updated) {
+                            onSave: () {
                               ref
                                   .read(remindersProvider.notifier)
-                                  .updateReminder(updated);
+                                  .loadReminders();
                             },
                           );
                         },

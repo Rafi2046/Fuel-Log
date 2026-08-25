@@ -55,13 +55,30 @@ class FuelLogs extends Table {
   TextColumn get note => text().nullable()();
 }
 
-@DriftDatabase(tables: [Vehicles, FuelLogs])
+/// Maintenance and service reminders per vehicle.
+class Reminders extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get vehicleId => integer().references(Vehicles, #id)();
+
+  TextColumn get title => text()();
+
+  DateTimeColumn get targetDate => dateTime().nullable()();
+
+  RealColumn get targetOdometer => real().nullable()();
+
+  BoolColumn get isCompleted =>
+      boolean().withDefault(const Constant(false))();
+}
+
+@DriftDatabase(tables: [Vehicles, FuelLogs, Reminders])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+  AppDatabase.forTesting(super.e);
 
-  /// Bumped to force recreate after capacity / EV column renames.
+  /// Bumped to force recreate after capacity / EV column renames & Reminders table.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,6 +88,7 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           // Early-dev: wipe and recreate whenever schema moves forward.
           if (from < schemaVersion) {
+            await customStatement('DROP TABLE IF EXISTS reminders');
             await customStatement('DROP TABLE IF EXISTS fuel_logs');
             await customStatement('DROP TABLE IF EXISTS vehicles');
             await m.createAll();
@@ -88,6 +106,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Removes a vehicle and its fuel logs.
   Future<void> deleteVehicle(int id) async {
+    await (delete(reminders)..where((t) => t.vehicleId.equals(id))).go();
     await (delete(fuelLogs)..where((t) => t.vehicleId.equals(id))).go();
     await (delete(vehicles)..where((t) => t.id.equals(id))).go();
   }
@@ -107,6 +126,45 @@ class AppDatabase extends _$AppDatabase {
           ..where((t) => t.vehicleId.equals(vehicleId))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
+  }
+
+  Future<int> insertReminder(RemindersCompanion reminder) =>
+      into(reminders).insert(reminder);
+
+  Future<List<Reminder>> getIncompleteRemindersForVehicle(int vehicleId) {
+    return (select(reminders)
+          ..where((t) =>
+              t.vehicleId.equals(vehicleId) & t.isCompleted.equals(false)))
+        .get();
+  }
+
+  Future<List<Reminder>> getRemindersForVehicle(int vehicleId) {
+    return (select(reminders)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.isCompleted),
+            (t) => OrderingTerm.asc(t.targetDate),
+          ]))
+        .get();
+  }
+
+  Stream<List<Reminder>> watchRemindersForVehicle(int vehicleId) {
+    return (select(reminders)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.isCompleted),
+            (t) => OrderingTerm.asc(t.targetDate),
+          ]))
+        .watch();
+  }
+
+  Future<int> markReminderCompleted(int id) {
+    return (update(reminders)..where((t) => t.id.equals(id)))
+        .write(const RemindersCompanion(isCompleted: Value(true)));
+  }
+
+  Future<int> deleteReminder(int id) {
+    return (delete(reminders)..where((t) => t.id.equals(id))).go();
   }
 }
 
