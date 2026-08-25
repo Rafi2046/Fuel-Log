@@ -6,23 +6,24 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/analytics_carousel.dart';
 import '../../widgets/monthly_cost_breakdown.dart';
 
-/// Dedicated analytics home for advanced charts.
-///
-/// Keeps Home light (summaries only). Heavy fl_chart widgets live here:
-/// efficiency trend, fuel price, monthly distance, expense donut + costs.
+/// Dedicated analytics home for advanced charts & monthly costs.
 class StatsTab extends ConsumerWidget {
   const StatsTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logsAsync = ref.watch(vehicleLogsProvider);
+    final serviceLogsAsync = ref.watch(serviceLogsProvider);
     final vehicleAsync = ref.watch(activeVehicleProvider);
     final isEV = vehicleAsync.valueOrNull?.isElectric ?? false;
     final mileageUnit = isEV ? 'km/kWh' : 'km/L';
+
+    final serviceLogs = serviceLogsAsync.valueOrNull ?? [];
 
     return logsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -52,7 +53,10 @@ class StatsTab extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          MonthlyCostBreakdown(logs: logs),
+          MonthlyCostBreakdown(
+            fuelLogs: logs,
+            serviceLogs: serviceLogs,
+          ),
         ],
       ),
     );

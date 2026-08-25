@@ -71,14 +71,33 @@ class Reminders extends Table {
       boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [Vehicles, FuelLogs, Reminders])
+/// Non-fuel service and general expense records per vehicle.
+class ServiceLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get vehicleId => integer().references(Vehicles, #id)();
+
+  DateTimeColumn get date => dateTime()();
+
+  TextColumn get category => text()();
+
+  TextColumn get title => text()();
+
+  RealColumn get cost => real()();
+
+  RealColumn get odometer => real().nullable()();
+
+  TextColumn get note => text().nullable()();
+}
+
+@DriftDatabase(tables: [Vehicles, FuelLogs, Reminders, ServiceLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
-  /// Bumped to force recreate after capacity / EV column renames & Reminders table.
+  /// Bumped for ServiceLogs table addition.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +107,7 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           // Early-dev: wipe and recreate whenever schema moves forward.
           if (from < schemaVersion) {
+            await customStatement('DROP TABLE IF EXISTS service_logs');
             await customStatement('DROP TABLE IF EXISTS reminders');
             await customStatement('DROP TABLE IF EXISTS fuel_logs');
             await customStatement('DROP TABLE IF EXISTS vehicles');
@@ -165,6 +185,27 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteReminder(int id) {
     return (delete(reminders)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<int> insertServiceLog(ServiceLogsCompanion log) =>
+      into(serviceLogs).insert(log);
+
+  Future<int> deleteServiceLog(int id) {
+    return (delete(serviceLogs)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<List<ServiceLog>> getServiceLogsForVehicle(int vehicleId) {
+    return (select(serviceLogs)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .get();
+  }
+
+  Stream<List<ServiceLog>> watchServiceLogsForVehicle(int vehicleId) {
+    return (select(serviceLogs)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
   }
 }
 

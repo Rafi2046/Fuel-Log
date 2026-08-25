@@ -7,36 +7,57 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/app_formatters.dart';
 import 'app_card.dart';
-import 'expense_ratio_chart.dart';
+import 'month_expense_details_sheet.dart';
 
-/// Minimal month rows: fuel (orange) + dummy service (green).
+/// Monthly cost breakdown combining fuel logs (orange) and service logs (green) with clickable details sheet.
 class MonthlyCostBreakdown extends StatelessWidget {
-  const MonthlyCostBreakdown({super.key, required this.logs});
+  const MonthlyCostBreakdown({
+    super.key,
+    required this.fuelLogs,
+    this.serviceLogs = const [],
+  });
 
-  final List<FuelLog> logs;
+  final List<FuelLog> fuelLogs;
+  final List<ServiceLog> serviceLogs;
 
   static final DateFormat _monthLabel = DateFormat('MMM yyyy');
 
   List<_MonthSpend> get _months {
-    final map = <String, double>{};
+    final fuelMap = <String, double>{};
+    final serviceMap = <String, double>{};
+    final fuelLogsMap = <String, List<FuelLog>>{};
+    final serviceLogsMap = <String, List<ServiceLog>>{};
     final order = <String, DateTime>{};
 
-    for (final log in logs) {
+    for (final log in fuelLogs) {
       final key =
           '${log.date.year}-${log.date.month.toString().padLeft(2, '0')}';
-      map[key] = (map[key] ?? 0) + log.cost;
+      fuelMap[key] = (fuelMap[key] ?? 0) + log.cost;
+      fuelLogsMap.putIfAbsent(key, () => []).add(log);
       order[key] = DateTime(log.date.year, log.date.month);
     }
 
-    final keys = map.keys.toList()
+    for (final log in serviceLogs) {
+      final key =
+          '${log.date.year}-${log.date.month.toString().padLeft(2, '0')}';
+      serviceMap[key] = (serviceMap[key] ?? 0) + log.cost;
+      serviceLogsMap.putIfAbsent(key, () => []).add(log);
+      if (!order.containsKey(key)) {
+        order[key] = DateTime(log.date.year, log.date.month);
+      }
+    }
+
+    final keys = order.keys.toList()
       ..sort((a, b) => order[b]!.compareTo(order[a]!));
 
     return [
       for (final key in keys.take(6))
         _MonthSpend(
           label: _monthLabel.format(order[key]!).toUpperCase(),
-          fuel: map[key]!,
-          service: ExpenseRatioChart.dummyServiceCost,
+          fuel: fuelMap[key] ?? 0.0,
+          service: serviceMap[key] ?? 0.0,
+          monthFuelLogs: fuelLogsMap[key] ?? [],
+          monthServiceLogs: serviceLogsMap[key] ?? [],
         ),
     ];
   }
@@ -74,11 +95,15 @@ class _MonthSpend {
     required this.label,
     required this.fuel,
     required this.service,
+    required this.monthFuelLogs,
+    required this.monthServiceLogs,
   });
 
   final String label;
   final double fuel;
   final double service;
+  final List<FuelLog> monthFuelLogs;
+  final List<ServiceLog> monthServiceLogs;
 }
 
 class _MonthRow extends StatelessWidget {
@@ -88,43 +113,76 @@ class _MonthRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              month.label,
-              style: AppTextStyles.body.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+    final hasFuel = month.fuel > 0;
+    final hasService = month.service > 0;
+
+    return InkWell(
+      onTap: () {
+        MonthExpenseDetailsSheet.show(
+          context,
+          monthLabel: month.label,
+          fuelLogs: month.monthFuelLogs,
+          serviceLogs: month.monthServiceLogs,
+        );
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    month.label,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
+                ],
               ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _CostLine(
-                color: AppColors.primary,
-                value: AppCurrency.format(month.fuel),
-              ),
-              const SizedBox(height: 2),
-              _CostLine(
-                color: AppColors.success,
-                value: AppCurrency.format(month.service),
-              ),
-            ],
-          ),
-        ],
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (hasFuel || !hasService)
+                  _CostLine(
+                    color: AppColors.primary,
+                    label: 'Fuel',
+                    value: AppCurrency.format(month.fuel),
+                  ),
+                if (hasFuel && hasService) const SizedBox(height: 2),
+                if (hasService)
+                  _CostLine(
+                    color: const Color(0xFF2ECC71),
+                    label: 'Service/Costs',
+                    value: AppCurrency.format(month.service),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _CostLine extends StatelessWidget {
-  const _CostLine({required this.color, required this.value});
+  const _CostLine({
+    required this.color,
+    required this.label,
+    required this.value,
+  });
 
   final Color color;
+  final String label;
   final String value;
 
   @override
@@ -139,7 +197,7 @@ class _CostLine extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          value,
+          '$label: $value',
           style: AppTextStyles.caption.copyWith(
             color: color,
             fontWeight: FontWeight.w600,

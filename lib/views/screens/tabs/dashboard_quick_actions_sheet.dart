@@ -1,12 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../mileage/mileage_log_screen.dart';
 import '../refueling_form_screen.dart';
 import '../reminders/reminders_screen.dart';
+import '../services/widgets/add_cost_service_sheet.dart';
 
 /// Contextual quick actions from the center FAB (no grid menu).
 Future<void> showDashboardQuickActionsSheet(
@@ -31,7 +35,7 @@ Future<void> showDashboardQuickActionsSheet(
   );
 }
 
-class _DashboardQuickActionsSheet extends StatelessWidget {
+class _DashboardQuickActionsSheet extends ConsumerWidget {
   const _DashboardQuickActionsSheet({
     this.onRecordTrip,
     this.onExploreStations,
@@ -44,22 +48,8 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
   static const Color _costGreen = Color(0xFF2ECC71);
   static const Color _reminderYellow = Color(0xFFF5A623);
 
-  void _comingSoon(BuildContext context, String messageKey) {
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          messageKey.tr(),
-          style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-        ),
-        backgroundColor: AppColors.cardElevated,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -149,7 +139,19 @@ class _DashboardQuickActionsSheet extends StatelessWidget {
               color: _costGreen,
               title: 'actionAddCost'.tr(),
               subtitle: 'actionAddCostSubtitle'.tr(),
-              onTap: () => _comingSoon(context, 'costServiceComingSoon'),
+              onTap: () {
+                Navigator.of(context).pop();
+                final vehicle = ref.read(activeVehicleProvider).valueOrNull;
+                if (vehicle == null) return;
+                final logs = ref.read(vehicleLogsProvider).valueOrNull ?? [];
+                final currentOdo =
+                    logs.isNotEmpty ? logs.first.odometer : vehicle.startOdo;
+                AddCostServiceSheet.show(
+                  context,
+                  vehicleId: vehicle.id,
+                  currentOdometer: currentOdo,
+                );
+              },
             ),
             const Divider(color: AppColors.divider, height: 1),
             _ActionTile(
