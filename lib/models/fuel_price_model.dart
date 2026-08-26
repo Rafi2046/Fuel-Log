@@ -3,13 +3,14 @@ import 'package:latlong2/latlong.dart';
 
 /// Supported fuel types and octane ratings in Bangladesh and global standards.
 enum FuelTypeGrade {
+  /// BPC administered rates (uniform nationwide). Update when govt revises.
   octane95(
     code: '95',
     label: 'Octane (95)',
     shortCode: 'Octane',
     category: 'E',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 125.00,
+    defaultBpcPrice: 145.00,
     unit: '৳/L',
   ),
   octane98(
@@ -18,7 +19,7 @@ enum FuelTypeGrade {
     shortCode: 'Octane',
     category: 'E',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 130.00,
+    defaultBpcPrice: 145.00,
     unit: '৳/L',
   ),
   petrol91(
@@ -27,7 +28,7 @@ enum FuelTypeGrade {
     shortCode: 'Petrol',
     category: 'G',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 121.00,
+    defaultBpcPrice: 140.00,
     unit: '৳/L',
   ),
   petrol89(
@@ -36,7 +37,7 @@ enum FuelTypeGrade {
     shortCode: 'Petrol',
     category: 'G',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 121.00,
+    defaultBpcPrice: 140.00,
     unit: '৳/L',
   ),
   petrol87(
@@ -45,7 +46,7 @@ enum FuelTypeGrade {
     shortCode: 'Petrol',
     category: 'G',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 121.00,
+    defaultBpcPrice: 140.00,
     unit: '৳/L',
   ),
   diesel(
@@ -54,7 +55,7 @@ enum FuelTypeGrade {
     shortCode: 'Diesel',
     category: 'D',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 105.00,
+    defaultBpcPrice: 115.00,
     unit: '৳/L',
   ),
   cng(
@@ -90,7 +91,7 @@ enum FuelTypeGrade {
     shortCode: 'E85',
     category: 'E',
     badgeColor: Color(0xFF262632),
-    defaultBpcPrice: 124.90,
+    defaultBpcPrice: 145.00,
     unit: '৳/L',
   );
 
@@ -164,7 +165,7 @@ class StationPriceItem {
 
   factory StationPriceItem.fromJson(Map<String, dynamic> json) => StationPriceItem(
         fuelGradeCode: json['fuelGradeCode'] as String? ?? '95',
-        price: (json['price'] as num?)?.toDouble() ?? 125.0,
+        price: (json['price'] as num?)?.toDouble() ?? 145.0,
         lastUpdated: json['lastUpdated'] != null
             ? DateTime.tryParse(json['lastUpdated'] as String) ?? DateTime.now()
             : DateTime.now(),
@@ -213,7 +214,7 @@ class StationInfo {
     final octane = prices.where((p) => p.fuelGradeCode == '95' || p.fuelGradeCode == '98');
     if (octane.isNotEmpty) return octane.first.price;
     if (prices.isNotEmpty) return prices.first.price;
-    return 125.00;
+    return 145.00; // BPC Octane fallback
   }
 
   /// Relative formatted distance (e.g. "1154m" or "2.4 km")

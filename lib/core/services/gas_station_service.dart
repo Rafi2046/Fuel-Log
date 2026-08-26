@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 import '../../views/screens/tabs/trip_log_tab.dart';
+import 'bd_fuel_rate_service.dart';
 
 class GasStationService {
   GasStationService._();
@@ -15,6 +16,9 @@ class GasStationService {
     required LatLng center,
     double radiusMeters = 8000,
   }) async {
+    // Refresh BPC fuel rates (OpenVan) so list prices stay current.
+    await BdFuelRateService.instance.ensureLoaded(forceRefresh: true);
+
     // 1. Try fetching live real-world stations from OpenStreetMap Overpass API (Fast, Free, No API Key needed)
     try {
       final liveStations = await _fetchFromOverpass(center, radiusMeters);

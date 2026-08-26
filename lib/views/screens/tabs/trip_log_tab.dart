@@ -10,6 +10,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_shadows.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/services/bd_fuel_rate_service.dart';
 import '../../../core/services/gas_station_service.dart';
 import '../../../core/services/navigation_routing_service.dart';
 import '../../../models/fuel_price_model.dart';
@@ -25,7 +26,6 @@ class MockGasStation {
   final double rating;
   final LatLng location;
   final String? imageUrl;
-  final double primaryPrice;
   final StationInfo? stationInfo;
 
   const MockGasStation({
@@ -36,12 +36,16 @@ class MockGasStation {
     required this.rating,
     required this.location,
     this.imageUrl,
-    this.primaryPrice = 125.00,
     this.stationInfo,
   });
 
+  /// Always BPC Octane — same nationwide (live via [BdFuelRateService]).
+  double get primaryPrice => BdFuelRateService.instance.octane;
+
   StationInfo toStationInfo() {
     if (stationInfo != null) return stationInfo!;
+    final rates = BdFuelRateService.instance.current;
+    final now = DateTime.now();
     return StationInfo(
       id: id,
       name: name,
@@ -51,28 +55,28 @@ class MockGasStation {
       prices: [
         StationPriceItem(
           fuelGradeCode: '95',
-          price: primaryPrice,
-          lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
+          price: rates.octane,
+          lastUpdated: rates.updatedAt,
         ),
         StationPriceItem(
           fuelGradeCode: '91',
-          price: primaryPrice - 4,
-          lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
+          price: rates.petrol,
+          lastUpdated: rates.updatedAt,
         ),
         StationPriceItem(
           fuelGradeCode: 'D',
-          price: 105.00,
-          lastUpdated: DateTime.now().subtract(const Duration(days: 5)),
+          price: rates.diesel,
+          lastUpdated: rates.updatedAt,
         ),
         StationPriceItem(
           fuelGradeCode: 'CNG',
-          price: 43.00,
-          lastUpdated: DateTime.now().subtract(const Duration(days: 1)),
+          price: FuelTypeGrade.cng.defaultBpcPrice,
+          lastUpdated: now,
         ),
         StationPriceItem(
           fuelGradeCode: 'LPG',
-          price: 68.50,
-          lastUpdated: DateTime.now().subtract(const Duration(days: 3)),
+          price: FuelTypeGrade.lpg.defaultBpcPrice,
+          lastUpdated: now,
         ),
       ],
     );

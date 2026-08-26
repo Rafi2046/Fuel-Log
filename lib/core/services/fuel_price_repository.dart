@@ -63,7 +63,7 @@ class FuelPriceRepository {
         ),
         StationPriceItem(
           fuelGradeCode: 'E85',
-          price: 144.92,
+          price: 145.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 28)),
         ),
         StationPriceItem(
@@ -73,7 +73,7 @@ class FuelPriceRepository {
         ),
         StationPriceItem(
           fuelGradeCode: 'D',
-          price: 105.00,
+          price: 115.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
         ),
       ],
@@ -100,7 +100,7 @@ class FuelPriceRepository {
         ),
         StationPriceItem(
           fuelGradeCode: 'D',
-          price: 105.00,
+          price: 115.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 12)),
         ),
       ],
@@ -117,7 +117,7 @@ class FuelPriceRepository {
       prices: [
         StationPriceItem(
           fuelGradeCode: '95',
-          price: 140.00,
+          price: 145.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 81)),
         ),
         StationPriceItem(
@@ -149,12 +149,12 @@ class FuelPriceRepository {
         ),
         StationPriceItem(
           fuelGradeCode: '98',
-          price: 148.00,
+          price: 145.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 10)),
         ),
         StationPriceItem(
           fuelGradeCode: 'D',
-          price: 105.00,
+          price: 115.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 5)),
         ),
       ],
@@ -176,7 +176,7 @@ class FuelPriceRepository {
         ),
         StationPriceItem(
           fuelGradeCode: 'D',
-          price: 105.00,
+          price: 115.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 10)),
         ),
       ],
@@ -198,7 +198,7 @@ class FuelPriceRepository {
         ),
         StationPriceItem(
           fuelGradeCode: '91',
-          price: 141.00,
+          price: 135.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 5)),
         ),
       ],
@@ -215,7 +215,7 @@ class FuelPriceRepository {
       prices: [
         StationPriceItem(
           fuelGradeCode: '95',
-          price: 140.00,
+          price: 145.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 14)),
         ),
         StationPriceItem(
@@ -237,7 +237,7 @@ class FuelPriceRepository {
       prices: [
         StationPriceItem(
           fuelGradeCode: '95',
-          price: 125.00,
+          price: 145.00,
           lastUpdated: DateTime.now().subtract(const Duration(days: 1)),
         ),
         StationPriceItem(

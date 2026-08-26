@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/services/bd_fuel_rate_service.dart';
 import '../../../../models/fuel_price_model.dart';
 import '../../../../viewmodels/gas_station_viewmodel.dart';
 
@@ -61,6 +62,24 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
     _priceController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  double _officialRate(FuelTypeGrade grade) {
+    final rates = BdFuelRateService.instance.current;
+    switch (grade) {
+      case FuelTypeGrade.octane95:
+      case FuelTypeGrade.octane98:
+      case FuelTypeGrade.e85:
+        return rates.octane;
+      case FuelTypeGrade.petrol91:
+      case FuelTypeGrade.petrol89:
+      case FuelTypeGrade.petrol87:
+        return rates.petrol;
+      case FuelTypeGrade.diesel:
+        return rates.diesel;
+      default:
+        return grade.defaultBpcPrice;
+    }
   }
 
   Future<void> _submit() async {
@@ -193,7 +212,7 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'BPC Govt Official Rate: ৳${grade.defaultBpcPrice.toStringAsFixed(2)} ${grade.unit}',
+                    'BPC Govt Official Rate: ৳${_officialRate(grade).toStringAsFixed(2)} ${grade.unit}',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 13,
