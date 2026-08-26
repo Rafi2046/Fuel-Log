@@ -126,5 +126,9 @@
   "vehicleDeleted": "গাড়ি ডিলিট হয়েছে",
   "vehicleDeleteFailed": "গাড়ি ডিলিট করা যায়নি",
   "delete": "ডিলিট",
-  "cancel": "বাতিল"
+  "cancel": "বাতিল",
+  "exploreMetrics": "অ্যাডভান্সড এক্সপ্লোরার",
+  "metricExplorerTitle": "মেট্রিক এক্সপ্লোরার",
+  "report": "রিপোর্ট",
+  "monthlySpendingBreakdown": "মাসিক খরচের বিভাজন"
 }

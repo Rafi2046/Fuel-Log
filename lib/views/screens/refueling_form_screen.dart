@@ -21,6 +21,8 @@ class RefuelingFormScreen extends ConsumerStatefulWidget {
 class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   final _odometerController = TextEditingController();
   final _tripOdometerController = TextEditingController();
+  final _odometerFocus = FocusNode();
+  final _tripFocus = FocusNode();
   final _amountController = TextEditingController();
   final _pricePerUnitController = TextEditingController();
   final _totalCostController = TextEditingController();
@@ -31,9 +33,27 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   double _beforeLevelPercent = 20.0;
   double _afterLevelPercent = 100.0;
   bool _isUpdating = false;
+  bool _seededLastOdometer = false;
+
+  /// True after the user sets an absolute total that differs from last reading.
+  /// Protects that value from being overwritten when Trip is edited.
+  bool _totalManuallySet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _odometerFocus.addListener(_onOdometerFocusChange);
+    _tripFocus.addListener(_onTripFocusChange);
+  }
 
   @override
   void dispose() {
+    _odometerFocus
+      ..removeListener(_onOdometerFocusChange)
+      ..dispose();
+    _tripFocus
+      ..removeListener(_onTripFocusChange)
+      ..dispose();
     _odometerController.dispose();
     _tripOdometerController.dispose();
     _amountController.dispose();
@@ -43,31 +63,85 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     super.dispose();
   }
 
-  void _onOdometerChanged(double? lastOdo) {
+  void _onOdometerFocusChange() {
+    if (!_odometerFocus.hasFocus) {
+      _applyTotalToTrip(ref.read(vehicleLogsProvider).valueOrNull);
+    }
+  }
+
+  void _onTripFocusChange() {
+    if (!_tripFocus.hasFocus) {
+      _applyTripToTotal(ref.read(vehicleLogsProvider).valueOrNull);
+    }
+  }
+
+  double? _lastOdometerFrom(List<FuelLog>? logs) {
+    if (logs == null || logs.isEmpty) return null;
+    return logs.first.odometer;
+  }
+
+  String _fmt(double value) =>
+      value.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+
+  void _setText(TextEditingController controller, String value) {
+    if (controller.text == value) return;
+    controller.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
+
+  /// Total → Trip (always safe). Marks total as manual when it differs from last.
+  void _applyTotalToTrip(List<FuelLog>? logs) {
     if (_isUpdating) return;
-    _isUpdating = true;
+    final lastOdo = _lastOdometerFrom(logs);
     final total = double.tryParse(_odometerController.text.trim());
-    if (total != null && lastOdo != null && lastOdo > 0) {
+    if (total == null) return;
+
+    if (lastOdo != null && lastOdo > 0) {
       final trip = total - lastOdo;
       if (trip >= 0) {
-        _tripOdometerController.text =
-            trip.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+        _isUpdating = true;
+        _setText(_tripOdometerController, _fmt(trip));
+        _isUpdating = false;
       }
+      // Absolute total that isn't just "last + 0"
+      _totalManuallySet = (total - lastOdo).abs() > 0.05;
+    } else {
+      _totalManuallySet = total > 0;
     }
+  }
+
+  /// Trip → Total only when total hasn't been manually locked.
+  /// If total is locked, snap trip back to match total instead.
+  void _applyTripToTotal(List<FuelLog>? logs) {
+    if (_isUpdating) return;
+    final lastOdo = _lastOdometerFrom(logs) ?? 0.0;
+    final trip = double.tryParse(_tripOdometerController.text.trim());
+    if (trip == null || trip < 0) return;
+
+    if (_totalManuallySet) {
+      // Keep user's total; correct trip to stay consistent
+      _applyTotalToTrip(logs);
+      return;
+    }
+
+    final total = lastOdo + trip;
+    _isUpdating = true;
+    _setText(_odometerController, _fmt(total));
     _isUpdating = false;
   }
 
-  void _onTripOdometerChanged(double? lastOdo) {
-    if (_isUpdating) return;
+  void _seedOdometerIfNeeded(double? lastOdometer) {
+    if (_seededLastOdometer) return;
+    _seededLastOdometer = true;
+    if (lastOdometer == null || lastOdometer <= 0) return;
+    if (_odometerController.text.trim().isNotEmpty) return;
     _isUpdating = true;
-    final trip = double.tryParse(_tripOdometerController.text.trim());
-    final baseOdo = lastOdo ?? 0.0;
-    if (trip != null && trip >= 0) {
-      final total = baseOdo + trip;
-      _odometerController.text =
-          total.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
-    }
+    _setText(_odometerController, _fmt(lastOdometer));
+    _setText(_tripOdometerController, '0');
     _isUpdating = false;
+    _totalManuallySet = false;
   }
 
   void _onAmountChanged() {
@@ -76,8 +150,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final amount = double.tryParse(_amountController.text.trim());
     final price = double.tryParse(_pricePerUnitController.text.trim());
     if (amount != null && price != null && amount > 0) {
-      final cost = amount * price;
-      _totalCostController.text = cost.toStringAsFixed(2);
+      _setText(_totalCostController, (amount * price).toStringAsFixed(2));
     }
     _isUpdating = false;
   }
@@ -88,8 +161,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final amount = double.tryParse(_amountController.text.trim());
     final price = double.tryParse(_pricePerUnitController.text.trim());
     if (amount != null && price != null && amount > 0) {
-      final cost = amount * price;
-      _totalCostController.text = cost.toStringAsFixed(2);
+      _setText(_totalCostController, (amount * price).toStringAsFixed(2));
     }
     _isUpdating = false;
   }
@@ -100,24 +172,31 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final cost = double.tryParse(_totalCostController.text.trim());
     final amount = double.tryParse(_amountController.text.trim());
     if (cost != null && amount != null && amount > 0) {
-      final price = cost / amount;
-      _pricePerUnitController.text = price.toStringAsFixed(2);
+      _setText(_pricePerUnitController, (cost / amount).toStringAsFixed(2));
     }
     _isUpdating = false;
   }
 
   void _recalculateFromSliders(double capacity) {
     final cap = capacity > 0 ? capacity : 50.0;
-    final addedPercent = (_afterLevelPercent - _beforeLevelPercent).clamp(0.0, 100.0);
+    final addedPercent =
+        (_afterLevelPercent - _beforeLevelPercent).clamp(0.0, 100.0);
     final calculatedLiters = (addedPercent / 100.0) * cap;
 
     _isUpdating = true;
-    _amountController.text = calculatedLiters.toStringAsFixed(1);
+    _setText(_amountController, calculatedLiters.toStringAsFixed(1));
     _isUpdating = false;
     _onAmountChanged();
   }
 
   Future<void> _onSave(Vehicle vehicle) async {
+    final logs = ref.read(vehicleLogsProvider).valueOrNull;
+    if (_totalManuallySet) {
+      _applyTotalToTrip(logs);
+    } else {
+      _applyTripToTotal(logs);
+    }
+
     final odometer = double.tryParse(_odometerController.text.trim());
     final amount = double.tryParse(_amountController.text.trim());
     final cost = double.tryParse(_totalCostController.text.trim());
@@ -175,6 +254,11 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
 
     final logs = logsAsync.valueOrNull ?? [];
     final lastOdometer = logs.isNotEmpty ? logs.first.odometer : null;
+    if (!_seededLastOdometer) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _seedOdometerIfNeeded(lastOdometer);
+      });
+    }
 
     return AppScaffold(
       title: 'Refueling',
@@ -198,6 +282,8 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                     vehicle: vehicle,
                     odometerController: _odometerController,
                     tripOdometerController: _tripOdometerController,
+                    odometerFocus: _odometerFocus,
+                    tripFocus: _tripFocus,
                     amountController: _amountController,
                     pricePerUnitController: _pricePerUnitController,
                     totalCostController: _totalCostController,
@@ -207,8 +293,15 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                     isSetupTankLevel: _isSetupTankLevel,
                     beforeLevelPercent: _beforeLevelPercent,
                     afterLevelPercent: _afterLevelPercent,
-                    onOdometerChanged: () => _onOdometerChanged(lastOdometer),
-                    onTripOdometerChanged: () => _onTripOdometerChanged(lastOdometer),
+                    onOdometerEditingComplete: () {
+                      _applyTotalToTrip(logs);
+                      _tripFocus.requestFocus();
+                    },
+                    onTripEditingComplete: () {
+                      _applyTripToTotal(logs);
+                      FocusScope.of(context).nextFocus();
+                    },
+                    onOdometerChanged: () => _applyTotalToTrip(logs),
                     onAmountChanged: _onAmountChanged,
                     onPriceChanged: _onPriceChanged,
                     onTotalCostChanged: _onTotalCostChanged,

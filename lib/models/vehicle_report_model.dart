@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../core/constants/app_colors.dart';
 
 enum VehicleReportType {
   seller,
@@ -44,39 +47,42 @@ extension VehicleReportTypeExtension on VehicleReportType {
     }
   }
 
-  IconData get icon {
+  /// One-line blurb for compact list tiles.
+  String get shortDescription {
     switch (this) {
       case VehicleReportType.seller:
-        return Icons.directions_car_filled_rounded;
+        return 'Fuel, odometer & cost for buyers';
       case VehicleReportType.custom:
-        return Icons.tune_rounded;
+        return 'Export logs for a custom range';
       case VehicleReportType.ownershipCost:
-        return Icons.account_balance_wallet_rounded;
+        return 'Purchase, fuel & maintenance total';
       case VehicleReportType.annualSummary:
-        return Icons.calendar_today_rounded;
+        return 'Yearly spend, distance & mileage';
       case VehicleReportType.fuelEfficiency:
-        return Icons.local_gas_station_rounded;
+        return 'Consumption trends & fill-ups';
       case VehicleReportType.maintenanceHistory:
-        return Icons.build_circle_rounded;
+        return 'Service logs for workshop use';
     }
   }
 
-  Color get color {
+  IconData get icon {
     switch (this) {
       case VehicleReportType.seller:
-        return const Color(0xFF38BDF8);
+        return LucideIcons.car;
       case VehicleReportType.custom:
-        return const Color(0xFFA855F7);
+        return LucideIcons.slidersHorizontal;
       case VehicleReportType.ownershipCost:
-        return const Color(0xFFF59E0B);
+        return LucideIcons.wallet;
       case VehicleReportType.annualSummary:
-        return const Color(0xFF10B981);
+        return LucideIcons.calendar;
       case VehicleReportType.fuelEfficiency:
-        return const Color(0xFFFF5722);
+        return LucideIcons.gauge;
       case VehicleReportType.maintenanceHistory:
-        return const Color(0xFFEC4899);
+        return LucideIcons.wrench;
     }
   }
+
+  Color get color => AppColors.primary;
 }
 
 class VehicleReportData {

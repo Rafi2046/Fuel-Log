@@ -17,6 +17,8 @@ class RefuelingFormFields extends StatelessWidget {
     required this.vehicle,
     required this.odometerController,
     required this.tripOdometerController,
+    required this.odometerFocus,
+    required this.tripFocus,
     required this.amountController,
     required this.pricePerUnitController,
     required this.totalCostController,
@@ -26,8 +28,9 @@ class RefuelingFormFields extends StatelessWidget {
     required this.isSetupTankLevel,
     required this.beforeLevelPercent,
     required this.afterLevelPercent,
+    required this.onOdometerEditingComplete,
+    required this.onTripEditingComplete,
     required this.onOdometerChanged,
-    required this.onTripOdometerChanged,
     required this.onAmountChanged,
     required this.onPriceChanged,
     required this.onTotalCostChanged,
@@ -40,6 +43,8 @@ class RefuelingFormFields extends StatelessWidget {
   final Vehicle vehicle;
   final TextEditingController odometerController;
   final TextEditingController tripOdometerController;
+  final FocusNode odometerFocus;
+  final FocusNode tripFocus;
   final TextEditingController amountController;
   final TextEditingController pricePerUnitController;
   final TextEditingController totalCostController;
@@ -50,8 +55,9 @@ class RefuelingFormFields extends StatelessWidget {
   final double beforeLevelPercent;
   final double afterLevelPercent;
 
+  final VoidCallback onOdometerEditingComplete;
+  final VoidCallback onTripEditingComplete;
   final VoidCallback onOdometerChanged;
-  final VoidCallback onTripOdometerChanged;
   final VoidCallback onAmountChanged;
   final VoidCallback onPriceChanged;
   final VoidCallback onTotalCostChanged;
@@ -130,9 +136,12 @@ class RefuelingFormFields extends StatelessWidget {
         RefuelingOdometerSection(
           odometerController: odometerController,
           tripOdometerController: tripOdometerController,
+          odometerFocus: odometerFocus,
+          tripFocus: tripFocus,
           lastOdometer: lastOdometer,
+          onOdometerEditingComplete: onOdometerEditingComplete,
+          onTripEditingComplete: onTripEditingComplete,
           onOdometerChanged: onOdometerChanged,
-          onTripOdometerChanged: onTripOdometerChanged,
         ),
         const SizedBox(height: 10),
 
@@ -193,6 +202,7 @@ class RefuelingFormFields extends StatelessWidget {
                 hint: 'Station name, payment method, discount, etc.',
                 controller: noteController,
                 prefixIcon: Icons.notes_rounded,
+                dense: true,
                 maxLines: 2,
                 textInputAction: TextInputAction.done,
               ),

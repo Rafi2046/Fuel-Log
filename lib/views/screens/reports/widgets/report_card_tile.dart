@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
 import '../../../../models/vehicle_report_model.dart';
 
 class ReportCardTile extends StatelessWidget {
@@ -14,99 +18,65 @@ class ReportCardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161622),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF262638)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Report Icon Container
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: type.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: type.color.withValues(alpha: 0.3),
-                    ),
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Icon(
                     type.icon,
-                    color: type.color,
-                    size: 22,
+                    color: AppColors.primary,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 14),
-                // Title and Description
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              type.title,
-                              style: const TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.4),
-                              ),
-                            ),
-                            child: const Text(
-                              'FREE',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF10B981),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
                       Text(
-                        type.description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          height: 1.35,
+                        type.title,
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        type.shortDescription,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textTertiary,
+                          fontSize: 11,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 16,
                   color: AppColors.textTertiary,
                 ),
               ],

@@ -6,22 +6,28 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../widgets/app_card.dart';
 import '../../../widgets/app_text_field.dart';
 
-/// Compact, elegant Odometer & Trip Distance section.
+/// Compact Odometer & Trip Distance — total is primary; trip is a helper.
 class RefuelingOdometerSection extends StatelessWidget {
   const RefuelingOdometerSection({
     super.key,
     required this.odometerController,
     required this.tripOdometerController,
+    required this.odometerFocus,
+    required this.tripFocus,
     required this.lastOdometer,
+    required this.onOdometerEditingComplete,
+    required this.onTripEditingComplete,
     required this.onOdometerChanged,
-    required this.onTripOdometerChanged,
   });
 
   final TextEditingController odometerController;
   final TextEditingController tripOdometerController;
+  final FocusNode odometerFocus;
+  final FocusNode tripFocus;
   final double? lastOdometer;
+  final VoidCallback onOdometerEditingComplete;
+  final VoidCallback onTripEditingComplete;
   final VoidCallback onOdometerChanged;
-  final VoidCallback onTripOdometerChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -95,16 +101,21 @@ class RefuelingOdometerSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: AppTextField(
                   label: 'Total Odometer',
                   hint: lastOdometer != null ? '${lastOdometer!.round()}' : '0',
                   controller: odometerController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  focusNode: odometerFocus,
+                  dense: true,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   prefixIcon: Icons.speed_rounded,
                   suffixText: 'km',
                   onChanged: (_) => onOdometerChanged(),
+                  onEditingComplete: onOdometerEditingComplete,
                   textInputAction: TextInputAction.next,
                 ),
               ),
@@ -112,12 +123,15 @@ class RefuelingOdometerSection extends StatelessWidget {
               Expanded(
                 child: AppTextField(
                   label: 'Trip Distance',
-                  hint: 'e.g. 350',
+                  hint: 'since last',
                   controller: tripOdometerController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  focusNode: tripFocus,
+                  dense: true,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   prefixIcon: Icons.add_road_rounded,
                   suffixText: 'km',
-                  onChanged: (_) => onTripOdometerChanged(),
+                  onEditingComplete: onTripEditingComplete,
                   textInputAction: TextInputAction.next,
                 ),
               ),

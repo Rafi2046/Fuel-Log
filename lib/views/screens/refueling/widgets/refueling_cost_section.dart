@@ -58,13 +58,16 @@ class RefuelingCostSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: AppTextField(
                   label: amountLabel,
                   hint: '0.0',
                   controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  dense: true,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   prefixIcon: isEV
                       ? Icons.battery_charging_full_rounded
                       : Icons.local_gas_station_rounded,
@@ -79,7 +82,9 @@ class RefuelingCostSection extends StatelessWidget {
                   label: 'Price / $unitSuffix',
                   hint: '0.0',
                   controller: pricePerUnitController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  dense: true,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   prefixIcon: Icons.sell_outlined,
                   onChanged: (_) => onPriceChanged(),
                   textInputAction: TextInputAction.next,
@@ -92,6 +97,7 @@ class RefuelingCostSection extends StatelessWidget {
             label: 'Total Cost',
             hint: 'e.g. 5000',
             controller: totalCostController,
+            dense: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             prefixIcon: Icons.payments_outlined,
             onChanged: (_) => onTotalCostChanged(),

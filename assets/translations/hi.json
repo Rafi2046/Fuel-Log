@@ -126,5 +126,9 @@
   "vehicleDeleted": "वाहन हटा दिया गया",
   "vehicleDeleteFailed": "वाहन हटाया नहीं जा सका",
   "delete": "हटाएँ",
-  "cancel": "रद्द"
+  "cancel": "रद्द",
+  "exploreMetrics": "एडवांस्ड एक्सप्लोरर",
+  "metricExplorerTitle": "मेट्रिक एक्सप्लोरर",
+  "report": "रिपोर्ट",
+  "monthlySpendingBreakdown": "मासिक खर्च विवरण"
 }

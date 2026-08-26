@@ -126,5 +126,9 @@
   "vehicleDeleted": "Vehicle deleted",
   "vehicleDeleteFailed": "Could not delete vehicle",
   "delete": "Delete",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "exploreMetrics": "Advanced Explorer",
+  "metricExplorerTitle": "Metric Explorer",
+  "report": "Report",
+  "monthlySpendingBreakdown": "Monthly Spending Breakdown"
 }
