@@ -81,7 +81,7 @@ class MockGasStation {
 
 const LatLng kDefaultUserLocation = LatLng(23.7925, 90.4078);
 
-/// Map-centric trip logging with real-time GPS location, ultra-clean dark map, smooth animated camera, and buffered tile streaming.
+/// Map-centric trip logging — free OpenStreetMap tiles (no API key / card).
 class TripLogTab extends StatefulWidget {
   const TripLogTab({super.key, this.isActive = true});
 
@@ -91,8 +91,7 @@ class TripLogTab extends StatefulWidget {
   State<TripLogTab> createState() => _TripLogTabState();
 }
 
-class _TripLogTabState extends State<TripLogTab>
-    with SingleTickerProviderStateMixin {
+class _TripLogTabState extends State<TripLogTab> {
   bool _isLoadingStations = false;
   bool _showStations = false;
   bool _isFetchingLocation = false;
@@ -111,33 +110,14 @@ class _TripLogTabState extends State<TripLogTab>
 
   late final MapController _mapController;
   late final PageController _carouselController;
-  late final AnimationController _cameraAnimController;
-  late final Animation<double> _cameraAnimation;
-  _LatLngTween? _latTween;
-  Tween<double>? _zoomTween;
+  double _mapZoom = 15.0;
+  LatLng _mapCenter = kDefaultUserLocation;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _carouselController = PageController(viewportFraction: 0.86);
-
-    _cameraAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-    _cameraAnimation = CurvedAnimation(
-      parent: _cameraAnimController,
-      curve: Curves.easeOutCubic,
-    )..addListener(() {
-        if (!mounted || _latTween == null || _zoomTween == null) return;
-        try {
-          _mapController.move(
-            _latTween!.evaluate(_cameraAnimation),
-            _zoomTween!.evaluate(_cameraAnimation),
-          );
-        } catch (_) {}
-      });
 
     if (widget.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -160,30 +140,18 @@ class _TripLogTabState extends State<TripLogTab>
   void dispose() {
     _tripTimer?.cancel();
     _gpsPollingTimer?.cancel();
-    _cameraAnimController.dispose();
     _mapController.dispose();
     _carouselController.dispose();
     super.dispose();
   }
 
-  /// Silky smooth 60fps camera movement with easeOutCubic curve (reusing single controller)
   void _animatedMapMove(LatLng destLocation, double destZoom) {
     if (!mounted) return;
-
-    _cameraAnimController.stop();
-
-    LatLng startCenter = _userLocation;
-    double startZoom = 15.0;
+    _mapZoom = destZoom;
+    _mapCenter = destLocation;
     try {
-      startCenter = _mapController.camera.center;
-      startZoom = _mapController.camera.zoom;
+      _mapController.move(destLocation, destZoom);
     } catch (_) {}
-
-    _latTween = _LatLngTween(begin: startCenter, end: destLocation);
-    _zoomTween = Tween<double>(begin: startZoom, end: destZoom);
-
-    _cameraAnimController.reset();
-    _cameraAnimController.forward();
   }
 
   /// Automatically requests permission and fetches live device GPS coordinates
@@ -261,12 +229,7 @@ class _TripLogTabState extends State<TripLogTab>
 
     setState(() => _isLoadingStations = true);
 
-    LatLng currentCenter = _userLocation;
-    try {
-      currentCenter = _mapController.camera.center;
-    } catch (_) {
-      currentCenter = _userLocation;
-    }
+    LatLng currentCenter = _mapCenter;
 
     final newStations = await GasStationService.instance.getNearbyStations(
       center: currentCenter,
@@ -336,23 +299,15 @@ class _TripLogTabState extends State<TripLogTab>
   }
 
   void _zoomIn() {
-    try {
-      final currentZoom = _mapController.camera.zoom;
-      final currentCenter = _mapController.camera.center;
-      if (currentZoom < 18.0) {
-        _animatedMapMove(currentCenter, currentZoom + 1.0);
-      }
-    } catch (_) {}
+    if (_mapZoom < 18.0) {
+      _animatedMapMove(_mapCenter, (_mapZoom + 1.0).clamp(8.5, 18.0));
+    }
   }
 
   void _zoomOut() {
-    try {
-      final currentZoom = _mapController.camera.zoom;
-      final currentCenter = _mapController.camera.center;
-      if (currentZoom > 9.0) {
-        _animatedMapMove(currentCenter, currentZoom - 1.0);
-      }
-    } catch (_) {}
+    if (_mapZoom > 9.0) {
+      _animatedMapMove(_mapCenter, (_mapZoom - 1.0).clamp(8.5, 18.0));
+    }
   }
 
   void _recenterUser() {
@@ -479,10 +434,7 @@ class _TripLogTabState extends State<TripLogTab>
       });
 
       // Smooth camera follow as you drive
-      try {
-        final currentZoom = _mapController.camera.zoom;
-        _animatedMapMove(currentLatLng, currentZoom);
-      } catch (_) {}
+      _animatedMapMove(currentLatLng, _mapZoom);
 
       // Arrival detection within 30 meters
       if (remainingMeters < 30) {
@@ -576,7 +528,7 @@ class _TripLogTabState extends State<TripLogTab>
               _userLocation = currentLatLng;
             });
             try {
-              _animatedMapMove(currentLatLng, _mapController.camera.zoom);
+              _animatedMapMove(currentLatLng, _mapZoom);
             } catch (_) {}
           } catch (_) {}
         },
@@ -646,7 +598,7 @@ class _TripLogTabState extends State<TripLogTab>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Clean Minimalist Dark Map with Locked Rotation and Buffered Seamless Zoom
+          // 1. Free OpenStreetMap (dark-tinted) — no API key / card needed
           LayoutBuilder(
             builder: (context, constraints) {
               if (!constraints.hasBoundedWidth ||
@@ -656,48 +608,53 @@ class _TripLogTabState extends State<TripLogTab>
                 return const ColoredBox(color: Color(0xFF0F0F12));
               }
 
-              return Container(
+              return ColoredBox(
                 color: const Color(0xFF0F0F12),
                 child: FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
                     initialCenter: _userLocation,
-                    initialZoom: 15.0,
+                    initialZoom: _mapZoom.clamp(8.5, 18.0),
                     minZoom: 8.5,
-                    maxZoom: 18.5,
-                    cameraConstraint: CameraConstraint.containCenter(
-                      bounds: LatLngBounds(
-                        const LatLng(-85.0, -180.0),
-                        const LatLng(85.0, 180.0),
-                      ),
-                    ),
+                    maxZoom: 18.0,
+                    backgroundColor: const Color(0xFF0F0F12),
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.drag |
                           InteractiveFlag.pinchZoom |
                           InteractiveFlag.doubleTapZoom |
                           InteractiveFlag.scrollWheelZoom,
                     ),
+                    onPositionChanged: (camera, _) {
+                      _mapZoom = camera.zoom;
+                      _mapCenter = camera.center;
+                    },
                   ),
                   children: [
+                    // OpenStreetMap = more roads/labels (Google-like detail), free, no card.
+                    // Single invert matrix → dark look without breaking tiles.
                     TileLayer(
                       urlTemplate:
-                          'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png',
-                      userAgentPackageName: 'com.fuel_log.app',
-                      maxZoom: 19,
-                      minZoom: 1,
-                      keepBuffer: 3,
-                      panBuffer: 1,
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.fuel_log',
+                      maxNativeZoom: 19,
+                      maxZoom: 18,
+                      keepBuffer: 4,
+                      panBuffer: 2,
                       retinaMode: true,
-                      subdomains: const ['a', 'b', 'c', 'd'],
+                      tileDisplay: const TileDisplay.instantaneous(),
                       tileBuilder: (context, tileWidget, tile) {
-                        return ColoredBox(
-                          color: const Color(0xFF0F0F12),
+                        return ColorFiltered(
+                          colorFilter: const ColorFilter.matrix(<double>[
+                            // Night invert (grayscale) — keeps street/label detail
+                            -0.2126, -0.7152, -0.0722, 0, 255,
+                            -0.2126, -0.7152, -0.0722, 0, 255,
+                            -0.2126, -0.7152, -0.0722, 0, 255,
+                            0, 0, 0, 1, 0,
+                          ]),
                           child: tileWidget,
                         );
                       },
                     ),
-
-                    // Turn-by-Turn Route Polyline (Live Navigation Mode)
                     if (_isNavigating &&
                         _activeRoute != null &&
                         _activeRoute!.points.isNotEmpty)
@@ -716,10 +673,8 @@ class _TripLogTabState extends State<TripLogTab>
                           ),
                         ],
                       ),
-
                     MarkerLayer(
                       markers: [
-                        // User Current Location Puck
                         Marker(
                           point: _userLocation,
                           width: 44,
@@ -729,27 +684,22 @@ class _TripLogTabState extends State<TripLogTab>
                             isLocating: _isFetchingLocation,
                           ),
                         ),
-
-                        // Destination Flag Marker (Live Navigation Mode)
                         if (_isNavigating && _navigatingStation != null)
                           Marker(
                             point: _navigatingStation!.location,
-                            width: 48,
-                            height: 48,
+                            width: 40,
+                            height: 40,
                             alignment: Alignment.topCenter,
                             child: const _DestinationFlagMarker(),
                           ),
-
-                        // Dynamic Gas Station Markers (Wide horizontal layout)
                         if (!_isNavigating && _showStations)
                           for (var i = 0; i < _stations.length; i++)
                             Marker(
                               point: _stations[i].location,
-                              width: 140,
-                              height: 62,
+                              width: 36,
+                              height: 44,
                               alignment: Alignment.bottomCenter,
-                              child: _MapStationMarker(
-                                station: _stations[i],
+                              child: _StationPinMarker(
                                 isSelected: i == _selectedStationIndex,
                                 onTap: () => _selectStation(i),
                               ),
@@ -776,10 +726,13 @@ class _TripLogTabState extends State<TripLogTab>
                 child: _isNavigating && _navigatingStation != null
                     ? Column(
                         key: const ValueKey('nav_top_hud_col'),
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _TripStatsPill(
-                            distanceKm: _tripDistanceCoveredKm,
-                            elapsed: _tripDuration,
+                          Center(
+                            child: _TripStatsPill(
+                              distanceKm: _tripDistanceCoveredKm,
+                              elapsed: _tripDuration,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           _NavigationTopHud(
@@ -792,10 +745,13 @@ class _TripLogTabState extends State<TripLogTab>
                       )
                     : Column(
                         key: const ValueKey('standard_top_hud'),
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _TripStatsPill(
-                            distanceKm: _tripDistanceCoveredKm,
-                            elapsed: _tripDuration,
+                          Center(
+                            child: _TripStatsPill(
+                              distanceKm: _tripDistanceCoveredKm,
+                              elapsed: _tripDuration,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           _MapActionChips(
@@ -968,26 +924,33 @@ class _TripLogTabState extends State<TripLogTab>
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
+                              // Manual entry — circular like reference
                               Container(
-                                width: 46,
-                                height: 46,
+                                width: 48,
+                                height: 48,
                                 decoration: BoxDecoration(
-                                  color: AppColors.cardElevated,
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: const Color(0xFF2E2E3C)),
+                                  color: const Color(0xFF18181F)
+                                      .withValues(alpha: 0.94),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF2E2E38),
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.35),
-                                      blurRadius: 10,
+                                      color:
+                                          Colors.black.withValues(alpha: 0.4),
+                                      blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
                                 child: Material(
                                   color: Colors.transparent,
+                                  shape: const CircleBorder(),
                                   child: InkWell(
-                                    borderRadius: BorderRadius.circular(14),
-                                    onTap: () => showTripManualEntrySheet(context),
+                                    customBorder: const CircleBorder(),
+                                    onTap: () =>
+                                        showTripManualEntrySheet(context),
                                     child: const Center(
                                       child: Icon(
                                         LucideIcons.mapPin,
@@ -998,7 +961,7 @@ class _TripLogTabState extends State<TripLogTab>
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: _StartTripFab(
                                   isTracking: _isGeneralTripTracking,
@@ -1027,34 +990,61 @@ class _UserLocationMarker extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: isLocating ? 44 : 38,
-            height: isLocating ? 44 : 38,
+          Container(
+            width: isLocating ? 40 : 34,
+            height: isLocating ? 40 : 34,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF29B6F6).withValues(
-                alpha: isLocating ? 0.4 : 0.2,
+                alpha: isLocating ? 0.35 : 0.2,
               ),
             ),
           ),
           Container(
-            width: 18,
-            height: 18,
+            width: 16,
+            height: 16,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF0288D1),
-              border: Border.all(color: Colors.white, width: 2.2),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0288D1).withValues(alpha: 0.7),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
+              border: Border.all(color: Colors.white, width: 2),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DestinationFlagMarker extends StatelessWidget {
+  const _DestinationFlagMarker();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Icon(
+      LucideIcons.flag,
+      size: 22,
+      color: Color(0xFF00E5FF),
+    );
+  }
+}
+
+class _StationPinMarker extends StatelessWidget {
+  const _StationPinMarker({
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Icon(
+        LucideIcons.mapPin,
+        size: isSelected ? 30 : 26,
+        color: isSelected ? AppColors.primary : const Color(0xFF4A9EFF),
       ),
     );
   }
@@ -1173,112 +1163,6 @@ class _MapChip extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MapStationMarker extends StatelessWidget {
-  const _MapStationMarker({
-    required this.station,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final MockGasStation station;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: isSelected ? 1.06 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Floating Horizontal Capsule Badge
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-              decoration: BoxDecoration(
-                color: const Color(0xFF16161A).withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primary
-                      : const Color(0xFF2E2E38),
-                  width: isSelected ? 1.5 : 1.0,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${station.name.split(' ').first} • ৳${station.primaryPrice.toStringAsFixed(0)}',
-                    maxLines: 1,
-                    softWrap: false,
-                    style: AppTextStyles.caption.copyWith(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    LucideIcons.star,
-                    size: 10,
-                    color: Color(0xFFFFB74D),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 3),
-            // Clean Glowing Circular Icon Pin
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary
-                    : const Color(0xFF202028),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? Colors.white : AppColors.primary,
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(
-                      alpha: isSelected ? 0.6 : 0.25,
-                    ),
-                    blurRadius: isSelected ? 12 : 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                LucideIcons.fuel,
-                color: isSelected ? Colors.white : AppColors.primary,
-                size: 14,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -1782,7 +1666,8 @@ class _StartTripFab extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isTracking;
 
-  static final _radius = BorderRadius.circular(14);
+  // Soft pill — matches reference Start Trip (not sharp rect, not full capsule)
+  static final _radius = BorderRadius.circular(28);
 
   @override
   Widget build(BuildContext context) {
@@ -1791,11 +1676,9 @@ class _StartTripFab extends StatelessWidget {
         borderRadius: _radius,
         boxShadow: [
           BoxShadow(
-            color: isTracking
-                ? const Color(0xFFD32F2F).withValues(alpha: 0.5)
-                : AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -1808,7 +1691,7 @@ class _StartTripFab extends StatelessWidget {
           onTap: onPressed,
           borderRadius: _radius,
           child: Container(
-            height: 46,
+            height: 48,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
@@ -1817,7 +1700,7 @@ class _StartTripFab extends StatelessWidget {
                 Icon(
                   isTracking ? LucideIcons.square : LucideIcons.play,
                   color: Colors.white,
-                  size: 16,
+                  size: 18,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -1834,55 +1717,6 @@ class _StartTripFab extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _LatLngTween extends Tween<LatLng> {
-  _LatLngTween({required LatLng begin, required LatLng end})
-      : super(begin: begin, end: end);
-
-  @override
-  LatLng lerp(double t) {
-    final lat = begin!.latitude + (end!.latitude - begin!.latitude) * t;
-    final lng = begin!.longitude + (end!.longitude - begin!.longitude) * t;
-    return LatLng(lat, lng);
-  }
-}
-
-class _DestinationFlagMarker extends StatelessWidget {
-  const _DestinationFlagMarker();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: const Color(0xFF00E5FF),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
-                blurRadius: 14,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: const Icon(
-            LucideIcons.flag,
-            size: 16,
-            color: Colors.black,
-          ),
-        ),
-        Container(
-          width: 2.5,
-          height: 10,
-          color: const Color(0xFF00E5FF),
-        ),
-      ],
     );
   }
 }
