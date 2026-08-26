@@ -7,7 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../screens/refueling_form_screen.dart';
 import '../screens/stations/station_detail_screen.dart';
-import '../screens/tabs/trip_log_tab.dart';
+import '../../models/mock_gas_station.dart';
 
 /// Luxury frosted glass modal sheet showing all nearby stations in rich detail
 class StationListModalSheet extends StatefulWidget {

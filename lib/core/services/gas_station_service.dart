@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
-import '../../views/screens/tabs/trip_log_tab.dart';
+import '../../models/mock_gas_station.dart';
 import 'bd_fuel_rate_service.dart';
 
 class GasStationService {
