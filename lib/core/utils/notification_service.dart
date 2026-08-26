@@ -2,12 +2,15 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-/// Service for managing local push notifications for maintenance reminders.
+/// Service for managing local push notifications for maintenance reminders
+/// and weather / drive tips.
 class NotificationService {
   NotificationService._internal();
-  static final NotificationService _instance =
-      NotificationService._internal();
+  static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
+
+  static const weatherMorningId = 91001;
+  static const weatherAlertId = 91002;
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -94,7 +97,6 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (_) {
-      // Fallback for Android OS / devices where exact alarm permission is restricted
       await _flutterLocalNotificationsPlugin.zonedSchedule(
         id,
         title,
@@ -137,5 +139,78 @@ class NotificationService {
       body,
       details,
     );
+  }
+
+  NotificationDetails get _weatherDetails {
+    const androidDetails = AndroidNotificationDetails(
+      'weather_drive_tips',
+      'Weather & Drive Tips',
+      channelDescription:
+          'Morning drive tips and alerts when weather may affect driving',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    const iosDetails = DarwinNotificationDetails();
+    return const NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+  }
+
+  /// Immediate weather / drive advice notification (translated strings).
+  Future<void> showWeatherNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    await init();
+    await _flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      body,
+      _weatherDetails,
+    );
+  }
+
+  /// Daily morning tip at 07:00 local — opens reminder to check drive weather.
+  Future<void> scheduleMorningWeatherTip({
+    String title = 'Drive weather tip',
+    String body = 'Check today’s conditions before you take the car out.',
+  }) async {
+    await init();
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      7,
+    );
+    if (!scheduled.isAfter(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+
+    try {
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        weatherMorningId,
+        title,
+        body,
+        scheduled,
+        _weatherDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (_) {
+      // Scheduling can fail on restricted devices — ignore quietly.
+    }
+  }
+
+  Future<void> cancelWeatherNotifications() async {
+    await init();
+    await _flutterLocalNotificationsPlugin.cancel(weatherMorningId);
+    await _flutterLocalNotificationsPlugin.cancel(weatherAlertId);
   }
 }

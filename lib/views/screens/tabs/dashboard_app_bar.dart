@@ -13,7 +13,6 @@ PreferredSizeWidget buildDashboardAppBar({
   required int currentIndex,
   required Vehicle? activeVehicle,
   VoidCallback? onVehicleTap,
-  VoidCallback? onGarageTap,
   VoidCallback? onFuelStationsTap,
 }) {
   switch (currentIndex) {
@@ -132,28 +131,6 @@ PreferredSizeWidget buildDashboardAppBar({
                 color: AppColors.primary,
               ),
               onPressed: onFuelStationsTap,
-            ),
-          ),
-
-          // Garage Quick Access Button
-          Container(
-            width: 38,
-            height: 38,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              tooltip: 'garageTitle'.tr(),
-              iconSize: 18,
-              icon: const Icon(
-                Icons.garage_outlined,
-                color: AppColors.textSecondary,
-              ),
-              onPressed: onGarageTap,
             ),
           ),
 

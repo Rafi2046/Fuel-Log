@@ -130,5 +130,19 @@
   "exploreMetrics": "Advanced Explorer",
   "metricExplorerTitle": "Metric Explorer",
   "report": "Report",
-  "monthlySpendingBreakdown": "Monthly Spending Breakdown"
+  "monthlySpendingBreakdown": "Monthly Spending Breakdown",
+  "weatherTipsAlerts": "Weather tips & alerts",
+  "weatherTipsAlertsSubtitle": "Morning tip and alerts when driving may be risky",
+  "weatherLoading": "Checking local weather…",
+  "weatherUnavailable": "Weather unavailable right now",
+  "weatherAdviceGoodTitle": "Good to drive",
+  "weatherAdviceGoodBody": "Conditions look fine to take the car out.",
+  "weatherAdviceCautionTitle": "Drive with care",
+  "weatherAdviceCautionBody": "Rain or wind — go slow and use lights if needed.",
+  "weatherAdviceAvoidTitle": "Better wait",
+  "weatherAdviceAvoidBody": "Heavy rain, storm, or low visibility — delay if you can.",
+  "weatherMorningTitle": "Drive weather tip",
+  "weatherMorningBody": "Check today’s conditions before you take the car out.",
+  "retry": "Retry",
+  "refresh": "Refresh"
 }

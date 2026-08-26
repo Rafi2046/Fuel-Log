@@ -15,6 +15,7 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/efficiency_gauge.dart';
 import '../../widgets/summary_stat_card.dart';
+import '../../widgets/weather_drive_card.dart';
 import '../reminders/reminders_screen.dart';
 
 /// Home tab — compact overview (gauge, month cards, recent log).
@@ -88,6 +89,8 @@ class _HomeContent extends StatelessWidget {
               unit: mileageUnit,
             ),
           ),
+          const SizedBox(height: AppSpacing.md),
+          const WeatherDriveCard(),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [

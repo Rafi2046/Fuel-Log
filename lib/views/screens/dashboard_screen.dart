@@ -8,8 +8,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
-import '../../core/services/gas_station_service.dart';
-import '../widgets/station_list_modal_sheet.dart';
 import '../widgets/trip_manual_entry_sheet.dart';
 import 'tabs/dashboard_app_bar.dart';
 import 'tabs/dashboard_nav_item.dart';
@@ -30,10 +28,11 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
+  final GlobalKey<TripLogTabState> _tripTabKey = GlobalKey<TripLogTabState>();
 
   List<Widget> get _tabs => [
         const HomeTab(),
-        TripLogTab(isActive: _isTripTab),
+        TripLogTab(key: _tripTabKey, isActive: _isTripTab),
         const StatsTab(),
         const SettingsTab(),
       ];
@@ -325,19 +324,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _openGasStations() async {
+  void _openGasStations() {
     setState(() => _currentIndex = 1);
-    final stations = await GasStationService.instance.getNearbyStations(
-      center: kDefaultUserLocation,
-    );
-    if (!mounted) return;
-    StationListModalSheet.show(
-      context,
-      stations: stations,
-      initialIndex: 0,
-      onStationSelected: (_) {},
-      onNavigate: (station) {},
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tripTabKey.currentState?.openNearbyStations();
+    });
   }
 
   @override
@@ -362,7 +353,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 currentIndex: _appBarIndex,
                 activeVehicle: activeVehicle,
                 onVehicleTap: _openVehicleSwitcher,
-                onGarageTap: _openGarage,
                 onFuelStationsTap: _openGasStations,
               ),
         body: IndexedStack(

@@ -11,41 +11,56 @@ class GasStationService {
 
   static const _distanceCalc = Distance();
 
-  /// Fetches real nearby gas stations for ANY location in Bangladesh or worldwide
+  /// Fetches real nearby gas stations. Optimized for fast first paint.
   Future<List<MockGasStation>> getNearbyStations({
     required LatLng center,
-    double radiusMeters = 8000,
+    double radiusMeters = 5000,
   }) async {
-    // Refresh BPC fuel rates (OpenVan) so list prices stay current.
-    await BdFuelRateService.instance.ensureLoaded(forceRefresh: true);
+    // Don't block on fuel-rate network — use cache / refresh in background.
+    // ignore: unawaited_futures
+    BdFuelRateService.instance.ensureLoaded();
 
-    // 1. Try fetching live real-world stations from OpenStreetMap Overpass API (Fast, Free, No API Key needed)
+    final cacheKey = _cacheKey(center);
+    final cached = _stationCache[cacheKey];
+    if (cached != null &&
+        DateTime.now().difference(cached.$1) < _stationCacheTtl) {
+      return cached.$2;
+    }
+
+    // Race Overpass vs a short deadline — never wait forever.
     try {
-      final liveStations = await _fetchFromOverpass(center, radiusMeters);
+      final liveStations = await _fetchFromOverpass(center, radiusMeters)
+          .timeout(const Duration(milliseconds: 2800));
       if (liveStations.isNotEmpty) {
+        _stationCache[cacheKey] = (DateTime.now(), liveStations);
         return liveStations;
       }
     } catch (_) {
-      // Fallback gracefully to high-precision regional station generator
+      // Fall through to regional generator
     }
 
-    // 2. High-precision dynamic generator with authentic regional brands
-    return _generateRegionalStations(center);
+    final regional = _generateRegionalStations(center);
+    _stationCache[cacheKey] = (DateTime.now(), regional);
+    return regional;
   }
 
-  /// Queries OpenStreetMap Overpass API for real fuel stations (nodes, ways, and relations)
+  String _cacheKey(LatLng c) =>
+      '${c.latitude.toStringAsFixed(2)},${c.longitude.toStringAsFixed(2)}';
+
+  static final Map<String, (DateTime, List<MockGasStation>)> _stationCache = {};
+  static const _stationCacheTtl = Duration(minutes: 5);
+
+  /// Queries OpenStreetMap Overpass — nodes only (much faster than ways/relations).
   Future<List<MockGasStation>> _fetchFromOverpass(
     LatLng center,
     double radiusMeters,
   ) async {
     final query = '''
-[out:json][timeout:5];
+[out:json][timeout:2];
 (
   node["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
-  way["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
-  relation["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
 );
-out center 30;
+out body 20;
 ''';
 
     final url = Uri.parse(
@@ -53,7 +68,7 @@ out center 30;
     );
 
     final response = await http.get(url).timeout(
-      const Duration(milliseconds: 6000),
+      const Duration(milliseconds: 2500),
     );
 
     if (response.statusCode != 200) return [];

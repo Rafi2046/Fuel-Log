@@ -130,5 +130,19 @@
   "exploreMetrics": "एडवांस्ड एक्सप्लोरर",
   "metricExplorerTitle": "मेट्रिक एक्सप्लोरर",
   "report": "रिपोर्ट",
-  "monthlySpendingBreakdown": "मासिक खर्च विवरण"
+  "monthlySpendingBreakdown": "मासिक खर्च विवरण",
+  "weatherTipsAlerts": "मौसम टिप और अलर्ट",
+  "weatherTipsAlertsSubtitle": "सुबह की टिप और खराब मौसम पर अलर्ट",
+  "weatherLoading": "स्थानीय मौसम जाँच हो रही है…",
+  "weatherUnavailable": "अभी मौसम उपलब्ध नहीं",
+  "weatherAdviceGoodTitle": "गाड़ी निकालना ठीक है",
+  "weatherAdviceGoodBody": "मौसम ठीक है — गाड़ी लेकर निकल सकते हैं।",
+  "weatherAdviceCautionTitle": "सावधानी से चलाएँ",
+  "weatherAdviceCautionBody": "बारिश या तेज़ हवा — धीरे चलाएँ, लाइट ऑन रखें।",
+  "weatherAdviceAvoidTitle": "इंतज़ार बेहतर",
+  "weatherAdviceAvoidBody": "तेज़ बारिश, तूफ़ान या कम दृश्यता — संभव हो तो रुकें।",
+  "weatherMorningTitle": "ड्राइव वेदर टिप",
+  "weatherMorningBody": "गाड़ी निकालने से पहले आज का मौसम देख लें।",
+  "retry": "फिर कोशिश",
+  "refresh": "रिफ्रेश"
 }

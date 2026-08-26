@@ -17,6 +17,7 @@ import '../../../models/fuel_price_model.dart';
 import '../stations/station_detail_screen.dart';
 import '../../widgets/station_list_modal_sheet.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
+import '../../widgets/weather_drive_card.dart';
 
 class MockGasStation {
   final String id;
@@ -92,10 +93,10 @@ class TripLogTab extends StatefulWidget {
   final bool isActive;
 
   @override
-  State<TripLogTab> createState() => _TripLogTabState();
+  TripLogTabState createState() => TripLogTabState();
 }
 
-class _TripLogTabState extends State<TripLogTab> {
+class TripLogTabState extends State<TripLogTab> {
   bool _isLoadingStations = false;
   bool _showStations = false;
   bool _isFetchingLocation = false;
@@ -158,59 +159,19 @@ class _TripLogTabState extends State<TripLogTab> {
     } catch (_) {}
   }
 
-  /// Automatically requests permission and fetches live device GPS coordinates
+  /// Used on tab focus — non-blocking location warm-up.
   Future<void> _fetchLiveLocation({bool showFeedback = false}) async {
     if (_isFetchingLocation) return;
     setState(() => _isFetchingLocation = true);
-
     try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (showFeedback && mounted) {
-          _chipSnack('Please enable device GPS / Location services');
-        }
-        setState(() => _isFetchingLocation = false);
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (showFeedback && mounted) {
-            _chipSnack('Location permission was denied');
-          }
-          setState(() => _isFetchingLocation = false);
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (showFeedback && mounted) {
-          _chipSnack('Location permission is permanently denied in settings');
-        }
-        setState(() => _isFetchingLocation = false);
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 8),
-        ),
-      );
-
+      final live = await _resolveLocationFast();
       if (!mounted) return;
-
-      final liveLatLng = LatLng(position.latitude, position.longitude);
       setState(() {
-        _userLocation = liveLatLng;
+        _userLocation = live;
         _isFetchingLocation = false;
       });
-
-      _animatedMapMove(liveLatLng, 15.2);
-
-      if (showFeedback && mounted) {
+      _animatedMapMove(live, 15.2);
+      if (showFeedback) {
         _chipSnack('📍 Current location locked');
       }
     } catch (_) {
@@ -223,6 +184,42 @@ class _TripLogTabState extends State<TripLogTab> {
     }
   }
 
+  /// Fast location: last-known first, then a short medium-accuracy fix.
+  Future<LatLng> _resolveLocationFast() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return _userLocation;
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return _userLocation;
+      }
+
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) {
+        final quick = LatLng(last.latitude, last.longitude);
+        _userLocation = quick;
+        return quick;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 2),
+        ),
+      );
+      final live = LatLng(position.latitude, position.longitude);
+      _userLocation = live;
+      return live;
+    } catch (_) {
+      return _userLocation;
+    }
+  }
+
   Future<void> _onToggleStations() async {
     if (_isLoadingStations) return;
 
@@ -231,12 +228,22 @@ class _TripLogTabState extends State<TripLogTab> {
       return;
     }
 
+    await openNearbyStations();
+  }
+
+  /// Opens nearby stations quickly (last-known GPS + short network budget).
+  Future<void> openNearbyStations() async {
+    if (_isLoadingStations) return;
+
     setState(() => _isLoadingStations = true);
 
-    LatLng currentCenter = _mapCenter;
+    final center = await _resolveLocationFast();
+    if (!mounted) return;
+
+    _animatedMapMove(center, 14.8);
 
     final newStations = await GasStationService.instance.getNearbyStations(
-      center: currentCenter,
+      center: center,
     );
 
     if (!mounted) return;
@@ -246,11 +253,52 @@ class _TripLogTabState extends State<TripLogTab> {
       _showStations = true;
       _stations = newStations;
       _selectedStationIndex = 0;
+      _userLocation = center;
     });
 
     if (newStations.isNotEmpty) {
       _animatedMapMove(newStations.first.location, 15.0);
+      if (_carouselController.hasClients) {
+        _carouselController.jumpToPage(0);
+      }
+    } else {
+      _chipSnack('No stations found nearby');
     }
+
+    // Refine GPS in background; refresh list only if we moved meaningfully.
+    // ignore: unawaited_futures
+    _refineStationsInBackground(center);
+  }
+
+  Future<void> _refineStationsInBackground(LatLng previous) async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 4),
+        ),
+      );
+      if (!mounted) return;
+      final live = LatLng(position.latitude, position.longitude);
+      final movedM = Distance()(previous, live);
+      if (movedM < 400) {
+        setState(() => _userLocation = live);
+        return;
+      }
+
+      final stations = await GasStationService.instance.getNearbyStations(
+        center: live,
+      );
+      if (!mounted || !_showStations) return;
+      setState(() {
+        _userLocation = live;
+        _stations = stations;
+        _selectedStationIndex = 0;
+      });
+      if (stations.isNotEmpty) {
+        _animatedMapMove(stations.first.location, 15.0);
+      }
+    } catch (_) {}
   }
 
   void _closeStations() {
@@ -874,7 +922,14 @@ class _TripLogTabState extends State<TripLogTab> {
             left: 0,
             right: 0,
             bottom: 12,
-            child: AnimatedSwitcher(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!_isNavigating &&
+                    !_isGeneralTripTracking &&
+                    !(_showStations && _stations.isNotEmpty))
+                  const WeatherDriveTripBanner(),
+                AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
@@ -975,6 +1030,8 @@ class _TripLogTabState extends State<TripLogTab> {
                             ],
                           ),
                         )),
+            ),
+              ],
             ),
           ),
         ],

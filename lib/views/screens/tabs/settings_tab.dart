@@ -1,23 +1,25 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_locales.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../viewmodels/weather_viewmodel.dart';
 import '../reports/reports_screen.dart';
 
 /// Settings tab with natural, clean layout and Lucide icons.
-class SettingsTab extends StatefulWidget {
+class SettingsTab extends ConsumerStatefulWidget {
   const SettingsTab({super.key});
 
   @override
-  State<SettingsTab> createState() => _SettingsTabState();
+  ConsumerState<SettingsTab> createState() => _SettingsTabState();
 }
 
-class _SettingsTabState extends State<SettingsTab> {
+class _SettingsTabState extends ConsumerState<SettingsTab> {
   bool _darkThemeEnabled = true;
 
   String _languageLabel(Locale locale) {
@@ -310,6 +312,21 @@ class _SettingsTabState extends State<SettingsTab> {
                   value: _darkThemeEnabled,
                   activeTrackColor: AppColors.primary,
                   onChanged: (v) => setState(() => _darkThemeEnabled = v),
+                ),
+              ),
+            ),
+            _SettingsTile(
+              icon: LucideIcons.cloudSun,
+              title: 'weatherTipsAlerts'.tr(),
+              subtitle: 'weatherTipsAlertsSubtitle'.tr(),
+              trailing: Transform.scale(
+                scale: 0.82,
+                child: CupertinoSwitch(
+                  value: ref.watch(weatherTipsEnabledProvider),
+                  activeTrackColor: AppColors.primary,
+                  onChanged: (v) => ref
+                      .read(weatherTipsEnabledProvider.notifier)
+                      .setEnabled(v),
                 ),
               ),
             ),

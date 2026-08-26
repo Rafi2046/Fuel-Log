@@ -130,5 +130,19 @@
   "exploreMetrics": "অ্যাডভান্সড এক্সপ্লোরার",
   "metricExplorerTitle": "মেট্রিক এক্সপ্লোরার",
   "report": "রিপোর্ট",
-  "monthlySpendingBreakdown": "মাসিক খরচের বিভাজন"
+  "monthlySpendingBreakdown": "মাসিক খরচের বিভাজন",
+  "weatherTipsAlerts": "আবহাওয়া টিপ ও অ্যালার্ট",
+  "weatherTipsAlertsSubtitle": "সকালের টিপ এবং খারাপ আবহাওয়ায় অ্যালার্ট",
+  "weatherLoading": "স্থানীয় আবহাওয়া দেখা হচ্ছে…",
+  "weatherUnavailable": "এখন আবহাওয়া পাওয়া যাচ্ছে না",
+  "weatherAdviceGoodTitle": "গাড়ি নিয়ে বের হওয়া যায়",
+  "weatherAdviceGoodBody": "আবহাওয়া ভালো — গাড়ি নিয়ে বের হওয়া ঠিক আছে।",
+  "weatherAdviceCautionTitle": "সাবধানে চালান",
+  "weatherAdviceCautionBody": "বৃষ্টি বা ঝোড়ো হাওয়া — ধীরে চালান, লাইট ব্যবহার করুন।",
+  "weatherAdviceAvoidTitle": "অপেক্ষা করাই ভালো",
+  "weatherAdviceAvoidBody": "ভারী বৃষ্টি, ঝড় বা কম দৃশ্যমানতা — পারলে একটু অপেক্ষা করুন।",
+  "weatherMorningTitle": "ড্রাইভ ওয়েদার টিপ",
+  "weatherMorningBody": "গাড়ি নিয়ে বের হওয়ার আগে আজকের আবহাওয়া দেখে নিন।",
+  "retry": "আবার চেষ্টা",
+  "refresh": "রিফ্রেশ"
 }

@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
 import 'core/constants/app_locales.dart';
@@ -20,6 +21,21 @@ Future<void> main() async {
   // Prefetch BD BPC fuel rates (OpenVan) — non-blocking for UI.
   // ignore: unawaited_futures
   BdFuelRateService.instance.ensureLoaded(forceRefresh: true);
+
+  // Schedule daily weather tip if user has tips enabled (default on).
+  // ignore: unawaited_futures
+  () async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('weather_tips_alerts_enabled') ?? true;
+      if (enabled) {
+        await NotificationService().scheduleMorningWeatherTip(
+          title: 'weatherMorningTitle'.tr(),
+          body: 'weatherMorningBody'.tr(),
+        );
+      }
+    } catch (_) {}
+  }();
 
   // Ensure the sqlite3_flutter_libs plugin is registered / linked.
   if (Platform.isAndroid) {
