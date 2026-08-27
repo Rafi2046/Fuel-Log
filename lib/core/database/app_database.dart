@@ -272,6 +272,23 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
         .watch();
   }
+
+  // Backup & Restore queries
+  Future<List<Vehicle>> getAllVehicles() => select(vehicles).get();
+  Future<List<FuelLog>> getAllFuelLogs() => select(fuelLogs).get();
+  Future<List<TripLog>> getAllTripLogs() => select(tripLogs).get();
+  Future<List<ServiceLog>> getAllServiceLogs() => select(serviceLogs).get();
+  Future<List<Reminder>> getAllReminders() => select(reminders).get();
+
+  Future<void> wipeAllData() async {
+    await transaction(() async {
+      await delete(tripLogs).go();
+      await delete(serviceLogs).go();
+      await delete(reminders).go();
+      await delete(fuelLogs).go();
+      await delete(vehicles).go();
+    });
+  }
 }
 
 LazyDatabase _openConnection() {

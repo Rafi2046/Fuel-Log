@@ -8,6 +8,10 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_locales.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/services/backup_restore_service.dart';
+import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../reports/reports_screen.dart';
 
@@ -21,6 +25,9 @@ class SettingsTab extends ConsumerStatefulWidget {
 
 class _SettingsTabState extends ConsumerState<SettingsTab> {
   bool _darkThemeEnabled = true;
+  bool _isExporting = false;
+  bool _isRestoring = false;
+  final _backupService = const BackupRestoreService();
 
   String _languageLabel(Locale locale) {
     switch (locale.languageCode) {
@@ -235,6 +242,136 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     );
   }
 
+  Future<void> _handleExport() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final db = ref.read(databaseProvider);
+      await _backupService.shareBackup(db: db);
+      if (!mounted) return;
+      _toast('Backup exported successfully');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('Could not export backup: $e');
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _handleImport() async {
+    if (_isRestoring) return;
+    try {
+      final file = await _backupService.pickBackupFile();
+      if (file == null || !mounted) return;
+
+      final summary = await _backupService.inspectBackupFile(file);
+
+      final shouldRestore = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E28),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            side: const BorderSide(color: Color(0xFF2E2E3C)),
+          ),
+          title: Row(
+            children: [
+              const Icon(LucideIcons.triangleAlert,
+                  color: AppColors.warning, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Restore Backup?',
+                style: AppTextStyles.title.copyWith(fontSize: 18),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'This will replace your current data with the selected backup:',
+                style: AppTextStyles.bodySecondary,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF14141B),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(color: const Color(0xFF2A2A38)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('🚗 Vehicles: ${summary.vehicleCount}',
+                        style: AppTextStyles.body),
+                    Text('⛽ Fuel Logs: ${summary.fuelLogCount}',
+                        style: AppTextStyles.body),
+                    Text('🗺️ Trip Logs: ${summary.tripLogCount}',
+                        style: AppTextStyles.body),
+                    Text('🔧 Service Logs: ${summary.serviceLogCount}',
+                        style: AppTextStyles.body),
+                    Text('⏰ Reminders: ${summary.reminderCount}',
+                        style: AppTextStyles.body),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '⚠️ Existing records will be overwritten.',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Cancel', style: AppTextStyles.bodySecondary),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Restore Data'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldRestore != true || !mounted) return;
+
+      setState(() => _isRestoring = true);
+
+      final db = ref.read(databaseProvider);
+      final restored =
+          await _backupService.restoreBackupFromFile(file: file, db: db);
+
+      // Invalidate providers so UI instantly syncs across all tabs
+      ref.invalidate(vehiclesProvider);
+      ref.invalidate(activeVehicleProvider);
+      ref.invalidate(vehicleLogsProvider);
+
+      if (!mounted) return;
+      _toast(
+          '✅ Restored ${restored.vehicleCount} vehicles & ${restored.totalRecords} records!');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('Restore error: $e');
+    } finally {
+      if (mounted) setState(() => _isRestoring = false);
+    }
+  }
+
   void _toast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -272,13 +409,33 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               icon: LucideIcons.fileDown,
               title: 'exportData'.tr(),
               subtitle: 'exportDataSubtitle'.tr(),
-              onTap: () => _toast('Backup CSV generated successfully'),
+              trailing: _isExporting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : null,
+              onTap: _isExporting ? null : _handleExport,
             ),
             _SettingsTile(
               icon: LucideIcons.fileUp,
               title: 'importData'.tr(),
               subtitle: 'importDataSubtitle'.tr(),
-              onTap: () => _toast('Select a valid CSV backup file'),
+              trailing: _isRestoring
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : null,
+              onTap: _isRestoring ? null : _handleImport,
             ),
           ],
         ),
