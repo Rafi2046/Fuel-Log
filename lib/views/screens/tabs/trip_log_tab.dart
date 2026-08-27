@@ -18,10 +18,13 @@ import 'trip/widgets/active_navigation_bottom_bar.dart';
 import 'trip/widgets/nearby_stations_carousel.dart';
 import 'trip/widgets/navigation_top_hud.dart';
 import 'trip/widgets/trip_default_fabs.dart';
+import 'trip/widgets/trip_history_sheet.dart';
+import 'trip/widgets/trip_list_view.dart';
 import 'trip/widgets/trip_map_action_chips.dart';
 import 'trip/widgets/trip_map_markers.dart';
 import 'trip/widgets/trip_map_zoom_controls.dart';
 import 'trip/widgets/trip_stats_pill.dart';
+import 'trip/widgets/trip_summary_card.dart';
 
 export '../../../models/mock_gas_station.dart';
 

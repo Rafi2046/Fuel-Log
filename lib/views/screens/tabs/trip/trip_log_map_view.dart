@@ -64,6 +64,7 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
                       isStationsActive: _showStations,
                       onStations: _onToggleStations,
                       onNavigate: _onTopNavigateChip,
+                      onHistory: () => showTripHistoryModalSheet(context),
                     ),
                   ],
                 ),
@@ -142,6 +143,7 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
                         onManualEntry: () =>
                             showTripManualEntrySheet(context),
                         onToggleTracking: _toggleGeneralTripTracking,
+                        onHistory: () => showTripHistoryModalSheet(context),
                       )),
           ),
         ],

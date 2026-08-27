@@ -7,16 +7,19 @@ import '../../../../../core/constants/app_text_styles.dart';
 
 class TripMapActionChips extends StatelessWidget {
   const TripMapActionChips({
+    super.key,
     required this.isLoadingStations,
     required this.isStationsActive,
     required this.onStations,
     required this.onNavigate,
+    this.onHistory,
   });
 
   final bool isLoadingStations;
   final bool isStationsActive;
   final VoidCallback onStations;
   final VoidCallback onNavigate;
+  final VoidCallback? onHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +37,11 @@ class TripMapActionChips extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: TripMapChip(
-            icon: LucideIcons.navigation,
-            label: 'navigate'.tr(),
+            icon: LucideIcons.route,
+            label: 'tripHistory'.tr(),
             isLoading: false,
             isActive: false,
-            onTap: onNavigate,
+            onTap: onHistory ?? onNavigate,
           ),
         ),
       ],

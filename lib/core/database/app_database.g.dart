@@ -1136,6 +1136,28 @@ class $RemindersTable extends Reminders
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _oilTypeMeta = const VerificationMeta(
+    'oilType',
+  );
+  @override
+  late final GeneratedColumn<String> oilType = GeneratedColumn<String>(
+    'oil_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _intervalKmMeta = const VerificationMeta(
+    'intervalKm',
+  );
+  @override
+  late final GeneratedColumn<double> intervalKm = GeneratedColumn<double>(
+    'interval_km',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1144,6 +1166,8 @@ class $RemindersTable extends Reminders
     targetDate,
     targetOdometer,
     isCompleted,
+    oilType,
+    intervalKm,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1200,6 +1224,18 @@ class $RemindersTable extends Reminders
         ),
       );
     }
+    if (data.containsKey('oil_type')) {
+      context.handle(
+        _oilTypeMeta,
+        oilType.isAcceptableOrUnknown(data['oil_type']!, _oilTypeMeta),
+      );
+    }
+    if (data.containsKey('interval_km')) {
+      context.handle(
+        _intervalKmMeta,
+        intervalKm.isAcceptableOrUnknown(data['interval_km']!, _intervalKmMeta),
+      );
+    }
     return context;
   }
 
@@ -1233,6 +1269,14 @@ class $RemindersTable extends Reminders
         DriftSqlType.bool,
         data['${effectivePrefix}is_completed'],
       )!,
+      oilType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}oil_type'],
+      ),
+      intervalKm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}interval_km'],
+      ),
     );
   }
 
@@ -1249,6 +1293,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   final DateTime? targetDate;
   final double? targetOdometer;
   final bool isCompleted;
+  final String? oilType;
+  final double? intervalKm;
   const Reminder({
     required this.id,
     required this.vehicleId,
@@ -1256,6 +1302,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     this.targetDate,
     this.targetOdometer,
     required this.isCompleted,
+    this.oilType,
+    this.intervalKm,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1270,6 +1318,12 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       map['target_odometer'] = Variable<double>(targetOdometer);
     }
     map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || oilType != null) {
+      map['oil_type'] = Variable<String>(oilType);
+    }
+    if (!nullToAbsent || intervalKm != null) {
+      map['interval_km'] = Variable<double>(intervalKm);
+    }
     return map;
   }
 
@@ -1285,6 +1339,12 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ? const Value.absent()
           : Value(targetOdometer),
       isCompleted: Value(isCompleted),
+      oilType: oilType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oilType),
+      intervalKm: intervalKm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(intervalKm),
     );
   }
 
@@ -1300,6 +1360,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       targetDate: serializer.fromJson<DateTime?>(json['targetDate']),
       targetOdometer: serializer.fromJson<double?>(json['targetOdometer']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      oilType: serializer.fromJson<String?>(json['oilType']),
+      intervalKm: serializer.fromJson<double?>(json['intervalKm']),
     );
   }
   @override
@@ -1312,6 +1374,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'targetDate': serializer.toJson<DateTime?>(targetDate),
       'targetOdometer': serializer.toJson<double?>(targetOdometer),
       'isCompleted': serializer.toJson<bool>(isCompleted),
+      'oilType': serializer.toJson<String?>(oilType),
+      'intervalKm': serializer.toJson<double?>(intervalKm),
     };
   }
 
@@ -1322,6 +1386,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     Value<DateTime?> targetDate = const Value.absent(),
     Value<double?> targetOdometer = const Value.absent(),
     bool? isCompleted,
+    Value<String?> oilType = const Value.absent(),
+    Value<double?> intervalKm = const Value.absent(),
   }) => Reminder(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -1331,6 +1397,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
         ? targetOdometer.value
         : this.targetOdometer,
     isCompleted: isCompleted ?? this.isCompleted,
+    oilType: oilType.present ? oilType.value : this.oilType,
+    intervalKm: intervalKm.present ? intervalKm.value : this.intervalKm,
   );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
@@ -1346,6 +1414,10 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       isCompleted: data.isCompleted.present
           ? data.isCompleted.value
           : this.isCompleted,
+      oilType: data.oilType.present ? data.oilType.value : this.oilType,
+      intervalKm: data.intervalKm.present
+          ? data.intervalKm.value
+          : this.intervalKm,
     );
   }
 
@@ -1357,7 +1429,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('title: $title, ')
           ..write('targetDate: $targetDate, ')
           ..write('targetOdometer: $targetOdometer, ')
-          ..write('isCompleted: $isCompleted')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('oilType: $oilType, ')
+          ..write('intervalKm: $intervalKm')
           ..write(')'))
         .toString();
   }
@@ -1370,6 +1444,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     targetDate,
     targetOdometer,
     isCompleted,
+    oilType,
+    intervalKm,
   );
   @override
   bool operator ==(Object other) =>
@@ -1380,7 +1456,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.title == this.title &&
           other.targetDate == this.targetDate &&
           other.targetOdometer == this.targetOdometer &&
-          other.isCompleted == this.isCompleted);
+          other.isCompleted == this.isCompleted &&
+          other.oilType == this.oilType &&
+          other.intervalKm == this.intervalKm);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
@@ -1390,6 +1468,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<DateTime?> targetDate;
   final Value<double?> targetOdometer;
   final Value<bool> isCompleted;
+  final Value<String?> oilType;
+  final Value<double?> intervalKm;
   const RemindersCompanion({
     this.id = const Value.absent(),
     this.vehicleId = const Value.absent(),
@@ -1397,6 +1477,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.targetDate = const Value.absent(),
     this.targetOdometer = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.oilType = const Value.absent(),
+    this.intervalKm = const Value.absent(),
   });
   RemindersCompanion.insert({
     this.id = const Value.absent(),
@@ -1405,6 +1487,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.targetDate = const Value.absent(),
     this.targetOdometer = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.oilType = const Value.absent(),
+    this.intervalKm = const Value.absent(),
   }) : vehicleId = Value(vehicleId),
        title = Value(title);
   static Insertable<Reminder> custom({
@@ -1414,6 +1498,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<DateTime>? targetDate,
     Expression<double>? targetOdometer,
     Expression<bool>? isCompleted,
+    Expression<String>? oilType,
+    Expression<double>? intervalKm,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1422,6 +1508,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (targetDate != null) 'target_date': targetDate,
       if (targetOdometer != null) 'target_odometer': targetOdometer,
       if (isCompleted != null) 'is_completed': isCompleted,
+      if (oilType != null) 'oil_type': oilType,
+      if (intervalKm != null) 'interval_km': intervalKm,
     });
   }
 
@@ -1432,6 +1520,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Value<DateTime?>? targetDate,
     Value<double?>? targetOdometer,
     Value<bool>? isCompleted,
+    Value<String?>? oilType,
+    Value<double?>? intervalKm,
   }) {
     return RemindersCompanion(
       id: id ?? this.id,
@@ -1440,6 +1530,8 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       targetDate: targetDate ?? this.targetDate,
       targetOdometer: targetOdometer ?? this.targetOdometer,
       isCompleted: isCompleted ?? this.isCompleted,
+      oilType: oilType ?? this.oilType,
+      intervalKm: intervalKm ?? this.intervalKm,
     );
   }
 
@@ -1464,6 +1556,12 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (isCompleted.present) {
       map['is_completed'] = Variable<bool>(isCompleted.value);
     }
+    if (oilType.present) {
+      map['oil_type'] = Variable<String>(oilType.value);
+    }
+    if (intervalKm.present) {
+      map['interval_km'] = Variable<double>(intervalKm.value);
+    }
     return map;
   }
 
@@ -1475,7 +1573,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('title: $title, ')
           ..write('targetDate: $targetDate, ')
           ..write('targetOdometer: $targetOdometer, ')
-          ..write('isCompleted: $isCompleted')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('oilType: $oilType, ')
+          ..write('intervalKm: $intervalKm')
           ..write(')'))
         .toString();
   }
@@ -1970,6 +2070,951 @@ class ServiceLogsCompanion extends UpdateCompanion<ServiceLog> {
   }
 }
 
+class $TripLogsTable extends TripLogs with TableInfo<$TripLogsTable, TripLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TripLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<int> vehicleId = GeneratedColumn<int>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES vehicles (id)',
+    ),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originMeta = const VerificationMeta('origin');
+  @override
+  late final GeneratedColumn<String> origin = GeneratedColumn<String>(
+    'origin',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _destinationMeta = const VerificationMeta(
+    'destination',
+  );
+  @override
+  late final GeneratedColumn<String> destination = GeneratedColumn<String>(
+    'destination',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endedAtMeta = const VerificationMeta(
+    'endedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endedAt = GeneratedColumn<DateTime>(
+    'ended_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startOdoMeta = const VerificationMeta(
+    'startOdo',
+  );
+  @override
+  late final GeneratedColumn<double> startOdo = GeneratedColumn<double>(
+    'start_odo',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endOdoMeta = const VerificationMeta('endOdo');
+  @override
+  late final GeneratedColumn<double> endOdo = GeneratedColumn<double>(
+    'end_odo',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _distanceKmMeta = const VerificationMeta(
+    'distanceKm',
+  );
+  @override
+  late final GeneratedColumn<double> distanceKm = GeneratedColumn<double>(
+    'distance_km',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _durationSecMeta = const VerificationMeta(
+    'durationSec',
+  );
+  @override
+  late final GeneratedColumn<int> durationSec = GeneratedColumn<int>(
+    'duration_sec',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _costPerKmMeta = const VerificationMeta(
+    'costPerKm',
+  );
+  @override
+  late final GeneratedColumn<double> costPerKm = GeneratedColumn<double>(
+    'cost_per_km',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _totalCostMeta = const VerificationMeta(
+    'totalCost',
+  );
+  @override
+  late final GeneratedColumn<double> totalCost = GeneratedColumn<double>(
+    'total_cost',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _privacyMeta = const VerificationMeta(
+    'privacy',
+  );
+  @override
+  late final GeneratedColumn<String> privacy = GeneratedColumn<String>(
+    'privacy',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _routeJsonMeta = const VerificationMeta(
+    'routeJson',
+  );
+  @override
+  late final GeneratedColumn<String> routeJson = GeneratedColumn<String>(
+    'route_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    title,
+    origin,
+    destination,
+    startedAt,
+    endedAt,
+    startOdo,
+    endOdo,
+    distanceKm,
+    durationSec,
+    costPerKm,
+    totalCost,
+    source,
+    privacy,
+    note,
+    routeJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'trip_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TripLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('origin')) {
+      context.handle(
+        _originMeta,
+        origin.isAcceptableOrUnknown(data['origin']!, _originMeta),
+      );
+    }
+    if (data.containsKey('destination')) {
+      context.handle(
+        _destinationMeta,
+        destination.isAcceptableOrUnknown(
+          data['destination']!,
+          _destinationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('ended_at')) {
+      context.handle(
+        _endedAtMeta,
+        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endedAtMeta);
+    }
+    if (data.containsKey('start_odo')) {
+      context.handle(
+        _startOdoMeta,
+        startOdo.isAcceptableOrUnknown(data['start_odo']!, _startOdoMeta),
+      );
+    }
+    if (data.containsKey('end_odo')) {
+      context.handle(
+        _endOdoMeta,
+        endOdo.isAcceptableOrUnknown(data['end_odo']!, _endOdoMeta),
+      );
+    }
+    if (data.containsKey('distance_km')) {
+      context.handle(
+        _distanceKmMeta,
+        distanceKm.isAcceptableOrUnknown(data['distance_km']!, _distanceKmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_distanceKmMeta);
+    }
+    if (data.containsKey('duration_sec')) {
+      context.handle(
+        _durationSecMeta,
+        durationSec.isAcceptableOrUnknown(
+          data['duration_sec']!,
+          _durationSecMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_durationSecMeta);
+    }
+    if (data.containsKey('cost_per_km')) {
+      context.handle(
+        _costPerKmMeta,
+        costPerKm.isAcceptableOrUnknown(data['cost_per_km']!, _costPerKmMeta),
+      );
+    }
+    if (data.containsKey('total_cost')) {
+      context.handle(
+        _totalCostMeta,
+        totalCost.isAcceptableOrUnknown(data['total_cost']!, _totalCostMeta),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('privacy')) {
+      context.handle(
+        _privacyMeta,
+        privacy.isAcceptableOrUnknown(data['privacy']!, _privacyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_privacyMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('route_json')) {
+      context.handle(
+        _routeJsonMeta,
+        routeJson.isAcceptableOrUnknown(data['route_json']!, _routeJsonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TripLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TripLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      origin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin'],
+      ),
+      destination: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}destination'],
+      ),
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      endedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ended_at'],
+      )!,
+      startOdo: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}start_odo'],
+      ),
+      endOdo: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}end_odo'],
+      ),
+      distanceKm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}distance_km'],
+      )!,
+      durationSec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_sec'],
+      )!,
+      costPerKm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}cost_per_km'],
+      ),
+      totalCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_cost'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      privacy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}privacy'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      routeJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}route_json'],
+      ),
+    );
+  }
+
+  @override
+  $TripLogsTable createAlias(String alias) {
+    return $TripLogsTable(attachedDatabase, alias);
+  }
+}
+
+class TripLog extends DataClass implements Insertable<TripLog> {
+  final int id;
+  final int vehicleId;
+  final String? title;
+  final String? origin;
+  final String? destination;
+  final DateTime startedAt;
+  final DateTime endedAt;
+  final double? startOdo;
+  final double? endOdo;
+  final double distanceKm;
+  final int durationSec;
+  final double? costPerKm;
+  final double? totalCost;
+  final String source;
+  final String privacy;
+  final String? note;
+  final String? routeJson;
+  const TripLog({
+    required this.id,
+    required this.vehicleId,
+    this.title,
+    this.origin,
+    this.destination,
+    required this.startedAt,
+    required this.endedAt,
+    this.startOdo,
+    this.endOdo,
+    required this.distanceKm,
+    required this.durationSec,
+    this.costPerKm,
+    this.totalCost,
+    required this.source,
+    required this.privacy,
+    this.note,
+    this.routeJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['vehicle_id'] = Variable<int>(vehicleId);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || origin != null) {
+      map['origin'] = Variable<String>(origin);
+    }
+    if (!nullToAbsent || destination != null) {
+      map['destination'] = Variable<String>(destination);
+    }
+    map['started_at'] = Variable<DateTime>(startedAt);
+    map['ended_at'] = Variable<DateTime>(endedAt);
+    if (!nullToAbsent || startOdo != null) {
+      map['start_odo'] = Variable<double>(startOdo);
+    }
+    if (!nullToAbsent || endOdo != null) {
+      map['end_odo'] = Variable<double>(endOdo);
+    }
+    map['distance_km'] = Variable<double>(distanceKm);
+    map['duration_sec'] = Variable<int>(durationSec);
+    if (!nullToAbsent || costPerKm != null) {
+      map['cost_per_km'] = Variable<double>(costPerKm);
+    }
+    if (!nullToAbsent || totalCost != null) {
+      map['total_cost'] = Variable<double>(totalCost);
+    }
+    map['source'] = Variable<String>(source);
+    map['privacy'] = Variable<String>(privacy);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || routeJson != null) {
+      map['route_json'] = Variable<String>(routeJson);
+    }
+    return map;
+  }
+
+  TripLogsCompanion toCompanion(bool nullToAbsent) {
+    return TripLogsCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      origin: origin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(origin),
+      destination: destination == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destination),
+      startedAt: Value(startedAt),
+      endedAt: Value(endedAt),
+      startOdo: startOdo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startOdo),
+      endOdo: endOdo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endOdo),
+      distanceKm: Value(distanceKm),
+      durationSec: Value(durationSec),
+      costPerKm: costPerKm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costPerKm),
+      totalCost: totalCost == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalCost),
+      source: Value(source),
+      privacy: Value(privacy),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      routeJson: routeJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(routeJson),
+    );
+  }
+
+  factory TripLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TripLog(
+      id: serializer.fromJson<int>(json['id']),
+      vehicleId: serializer.fromJson<int>(json['vehicleId']),
+      title: serializer.fromJson<String?>(json['title']),
+      origin: serializer.fromJson<String?>(json['origin']),
+      destination: serializer.fromJson<String?>(json['destination']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      endedAt: serializer.fromJson<DateTime>(json['endedAt']),
+      startOdo: serializer.fromJson<double?>(json['startOdo']),
+      endOdo: serializer.fromJson<double?>(json['endOdo']),
+      distanceKm: serializer.fromJson<double>(json['distanceKm']),
+      durationSec: serializer.fromJson<int>(json['durationSec']),
+      costPerKm: serializer.fromJson<double?>(json['costPerKm']),
+      totalCost: serializer.fromJson<double?>(json['totalCost']),
+      source: serializer.fromJson<String>(json['source']),
+      privacy: serializer.fromJson<String>(json['privacy']),
+      note: serializer.fromJson<String?>(json['note']),
+      routeJson: serializer.fromJson<String?>(json['routeJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'vehicleId': serializer.toJson<int>(vehicleId),
+      'title': serializer.toJson<String?>(title),
+      'origin': serializer.toJson<String?>(origin),
+      'destination': serializer.toJson<String?>(destination),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'endedAt': serializer.toJson<DateTime>(endedAt),
+      'startOdo': serializer.toJson<double?>(startOdo),
+      'endOdo': serializer.toJson<double?>(endOdo),
+      'distanceKm': serializer.toJson<double>(distanceKm),
+      'durationSec': serializer.toJson<int>(durationSec),
+      'costPerKm': serializer.toJson<double?>(costPerKm),
+      'totalCost': serializer.toJson<double?>(totalCost),
+      'source': serializer.toJson<String>(source),
+      'privacy': serializer.toJson<String>(privacy),
+      'note': serializer.toJson<String?>(note),
+      'routeJson': serializer.toJson<String?>(routeJson),
+    };
+  }
+
+  TripLog copyWith({
+    int? id,
+    int? vehicleId,
+    Value<String?> title = const Value.absent(),
+    Value<String?> origin = const Value.absent(),
+    Value<String?> destination = const Value.absent(),
+    DateTime? startedAt,
+    DateTime? endedAt,
+    Value<double?> startOdo = const Value.absent(),
+    Value<double?> endOdo = const Value.absent(),
+    double? distanceKm,
+    int? durationSec,
+    Value<double?> costPerKm = const Value.absent(),
+    Value<double?> totalCost = const Value.absent(),
+    String? source,
+    String? privacy,
+    Value<String?> note = const Value.absent(),
+    Value<String?> routeJson = const Value.absent(),
+  }) => TripLog(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    title: title.present ? title.value : this.title,
+    origin: origin.present ? origin.value : this.origin,
+    destination: destination.present ? destination.value : this.destination,
+    startedAt: startedAt ?? this.startedAt,
+    endedAt: endedAt ?? this.endedAt,
+    startOdo: startOdo.present ? startOdo.value : this.startOdo,
+    endOdo: endOdo.present ? endOdo.value : this.endOdo,
+    distanceKm: distanceKm ?? this.distanceKm,
+    durationSec: durationSec ?? this.durationSec,
+    costPerKm: costPerKm.present ? costPerKm.value : this.costPerKm,
+    totalCost: totalCost.present ? totalCost.value : this.totalCost,
+    source: source ?? this.source,
+    privacy: privacy ?? this.privacy,
+    note: note.present ? note.value : this.note,
+    routeJson: routeJson.present ? routeJson.value : this.routeJson,
+  );
+  TripLog copyWithCompanion(TripLogsCompanion data) {
+    return TripLog(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      title: data.title.present ? data.title.value : this.title,
+      origin: data.origin.present ? data.origin.value : this.origin,
+      destination: data.destination.present
+          ? data.destination.value
+          : this.destination,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+      startOdo: data.startOdo.present ? data.startOdo.value : this.startOdo,
+      endOdo: data.endOdo.present ? data.endOdo.value : this.endOdo,
+      distanceKm: data.distanceKm.present
+          ? data.distanceKm.value
+          : this.distanceKm,
+      durationSec: data.durationSec.present
+          ? data.durationSec.value
+          : this.durationSec,
+      costPerKm: data.costPerKm.present ? data.costPerKm.value : this.costPerKm,
+      totalCost: data.totalCost.present ? data.totalCost.value : this.totalCost,
+      source: data.source.present ? data.source.value : this.source,
+      privacy: data.privacy.present ? data.privacy.value : this.privacy,
+      note: data.note.present ? data.note.value : this.note,
+      routeJson: data.routeJson.present ? data.routeJson.value : this.routeJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TripLog(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('title: $title, ')
+          ..write('origin: $origin, ')
+          ..write('destination: $destination, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('startOdo: $startOdo, ')
+          ..write('endOdo: $endOdo, ')
+          ..write('distanceKm: $distanceKm, ')
+          ..write('durationSec: $durationSec, ')
+          ..write('costPerKm: $costPerKm, ')
+          ..write('totalCost: $totalCost, ')
+          ..write('source: $source, ')
+          ..write('privacy: $privacy, ')
+          ..write('note: $note, ')
+          ..write('routeJson: $routeJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    title,
+    origin,
+    destination,
+    startedAt,
+    endedAt,
+    startOdo,
+    endOdo,
+    distanceKm,
+    durationSec,
+    costPerKm,
+    totalCost,
+    source,
+    privacy,
+    note,
+    routeJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TripLog &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.title == this.title &&
+          other.origin == this.origin &&
+          other.destination == this.destination &&
+          other.startedAt == this.startedAt &&
+          other.endedAt == this.endedAt &&
+          other.startOdo == this.startOdo &&
+          other.endOdo == this.endOdo &&
+          other.distanceKm == this.distanceKm &&
+          other.durationSec == this.durationSec &&
+          other.costPerKm == this.costPerKm &&
+          other.totalCost == this.totalCost &&
+          other.source == this.source &&
+          other.privacy == this.privacy &&
+          other.note == this.note &&
+          other.routeJson == this.routeJson);
+}
+
+class TripLogsCompanion extends UpdateCompanion<TripLog> {
+  final Value<int> id;
+  final Value<int> vehicleId;
+  final Value<String?> title;
+  final Value<String?> origin;
+  final Value<String?> destination;
+  final Value<DateTime> startedAt;
+  final Value<DateTime> endedAt;
+  final Value<double?> startOdo;
+  final Value<double?> endOdo;
+  final Value<double> distanceKm;
+  final Value<int> durationSec;
+  final Value<double?> costPerKm;
+  final Value<double?> totalCost;
+  final Value<String> source;
+  final Value<String> privacy;
+  final Value<String?> note;
+  final Value<String?> routeJson;
+  const TripLogsCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.origin = const Value.absent(),
+    this.destination = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.endedAt = const Value.absent(),
+    this.startOdo = const Value.absent(),
+    this.endOdo = const Value.absent(),
+    this.distanceKm = const Value.absent(),
+    this.durationSec = const Value.absent(),
+    this.costPerKm = const Value.absent(),
+    this.totalCost = const Value.absent(),
+    this.source = const Value.absent(),
+    this.privacy = const Value.absent(),
+    this.note = const Value.absent(),
+    this.routeJson = const Value.absent(),
+  });
+  TripLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required int vehicleId,
+    this.title = const Value.absent(),
+    this.origin = const Value.absent(),
+    this.destination = const Value.absent(),
+    required DateTime startedAt,
+    required DateTime endedAt,
+    this.startOdo = const Value.absent(),
+    this.endOdo = const Value.absent(),
+    required double distanceKm,
+    required int durationSec,
+    this.costPerKm = const Value.absent(),
+    this.totalCost = const Value.absent(),
+    required String source,
+    required String privacy,
+    this.note = const Value.absent(),
+    this.routeJson = const Value.absent(),
+  }) : vehicleId = Value(vehicleId),
+       startedAt = Value(startedAt),
+       endedAt = Value(endedAt),
+       distanceKm = Value(distanceKm),
+       durationSec = Value(durationSec),
+       source = Value(source),
+       privacy = Value(privacy);
+  static Insertable<TripLog> custom({
+    Expression<int>? id,
+    Expression<int>? vehicleId,
+    Expression<String>? title,
+    Expression<String>? origin,
+    Expression<String>? destination,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? endedAt,
+    Expression<double>? startOdo,
+    Expression<double>? endOdo,
+    Expression<double>? distanceKm,
+    Expression<int>? durationSec,
+    Expression<double>? costPerKm,
+    Expression<double>? totalCost,
+    Expression<String>? source,
+    Expression<String>? privacy,
+    Expression<String>? note,
+    Expression<String>? routeJson,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (title != null) 'title': title,
+      if (origin != null) 'origin': origin,
+      if (destination != null) 'destination': destination,
+      if (startedAt != null) 'started_at': startedAt,
+      if (endedAt != null) 'ended_at': endedAt,
+      if (startOdo != null) 'start_odo': startOdo,
+      if (endOdo != null) 'end_odo': endOdo,
+      if (distanceKm != null) 'distance_km': distanceKm,
+      if (durationSec != null) 'duration_sec': durationSec,
+      if (costPerKm != null) 'cost_per_km': costPerKm,
+      if (totalCost != null) 'total_cost': totalCost,
+      if (source != null) 'source': source,
+      if (privacy != null) 'privacy': privacy,
+      if (note != null) 'note': note,
+      if (routeJson != null) 'route_json': routeJson,
+    });
+  }
+
+  TripLogsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? vehicleId,
+    Value<String?>? title,
+    Value<String?>? origin,
+    Value<String?>? destination,
+    Value<DateTime>? startedAt,
+    Value<DateTime>? endedAt,
+    Value<double?>? startOdo,
+    Value<double?>? endOdo,
+    Value<double>? distanceKm,
+    Value<int>? durationSec,
+    Value<double?>? costPerKm,
+    Value<double?>? totalCost,
+    Value<String>? source,
+    Value<String>? privacy,
+    Value<String?>? note,
+    Value<String?>? routeJson,
+  }) {
+    return TripLogsCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      title: title ?? this.title,
+      origin: origin ?? this.origin,
+      destination: destination ?? this.destination,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
+      startOdo: startOdo ?? this.startOdo,
+      endOdo: endOdo ?? this.endOdo,
+      distanceKm: distanceKm ?? this.distanceKm,
+      durationSec: durationSec ?? this.durationSec,
+      costPerKm: costPerKm ?? this.costPerKm,
+      totalCost: totalCost ?? this.totalCost,
+      source: source ?? this.source,
+      privacy: privacy ?? this.privacy,
+      note: note ?? this.note,
+      routeJson: routeJson ?? this.routeJson,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<int>(vehicleId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (origin.present) {
+      map['origin'] = Variable<String>(origin.value);
+    }
+    if (destination.present) {
+      map['destination'] = Variable<String>(destination.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (endedAt.present) {
+      map['ended_at'] = Variable<DateTime>(endedAt.value);
+    }
+    if (startOdo.present) {
+      map['start_odo'] = Variable<double>(startOdo.value);
+    }
+    if (endOdo.present) {
+      map['end_odo'] = Variable<double>(endOdo.value);
+    }
+    if (distanceKm.present) {
+      map['distance_km'] = Variable<double>(distanceKm.value);
+    }
+    if (durationSec.present) {
+      map['duration_sec'] = Variable<int>(durationSec.value);
+    }
+    if (costPerKm.present) {
+      map['cost_per_km'] = Variable<double>(costPerKm.value);
+    }
+    if (totalCost.present) {
+      map['total_cost'] = Variable<double>(totalCost.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (privacy.present) {
+      map['privacy'] = Variable<String>(privacy.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (routeJson.present) {
+      map['route_json'] = Variable<String>(routeJson.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TripLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('title: $title, ')
+          ..write('origin: $origin, ')
+          ..write('destination: $destination, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('startOdo: $startOdo, ')
+          ..write('endOdo: $endOdo, ')
+          ..write('distanceKm: $distanceKm, ')
+          ..write('durationSec: $durationSec, ')
+          ..write('costPerKm: $costPerKm, ')
+          ..write('totalCost: $totalCost, ')
+          ..write('source: $source, ')
+          ..write('privacy: $privacy, ')
+          ..write('note: $note, ')
+          ..write('routeJson: $routeJson')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1977,6 +3022,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FuelLogsTable fuelLogs = $FuelLogsTable(this);
   late final $RemindersTable reminders = $RemindersTable(this);
   late final $ServiceLogsTable serviceLogs = $ServiceLogsTable(this);
+  late final $TripLogsTable tripLogs = $TripLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1986,6 +3032,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     fuelLogs,
     reminders,
     serviceLogs,
+    tripLogs,
   ];
 }
 
@@ -2068,6 +3115,25 @@ final class $$VehiclesTableReferences
     ).filter((f) => f.vehicleId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_serviceLogsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TripLogsTable, List<TripLog>> _tripLogsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.tripLogs,
+    aliasName: 'vehicles__id__trip_logs__vehicle_id',
+  );
+
+  $$TripLogsTableProcessedTableManager get tripLogsRefs {
+    final manager = $$TripLogsTableTableManager(
+      $_db,
+      $_db.tripLogs,
+    ).filter((f) => f.vehicleId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_tripLogsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2194,6 +3260,31 @@ class $$VehiclesTableFilterComposer
           }) => $$ServiceLogsTableFilterComposer(
             $db: $db,
             $table: $db.serviceLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> tripLogsRefs(
+    Expression<bool> Function($$TripLogsTableFilterComposer f) f,
+  ) {
+    final $$TripLogsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tripLogs,
+      getReferencedColumn: (t) => t.vehicleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TripLogsTableFilterComposer(
+            $db: $db,
+            $table: $db.tripLogs,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2371,6 +3462,31 @@ class $$VehiclesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> tripLogsRefs<T extends Object>(
+    Expression<T> Function($$TripLogsTableAnnotationComposer a) f,
+  ) {
+    final $$TripLogsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tripLogs,
+      getReferencedColumn: (t) => t.vehicleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TripLogsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.tripLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$VehiclesTableTableManager
@@ -2390,6 +3506,7 @@ class $$VehiclesTableTableManager
             bool fuelLogsRefs,
             bool remindersRefs,
             bool serviceLogsRefs,
+            bool tripLogsRefs,
           })
         > {
   $$VehiclesTableTableManager(_$AppDatabase db, $VehiclesTable table)
@@ -2460,6 +3577,7 @@ class $$VehiclesTableTableManager
                 fuelLogsRefs = false,
                 remindersRefs = false,
                 serviceLogsRefs = false,
+                tripLogsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -2467,6 +3585,7 @@ class $$VehiclesTableTableManager
                     if (fuelLogsRefs) db.fuelLogs,
                     if (remindersRefs) db.reminders,
                     if (serviceLogsRefs) db.serviceLogs,
+                    if (tripLogsRefs) db.tripLogs,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -2534,6 +3653,27 @@ class $$VehiclesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (tripLogsRefs)
+                        await $_getPrefetchedData<
+                          Vehicle,
+                          $VehiclesTable,
+                          TripLog
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VehiclesTableReferences
+                              ._tripLogsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VehiclesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).tripLogsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.vehicleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2558,6 +3698,7 @@ typedef $$VehiclesTableProcessedTableManager =
         bool fuelLogsRefs,
         bool remindersRefs,
         bool serviceLogsRefs,
+        bool tripLogsRefs,
       })
     >;
 typedef $$FuelLogsTableCreateCompanionBuilder =
@@ -2938,6 +4079,8 @@ typedef $$RemindersTableCreateCompanionBuilder =
       Value<DateTime?> targetDate,
       Value<double?> targetOdometer,
       Value<bool> isCompleted,
+      Value<String?> oilType,
+      Value<double?> intervalKm,
     });
 typedef $$RemindersTableUpdateCompanionBuilder =
     RemindersCompanion Function({
@@ -2947,6 +4090,8 @@ typedef $$RemindersTableUpdateCompanionBuilder =
       Value<DateTime?> targetDate,
       Value<double?> targetOdometer,
       Value<bool> isCompleted,
+      Value<String?> oilType,
+      Value<double?> intervalKm,
     });
 
 final class $$RemindersTableReferences
@@ -3002,6 +4147,16 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get oilType => $composableBuilder(
+    column: $table.oilType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get intervalKm => $composableBuilder(
+    column: $table.intervalKm,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3063,6 +4218,16 @@ class $$RemindersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get oilType => $composableBuilder(
+    column: $table.oilType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get intervalKm => $composableBuilder(
+    column: $table.intervalKm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$VehiclesTableOrderingComposer get vehicleId {
     final $$VehiclesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3114,6 +4279,14 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get oilType =>
+      $composableBuilder(column: $table.oilType, builder: (column) => column);
+
+  GeneratedColumn<double> get intervalKm => $composableBuilder(
+    column: $table.intervalKm,
     builder: (column) => column,
   );
 
@@ -3175,6 +4348,8 @@ class $$RemindersTableTableManager
                 Value<DateTime?> targetDate = const Value.absent(),
                 Value<double?> targetOdometer = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<String?> oilType = const Value.absent(),
+                Value<double?> intervalKm = const Value.absent(),
               }) => RemindersCompanion(
                 id: id,
                 vehicleId: vehicleId,
@@ -3182,6 +4357,8 @@ class $$RemindersTableTableManager
                 targetDate: targetDate,
                 targetOdometer: targetOdometer,
                 isCompleted: isCompleted,
+                oilType: oilType,
+                intervalKm: intervalKm,
               ),
           createCompanionCallback:
               ({
@@ -3191,6 +4368,8 @@ class $$RemindersTableTableManager
                 Value<DateTime?> targetDate = const Value.absent(),
                 Value<double?> targetOdometer = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<String?> oilType = const Value.absent(),
+                Value<double?> intervalKm = const Value.absent(),
               }) => RemindersCompanion.insert(
                 id: id,
                 vehicleId: vehicleId,
@@ -3198,6 +4377,8 @@ class $$RemindersTableTableManager
                 targetDate: targetDate,
                 targetOdometer: targetOdometer,
                 isCompleted: isCompleted,
+                oilType: oilType,
+                intervalKm: intervalKm,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3634,6 +4815,551 @@ typedef $$ServiceLogsTableProcessedTableManager =
       ServiceLog,
       PrefetchHooks Function({bool vehicleId})
     >;
+typedef $$TripLogsTableCreateCompanionBuilder =
+    TripLogsCompanion Function({
+      Value<int> id,
+      required int vehicleId,
+      Value<String?> title,
+      Value<String?> origin,
+      Value<String?> destination,
+      required DateTime startedAt,
+      required DateTime endedAt,
+      Value<double?> startOdo,
+      Value<double?> endOdo,
+      required double distanceKm,
+      required int durationSec,
+      Value<double?> costPerKm,
+      Value<double?> totalCost,
+      required String source,
+      required String privacy,
+      Value<String?> note,
+      Value<String?> routeJson,
+    });
+typedef $$TripLogsTableUpdateCompanionBuilder =
+    TripLogsCompanion Function({
+      Value<int> id,
+      Value<int> vehicleId,
+      Value<String?> title,
+      Value<String?> origin,
+      Value<String?> destination,
+      Value<DateTime> startedAt,
+      Value<DateTime> endedAt,
+      Value<double?> startOdo,
+      Value<double?> endOdo,
+      Value<double> distanceKm,
+      Value<int> durationSec,
+      Value<double?> costPerKm,
+      Value<double?> totalCost,
+      Value<String> source,
+      Value<String> privacy,
+      Value<String?> note,
+      Value<String?> routeJson,
+    });
+
+final class $$TripLogsTableReferences
+    extends BaseReferences<_$AppDatabase, $TripLogsTable, TripLog> {
+  $$TripLogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $VehiclesTable _vehicleIdTable(_$AppDatabase db) =>
+      db.vehicles.createAlias('trip_logs__vehicle_id__vehicles__id');
+
+  $$VehiclesTableProcessedTableManager get vehicleId {
+    final $_column = $_itemColumn<int>('vehicle_id')!;
+
+    final manager = $$VehiclesTableTableManager(
+      $_db,
+      $_db.vehicles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_vehicleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TripLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $TripLogsTable> {
+  $$TripLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get destination => $composableBuilder(
+    column: $table.destination,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get startOdo => $composableBuilder(
+    column: $table.startOdo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get endOdo => $composableBuilder(
+    column: $table.endOdo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get distanceKm => $composableBuilder(
+    column: $table.distanceKm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationSec => $composableBuilder(
+    column: $table.durationSec,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get costPerKm => $composableBuilder(
+    column: $table.costPerKm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCost => $composableBuilder(
+    column: $table.totalCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get privacy => $composableBuilder(
+    column: $table.privacy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get routeJson => $composableBuilder(
+    column: $table.routeJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VehiclesTableFilterComposer get vehicleId {
+    final $$VehiclesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vehicleId,
+      referencedTable: $db.vehicles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VehiclesTableFilterComposer(
+            $db: $db,
+            $table: $db.vehicles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TripLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TripLogsTable> {
+  $$TripLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get destination => $composableBuilder(
+    column: $table.destination,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get startOdo => $composableBuilder(
+    column: $table.startOdo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get endOdo => $composableBuilder(
+    column: $table.endOdo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get distanceKm => $composableBuilder(
+    column: $table.distanceKm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationSec => $composableBuilder(
+    column: $table.durationSec,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get costPerKm => $composableBuilder(
+    column: $table.costPerKm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCost => $composableBuilder(
+    column: $table.totalCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get privacy => $composableBuilder(
+    column: $table.privacy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get routeJson => $composableBuilder(
+    column: $table.routeJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VehiclesTableOrderingComposer get vehicleId {
+    final $$VehiclesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vehicleId,
+      referencedTable: $db.vehicles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VehiclesTableOrderingComposer(
+            $db: $db,
+            $table: $db.vehicles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TripLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TripLogsTable> {
+  $$TripLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => column);
+
+  GeneratedColumn<String> get destination => $composableBuilder(
+    column: $table.destination,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+
+  GeneratedColumn<double> get startOdo =>
+      $composableBuilder(column: $table.startOdo, builder: (column) => column);
+
+  GeneratedColumn<double> get endOdo =>
+      $composableBuilder(column: $table.endOdo, builder: (column) => column);
+
+  GeneratedColumn<double> get distanceKm => $composableBuilder(
+    column: $table.distanceKm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationSec => $composableBuilder(
+    column: $table.durationSec,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get costPerKm =>
+      $composableBuilder(column: $table.costPerKm, builder: (column) => column);
+
+  GeneratedColumn<double> get totalCost =>
+      $composableBuilder(column: $table.totalCost, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get privacy =>
+      $composableBuilder(column: $table.privacy, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get routeJson =>
+      $composableBuilder(column: $table.routeJson, builder: (column) => column);
+
+  $$VehiclesTableAnnotationComposer get vehicleId {
+    final $$VehiclesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vehicleId,
+      referencedTable: $db.vehicles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VehiclesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.vehicles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TripLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TripLogsTable,
+          TripLog,
+          $$TripLogsTableFilterComposer,
+          $$TripLogsTableOrderingComposer,
+          $$TripLogsTableAnnotationComposer,
+          $$TripLogsTableCreateCompanionBuilder,
+          $$TripLogsTableUpdateCompanionBuilder,
+          (TripLog, $$TripLogsTableReferences),
+          TripLog,
+          PrefetchHooks Function({bool vehicleId})
+        > {
+  $$TripLogsTableTableManager(_$AppDatabase db, $TripLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TripLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TripLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TripLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> vehicleId = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> origin = const Value.absent(),
+                Value<String?> destination = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime> endedAt = const Value.absent(),
+                Value<double?> startOdo = const Value.absent(),
+                Value<double?> endOdo = const Value.absent(),
+                Value<double> distanceKm = const Value.absent(),
+                Value<int> durationSec = const Value.absent(),
+                Value<double?> costPerKm = const Value.absent(),
+                Value<double?> totalCost = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> privacy = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String?> routeJson = const Value.absent(),
+              }) => TripLogsCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                title: title,
+                origin: origin,
+                destination: destination,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                startOdo: startOdo,
+                endOdo: endOdo,
+                distanceKm: distanceKm,
+                durationSec: durationSec,
+                costPerKm: costPerKm,
+                totalCost: totalCost,
+                source: source,
+                privacy: privacy,
+                note: note,
+                routeJson: routeJson,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int vehicleId,
+                Value<String?> title = const Value.absent(),
+                Value<String?> origin = const Value.absent(),
+                Value<String?> destination = const Value.absent(),
+                required DateTime startedAt,
+                required DateTime endedAt,
+                Value<double?> startOdo = const Value.absent(),
+                Value<double?> endOdo = const Value.absent(),
+                required double distanceKm,
+                required int durationSec,
+                Value<double?> costPerKm = const Value.absent(),
+                Value<double?> totalCost = const Value.absent(),
+                required String source,
+                required String privacy,
+                Value<String?> note = const Value.absent(),
+                Value<String?> routeJson = const Value.absent(),
+              }) => TripLogsCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                title: title,
+                origin: origin,
+                destination: destination,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                startOdo: startOdo,
+                endOdo: endOdo,
+                distanceKm: distanceKm,
+                durationSec: durationSec,
+                costPerKm: costPerKm,
+                totalCost: totalCost,
+                source: source,
+                privacy: privacy,
+                note: note,
+                routeJson: routeJson,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TripLogsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({vehicleId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (vehicleId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.vehicleId,
+                                referencedTable: $$TripLogsTableReferences
+                                    ._vehicleIdTable(db),
+                                referencedColumn: $$TripLogsTableReferences
+                                    ._vehicleIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TripLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TripLogsTable,
+      TripLog,
+      $$TripLogsTableFilterComposer,
+      $$TripLogsTableOrderingComposer,
+      $$TripLogsTableAnnotationComposer,
+      $$TripLogsTableCreateCompanionBuilder,
+      $$TripLogsTableUpdateCompanionBuilder,
+      (TripLog, $$TripLogsTableReferences),
+      TripLog,
+      PrefetchHooks Function({bool vehicleId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3646,4 +5372,6 @@ class $AppDatabaseManager {
       $$RemindersTableTableManager(_db, _db.reminders);
   $$ServiceLogsTableTableManager get serviceLogs =>
       $$ServiceLogsTableTableManager(_db, _db.serviceLogs);
+  $$TripLogsTableTableManager get tripLogs =>
+      $$TripLogsTableTableManager(_db, _db.tripLogs);
 }

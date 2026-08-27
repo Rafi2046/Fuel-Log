@@ -153,6 +153,16 @@ mixin _AddReminderSheetController on ConsumerState<AddReminderSheet> {
     final targetOdometer =
         targetOdoText.isNotEmpty ? double.tryParse(targetOdoText) : null;
 
+    double? intervalKm;
+    if (_isEngineOil && _selectedOilType != null) {
+      final match = kReminderOilTypes
+          .where((e) => e['name'] == _selectedOilType || e['label'] == _selectedOilType)
+          .firstOrNull;
+      if (match != null) {
+        intervalKm = match['km'] as double?;
+      }
+    }
+
     final db = ref.read(databaseProvider);
     final reminderId = await db.insertReminder(
       RemindersCompanion.insert(
@@ -165,6 +175,12 @@ mixin _AddReminderSheetController on ConsumerState<AddReminderSheet> {
             ? drift.Value(targetOdometer)
             : const drift.Value.absent(),
         isCompleted: const drift.Value(false),
+        oilType: _selectedOilType != null
+            ? drift.Value(_selectedOilType)
+            : const drift.Value.absent(),
+        intervalKm: intervalKm != null
+            ? drift.Value(intervalKm)
+            : const drift.Value.absent(),
       ),
     );
 

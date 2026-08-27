@@ -1,10 +1,15 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/database/app_database.dart';
+import '../../viewmodels/trip_log_viewmodel.dart';
+import '../../viewmodels/vehicle_viewmodel.dart';
 import 'app_primary_button.dart';
 
 /// Full manual trip form — all reference fields, still borderless (no boxed inputs).
@@ -22,14 +27,15 @@ Future<void> showTripManualEntrySheet(BuildContext context) {
   );
 }
 
-class TripManualEntrySheet extends StatefulWidget {
+class TripManualEntrySheet extends ConsumerStatefulWidget {
   const TripManualEntrySheet({super.key});
 
   @override
-  State<TripManualEntrySheet> createState() => _TripManualEntrySheetState();
+  ConsumerState<TripManualEntrySheet> createState() =>
+      _TripManualEntrySheetState();
 }
 
-class _TripManualEntrySheetState extends State<TripManualEntrySheet> {
+class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
   final _formKey = GlobalKey<FormState>();
 
   final _titleCtrl = TextEditingController();
@@ -119,19 +125,111 @@ class _TripManualEntrySheetState extends State<TripManualEntrySheet> {
     });
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'tripSaved'.tr(),
-          style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
+
+    final activeVehicle = ref.read(activeVehicleProvider).valueOrNull;
+    if (activeVehicle == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No active vehicle selected.'),
+          behavior: SnackBarBehavior.floating,
         ),
-        backgroundColor: AppColors.cardElevated,
-        behavior: SnackBarBehavior.floating,
-      ),
+      );
+      return;
+    }
+
+    final startOdo = double.tryParse(_startOdoCtrl.text.trim());
+    final endOdo = double.tryParse(_endOdoCtrl.text.trim());
+
+    double? distance = double.tryParse(_distanceCtrl.text.trim());
+    if (distance == null &&
+        startOdo != null &&
+        endOdo != null &&
+        endOdo >= startOdo) {
+      distance = endOdo - startOdo;
+    }
+    final distanceKm = distance ?? 0.0;
+
+    final costPerKm = double.tryParse(_costPerKmCtrl.text.trim());
+    final tripCost = double.tryParse(_tripCostCtrl.text.trim());
+
+    final startedAt = DateTime(
+      _startDate.year,
+      _startDate.month,
+      _startDate.day,
+      _startTime.hour,
+      _startTime.minute,
     );
+    DateTime endedAt = DateTime(
+      _endDate.year,
+      _endDate.month,
+      _endDate.day,
+      _endTime.hour,
+      _endTime.minute,
+    );
+    if (endedAt.isBefore(startedAt)) {
+      endedAt = startedAt;
+    }
+    final durationSec = endedAt.difference(startedAt).inSeconds;
+
+    final title = _titleCtrl.text.trim();
+    final origin = _originCtrl.text.trim();
+    final destination = _destinationCtrl.text.trim();
+    final note = _noteCtrl.text.trim();
+
+    final companion = TripLogsCompanion.insert(
+      vehicleId: activeVehicle.id,
+      title: title.isNotEmpty ? drift.Value(title) : const drift.Value.absent(),
+      origin:
+          origin.isNotEmpty ? drift.Value(origin) : const drift.Value.absent(),
+      destination: destination.isNotEmpty
+          ? drift.Value(destination)
+          : const drift.Value.absent(),
+      startedAt: startedAt,
+      endedAt: endedAt,
+      startOdo: startOdo != null
+          ? drift.Value(startOdo)
+          : const drift.Value.absent(),
+      endOdo:
+          endOdo != null ? drift.Value(endOdo) : const drift.Value.absent(),
+      distanceKm: distanceKm,
+      durationSec: durationSec,
+      costPerKm: costPerKm != null
+          ? drift.Value(costPerKm)
+          : const drift.Value.absent(),
+      totalCost: tripCost != null
+          ? drift.Value(tripCost)
+          : const drift.Value.absent(),
+      source: 'manual',
+      privacy: _privacy,
+      note: note.isNotEmpty ? drift.Value(note) : const drift.Value.absent(),
+    );
+
+    try {
+      await ref.read(tripLogProvider.notifier).addTrip(companion);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'tripSaved'.tr(),
+            style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
+          ),
+          backgroundColor: AppColors.cardElevated,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save trip: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override

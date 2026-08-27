@@ -69,6 +69,10 @@ class Reminders extends Table {
 
   BoolColumn get isCompleted =>
       boolean().withDefault(const Constant(false))();
+
+  TextColumn get oilType => text().nullable()();
+
+  RealColumn get intervalKm => real().nullable()();
 }
 
 /// Non-fuel service and general expense records per vehicle.
@@ -90,14 +94,51 @@ class ServiceLogs extends Table {
   TextColumn get note => text().nullable()();
 }
 
-@DriftDatabase(tables: [Vehicles, FuelLogs, Reminders, ServiceLogs])
+/// Trip log records per vehicle (GPS or manual).
+class TripLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get vehicleId => integer().references(Vehicles, #id)();
+
+  TextColumn get title => text().nullable()();
+
+  TextColumn get origin => text().nullable()();
+
+  TextColumn get destination => text().nullable()();
+
+  DateTimeColumn get startedAt => dateTime()();
+
+  DateTimeColumn get endedAt => dateTime()();
+
+  RealColumn get startOdo => real().nullable()();
+
+  RealColumn get endOdo => real().nullable()();
+
+  RealColumn get distanceKm => real()();
+
+  IntColumn get durationSec => integer()();
+
+  RealColumn get costPerKm => real().nullable()();
+
+  RealColumn get totalCost => real().nullable()();
+
+  TextColumn get source => text()();
+
+  TextColumn get privacy => text()();
+
+  TextColumn get note => text().nullable()();
+
+  TextColumn get routeJson => text().nullable()();
+}
+
+@DriftDatabase(tables: [Vehicles, FuelLogs, Reminders, ServiceLogs, TripLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
-  /// Bumped for ServiceLogs table addition.
+  /// Bumped for TripLogs and Reminders schema updates.
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -107,6 +148,7 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           // Early-dev: wipe and recreate whenever schema moves forward.
           if (from < schemaVersion) {
+            await customStatement('DROP TABLE IF EXISTS trip_logs');
             await customStatement('DROP TABLE IF EXISTS service_logs');
             await customStatement('DROP TABLE IF EXISTS reminders');
             await customStatement('DROP TABLE IF EXISTS fuel_logs');
@@ -124,8 +166,10 @@ class AppDatabase extends _$AppDatabase {
     return rows.length;
   }
 
-  /// Removes a vehicle and its fuel logs.
+  /// Removes a vehicle and its associated reminders, fuel logs, service logs, and trip logs.
   Future<void> deleteVehicle(int id) async {
+    await (delete(tripLogs)..where((t) => t.vehicleId.equals(id))).go();
+    await (delete(serviceLogs)..where((t) => t.vehicleId.equals(id))).go();
     await (delete(reminders)..where((t) => t.vehicleId.equals(id))).go();
     await (delete(fuelLogs)..where((t) => t.vehicleId.equals(id))).go();
     await (delete(vehicles)..where((t) => t.id.equals(id))).go();
@@ -205,6 +249,27 @@ class AppDatabase extends _$AppDatabase {
     return (select(serviceLogs)
           ..where((t) => t.vehicleId.equals(vehicleId))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
+  }
+
+  Future<int> insertTripLog(TripLogsCompanion log) =>
+      into(tripLogs).insert(log);
+
+  Future<int> deleteTripLog(int id) {
+    return (delete(tripLogs)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<List<TripLog>> getTripLogsForVehicle(int vehicleId) {
+    return (select(tripLogs)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
+        .get();
+  }
+
+  Stream<List<TripLog>> watchTripLogsForVehicle(int vehicleId) {
+    return (select(tripLogs)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
         .watch();
   }
 }

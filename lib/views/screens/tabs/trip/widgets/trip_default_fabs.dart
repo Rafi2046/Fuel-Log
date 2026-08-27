@@ -5,18 +5,20 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import 'start_trip_fab.dart';
 
-/// Manual-entry circle + start/stop trip FAB row shown when idle on the map.
+/// Manual-entry circle + history circle + start/stop trip FAB row shown when idle on the map.
 class TripDefaultFabs extends StatelessWidget {
   const TripDefaultFabs({
     super.key,
     required this.isTracking,
     required this.onManualEntry,
     required this.onToggleTracking,
+    this.onHistory,
   });
 
   final bool isTracking;
   final VoidCallback onManualEntry;
   final VoidCallback onToggleTracking;
+  final VoidCallback? onHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,41 @@ class TripDefaultFabs extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          if (onHistory != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF18181F).withValues(alpha: 0.94),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF2E2E38)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onHistory,
+                  child: const Center(
+                    child: Icon(
+                      LucideIcons.route,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(width: 10),
           Expanded(
             child: StartTripFab(
               isTracking: isTracking,

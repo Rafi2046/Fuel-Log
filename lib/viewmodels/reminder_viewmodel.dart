@@ -121,6 +121,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
       serviceType: serviceType,
       lastServiceOdo: currentOdo,
       lastServiceDate: DateTime.now(),
+      intervalKm: r.intervalKm,
       targetOdo: r.targetOdometer,
       targetDate: r.targetDate,
       isCompleted: r.isCompleted,
