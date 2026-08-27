@@ -1,6 +1,6 @@
 part of 'add_reminder_sheet.dart';
 
-mixin _AddReminderSheetView on ConsumerState<AddReminderSheet> {
+mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderSheetController {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;

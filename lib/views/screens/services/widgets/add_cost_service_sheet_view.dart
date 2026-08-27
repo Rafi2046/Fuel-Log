@@ -1,9 +1,8 @@
 part of 'add_cost_service_sheet.dart';
 
-mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet> {
+mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostServiceSheetController {
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM dd, yyyy');
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -331,17 +330,6 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet> {
                 controller: _notesController,
                 hintText: 'e.g. Navana Toyota Workshop, Gulshan',
                 maxLines: 2,
-              ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
-                  ),
-                ),
               ),
 
               const SizedBox(height: 24),
