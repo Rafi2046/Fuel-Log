@@ -19,6 +19,8 @@ class Vehicles extends Table {
 
   TextColumn get model => text().nullable()();
 
+  TextColumn get brand => text().nullable()();
+
   RealColumn get startOdo => real()();
 
   /// Tank liters or battery kWh (energy-agnostic).
@@ -136,9 +138,9 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
-  /// Bumped for TripLogs and Reminders schema updates.
+  /// Bumped for Vehicles brand column (v7).
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -146,14 +148,8 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Early-dev: wipe and recreate whenever schema moves forward.
-          if (from < schemaVersion) {
-            await customStatement('DROP TABLE IF EXISTS trip_logs');
-            await customStatement('DROP TABLE IF EXISTS service_logs');
-            await customStatement('DROP TABLE IF EXISTS reminders');
-            await customStatement('DROP TABLE IF EXISTS fuel_logs');
-            await customStatement('DROP TABLE IF EXISTS vehicles');
-            await m.createAll();
+          if (from < 7) {
+            await m.addColumn(vehicles, vehicles.brand);
           }
         },
       );

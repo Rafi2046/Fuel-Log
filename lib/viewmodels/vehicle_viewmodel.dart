@@ -43,6 +43,7 @@ class VehicleViewModel extends StateNotifier<AsyncValue<void>> {
     required String type,
     required String name,
     String? model,
+    String? brand,
     required double startOdo,
     required double capacity,
     required String fuelType,
@@ -62,6 +63,9 @@ class VehicleViewModel extends StateNotifier<AsyncValue<void>> {
           model: model == null || model.isEmpty
               ? const Value.absent()
               : Value(model),
+          brand: brand == null || brand.isEmpty
+              ? const Value.absent()
+              : Value(brand),
           startOdo: startOdo,
           capacity: capacity,
           fuelType: fuelType,

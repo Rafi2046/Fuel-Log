@@ -48,6 +48,15 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _brandMeta = const VerificationMeta('brand');
+  @override
+  late final GeneratedColumn<String> brand = GeneratedColumn<String>(
+    'brand',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _startOdoMeta = const VerificationMeta(
     'startOdo',
   );
@@ -114,6 +123,7 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     type,
     name,
     model,
+    brand,
     startOdo,
     capacity,
     fuelType,
@@ -155,6 +165,12 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
       context.handle(
         _modelMeta,
         model.isAcceptableOrUnknown(data['model']!, _modelMeta),
+      );
+    }
+    if (data.containsKey('brand')) {
+      context.handle(
+        _brandMeta,
+        brand.isAcceptableOrUnknown(data['brand']!, _brandMeta),
       );
     }
     if (data.containsKey('start_odo')) {
@@ -218,6 +234,10 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         DriftSqlType.string,
         data['${effectivePrefix}model'],
       ),
+      brand: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}brand'],
+      ),
       startOdo: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}start_odo'],
@@ -254,6 +274,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
   final String type;
   final String name;
   final String? model;
+  final String? brand;
   final double startOdo;
 
   /// Tank liters or battery kWh (energy-agnostic).
@@ -268,6 +289,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     required this.type,
     required this.name,
     this.model,
+    this.brand,
     required this.startOdo,
     required this.capacity,
     required this.fuelType,
@@ -282,6 +304,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || model != null) {
       map['model'] = Variable<String>(model);
+    }
+    if (!nullToAbsent || brand != null) {
+      map['brand'] = Variable<String>(brand);
     }
     map['start_odo'] = Variable<double>(startOdo);
     map['capacity'] = Variable<double>(capacity);
@@ -299,6 +324,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       model: model == null && nullToAbsent
           ? const Value.absent()
           : Value(model),
+      brand: brand == null && nullToAbsent
+          ? const Value.absent()
+          : Value(brand),
       startOdo: Value(startOdo),
       capacity: Value(capacity),
       fuelType: Value(fuelType),
@@ -317,6 +345,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       type: serializer.fromJson<String>(json['type']),
       name: serializer.fromJson<String>(json['name']),
       model: serializer.fromJson<String?>(json['model']),
+      brand: serializer.fromJson<String?>(json['brand']),
       startOdo: serializer.fromJson<double>(json['startOdo']),
       capacity: serializer.fromJson<double>(json['capacity']),
       fuelType: serializer.fromJson<String>(json['fuelType']),
@@ -332,6 +361,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       'type': serializer.toJson<String>(type),
       'name': serializer.toJson<String>(name),
       'model': serializer.toJson<String?>(model),
+      'brand': serializer.toJson<String?>(brand),
       'startOdo': serializer.toJson<double>(startOdo),
       'capacity': serializer.toJson<double>(capacity),
       'fuelType': serializer.toJson<String>(fuelType),
@@ -345,6 +375,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     String? type,
     String? name,
     Value<String?> model = const Value.absent(),
+    Value<String?> brand = const Value.absent(),
     double? startOdo,
     double? capacity,
     String? fuelType,
@@ -355,6 +386,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     type: type ?? this.type,
     name: name ?? this.name,
     model: model.present ? model.value : this.model,
+    brand: brand.present ? brand.value : this.brand,
     startOdo: startOdo ?? this.startOdo,
     capacity: capacity ?? this.capacity,
     fuelType: fuelType ?? this.fuelType,
@@ -367,6 +399,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       type: data.type.present ? data.type.value : this.type,
       name: data.name.present ? data.name.value : this.name,
       model: data.model.present ? data.model.value : this.model,
+      brand: data.brand.present ? data.brand.value : this.brand,
       startOdo: data.startOdo.present ? data.startOdo.value : this.startOdo,
       capacity: data.capacity.present ? data.capacity.value : this.capacity,
       fuelType: data.fuelType.present ? data.fuelType.value : this.fuelType,
@@ -384,6 +417,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           ..write('type: $type, ')
           ..write('name: $name, ')
           ..write('model: $model, ')
+          ..write('brand: $brand, ')
           ..write('startOdo: $startOdo, ')
           ..write('capacity: $capacity, ')
           ..write('fuelType: $fuelType, ')
@@ -399,6 +433,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     type,
     name,
     model,
+    brand,
     startOdo,
     capacity,
     fuelType,
@@ -413,6 +448,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           other.type == this.type &&
           other.name == this.name &&
           other.model == this.model &&
+          other.brand == this.brand &&
           other.startOdo == this.startOdo &&
           other.capacity == this.capacity &&
           other.fuelType == this.fuelType &&
@@ -425,6 +461,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
   final Value<String> type;
   final Value<String> name;
   final Value<String?> model;
+  final Value<String?> brand;
   final Value<double> startOdo;
   final Value<double> capacity;
   final Value<String> fuelType;
@@ -435,6 +472,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.type = const Value.absent(),
     this.name = const Value.absent(),
     this.model = const Value.absent(),
+    this.brand = const Value.absent(),
     this.startOdo = const Value.absent(),
     this.capacity = const Value.absent(),
     this.fuelType = const Value.absent(),
@@ -446,6 +484,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     required String type,
     required String name,
     this.model = const Value.absent(),
+    this.brand = const Value.absent(),
     required double startOdo,
     required double capacity,
     required String fuelType,
@@ -461,6 +500,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Expression<String>? type,
     Expression<String>? name,
     Expression<String>? model,
+    Expression<String>? brand,
     Expression<double>? startOdo,
     Expression<double>? capacity,
     Expression<String>? fuelType,
@@ -472,6 +512,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       if (type != null) 'type': type,
       if (name != null) 'name': name,
       if (model != null) 'model': model,
+      if (brand != null) 'brand': brand,
       if (startOdo != null) 'start_odo': startOdo,
       if (capacity != null) 'capacity': capacity,
       if (fuelType != null) 'fuel_type': fuelType,
@@ -485,6 +526,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Value<String>? type,
     Value<String>? name,
     Value<String?>? model,
+    Value<String?>? brand,
     Value<double>? startOdo,
     Value<double>? capacity,
     Value<String>? fuelType,
@@ -496,6 +538,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       type: type ?? this.type,
       name: name ?? this.name,
       model: model ?? this.model,
+      brand: brand ?? this.brand,
       startOdo: startOdo ?? this.startOdo,
       capacity: capacity ?? this.capacity,
       fuelType: fuelType ?? this.fuelType,
@@ -518,6 +561,9 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     }
     if (model.present) {
       map['model'] = Variable<String>(model.value);
+    }
+    if (brand.present) {
+      map['brand'] = Variable<String>(brand.value);
     }
     if (startOdo.present) {
       map['start_odo'] = Variable<double>(startOdo.value);
@@ -544,6 +590,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           ..write('type: $type, ')
           ..write('name: $name, ')
           ..write('model: $model, ')
+          ..write('brand: $brand, ')
           ..write('startOdo: $startOdo, ')
           ..write('capacity: $capacity, ')
           ..write('fuelType: $fuelType, ')
@@ -3042,6 +3089,7 @@ typedef $$VehiclesTableCreateCompanionBuilder =
       required String type,
       required String name,
       Value<String?> model,
+      Value<String?> brand,
       required double startOdo,
       required double capacity,
       required String fuelType,
@@ -3054,6 +3102,7 @@ typedef $$VehiclesTableUpdateCompanionBuilder =
       Value<String> type,
       Value<String> name,
       Value<String?> model,
+      Value<String?> brand,
       Value<double> startOdo,
       Value<double> capacity,
       Value<String> fuelType,
@@ -3166,6 +3215,11 @@ class $$VehiclesTableFilterComposer
 
   ColumnFilters<String> get model => $composableBuilder(
     column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get brand => $composableBuilder(
+    column: $table.brand,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3324,6 +3378,11 @@ class $$VehiclesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get brand => $composableBuilder(
+    column: $table.brand,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get startOdo => $composableBuilder(
     column: $table.startOdo,
     builder: (column) => ColumnOrderings(column),
@@ -3370,6 +3429,9 @@ class $$VehiclesTableAnnotationComposer
 
   GeneratedColumn<String> get model =>
       $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get brand =>
+      $composableBuilder(column: $table.brand, builder: (column) => column);
 
   GeneratedColumn<double> get startOdo =>
       $composableBuilder(column: $table.startOdo, builder: (column) => column);
@@ -3526,6 +3588,7 @@ class $$VehiclesTableTableManager
                 Value<String> type = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> brand = const Value.absent(),
                 Value<double> startOdo = const Value.absent(),
                 Value<double> capacity = const Value.absent(),
                 Value<String> fuelType = const Value.absent(),
@@ -3536,6 +3599,7 @@ class $$VehiclesTableTableManager
                 type: type,
                 name: name,
                 model: model,
+                brand: brand,
                 startOdo: startOdo,
                 capacity: capacity,
                 fuelType: fuelType,
@@ -3548,6 +3612,7 @@ class $$VehiclesTableTableManager
                 required String type,
                 required String name,
                 Value<String?> model = const Value.absent(),
+                Value<String?> brand = const Value.absent(),
                 required double startOdo,
                 required double capacity,
                 required String fuelType,
@@ -3558,6 +3623,7 @@ class $$VehiclesTableTableManager
                 type: type,
                 name: name,
                 model: model,
+                brand: brand,
                 startOdo: startOdo,
                 capacity: capacity,
                 fuelType: fuelType,
