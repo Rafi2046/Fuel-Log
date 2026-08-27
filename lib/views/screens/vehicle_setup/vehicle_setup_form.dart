@@ -73,7 +73,7 @@ class VehicleSetupForm extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               AppTextField(
-                label: 'Model',
+                label: 'Model (Optional)',
                 hint: 'e.g. Toyota Axio',
                 controller: modelController,
                 prefixIcon: Icons.badge_outlined,

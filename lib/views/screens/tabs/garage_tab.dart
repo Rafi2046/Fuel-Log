@@ -7,8 +7,10 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
-import '../../widgets/app_outline_button.dart';
+import '../../widgets/app_primary_button.dart';
 import '../vehicle_setup_screen.dart';
+import 'garage/widgets/garage_empty_state.dart';
+import 'garage/widgets/garage_slots_header.dart';
 import 'garage_vehicle_card.dart';
 
 /// Soft cap — free tier allows up to this many vehicles.
@@ -51,7 +53,6 @@ class GarageTab extends ConsumerWidget {
       _typeLabel(vehicle),
       if (vehicle.model != null && vehicle.model!.trim().isNotEmpty)
         vehicle.model!.trim(),
-      vehicle.fuelType,
       _odometerLabel(vehicle.startOdo),
     ];
     return parts.join(' • ');
@@ -209,27 +210,18 @@ class GarageTab extends ConsumerWidget {
         child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
       ),
       data: (vehicles) {
+        final isEmpty = vehicles.isEmpty;
+
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           children: [
-            if (vehicles.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.garage_outlined,
-                      size: 40,
-                      color: AppColors.textTertiary.withValues(alpha: 0.7),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'garageEmpty'.tr(),
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.caption,
-                    ),
-                  ],
-                ),
+            if (!isEmpty) ...[
+              GarageSlotsHeader(used: vehicles.length, max: kMaxVehicles),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            if (isEmpty)
+              GarageEmptyState(
+                onAddPressed: () => _onAddPressed(context, 0),
               )
             else
               for (var i = 0; i < vehicles.length; i++) ...[
@@ -238,39 +230,45 @@ class GarageTab extends ConsumerWidget {
                   direction: DismissDirection.endToStart,
                   confirmDismiss: (_) async {
                     await _confirmDelete(context, ref, vehicles[i]);
-                    // Deletion happens inside confirm; keep row if cancelled.
                     return false;
                   },
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: AppSpacing.md),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.18),
                       borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
+                          BorderRadius.circular(AppSpacing.radiusLg),
                     ),
                     child: const Icon(
                       Icons.delete_outline_rounded,
                       color: AppColors.error,
                     ),
                   ),
-                  child: GarageVehicleCard(
-                    name: vehicles[i].name,
-                    subtitle: _subtitle(vehicles[i]),
-                    icon: _iconFor(vehicles[i]),
-                    onDelete: () =>
-                        _confirmDelete(context, ref, vehicles[i]),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: GarageVehicleCard(
+                      name: vehicles[i].name,
+                      subtitle: _subtitle(vehicles[i]),
+                      fuelType: vehicles[i].fuelType,
+                      icon: _iconFor(vehicles[i]),
+                      onDelete: () =>
+                          _confirmDelete(context, ref, vehicles[i]),
+                    ),
                   ),
                 ),
-                if (i < vehicles.length - 1)
-                  const SizedBox(height: AppSpacing.sm),
               ],
-            const SizedBox(height: AppSpacing.lg),
-            AppOutlineButton(
-              label: 'addNewVehicle'.tr(),
-              icon: Icons.add_rounded,
-              onPressed: () => _onAddPressed(context, vehicles.length),
-            ),
+            if (!isEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              AppPrimaryButton(
+                label: 'addNewVehicle'.tr(),
+                icon: Icons.add_rounded,
+                onPressed: vehicles.length >= kMaxVehicles
+                    ? null
+                    : () => _onAddPressed(context, vehicles.length),
+              ),
+            ],
             if (vehicles.length >= kMaxVehicles) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(

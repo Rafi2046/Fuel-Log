@@ -121,7 +121,7 @@ class VehicleIdentityStep extends StatelessWidget {
                   indent: 64,
                 ),
                 _IdentityInputRow(
-                  label: 'Model',
+                  label: 'Model (Optional)',
                   hint: 'e.g., Toyota Axio, Yamaha R15',
                   controller: modelController,
                   icon: Icons.badge_outlined,
