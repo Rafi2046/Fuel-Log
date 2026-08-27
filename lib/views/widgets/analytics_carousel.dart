@@ -19,11 +19,13 @@ class AnalyticsCarousel extends StatefulWidget {
     super.key,
     required this.logs,
     required this.mileageUnit,
+    this.serviceLogs = const [],
     this.isElectric = false,
     this.chartHeight = 220,
   });
 
   final List<FuelLog> logs;
+  final List<ServiceLog> serviceLogs;
   final String mileageUnit;
   final bool isElectric;
   final double chartHeight;
@@ -79,7 +81,10 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
           scrollable: fullscreen,
         );
       default:
-        return ExpenseRatioChart(logs: widget.logs);
+        return ExpenseRatioChart(
+          logs: widget.logs,
+          serviceLogs: widget.serviceLogs,
+        );
     }
   }
 

@@ -17,6 +17,7 @@ import '../../widgets/efficiency_gauge.dart';
 import '../../widgets/summary_stat_card.dart';
 import '../../widgets/weather_drive_card.dart';
 import '../reminders/reminders_screen.dart';
+import 'logs_tab.dart';
 
 /// Home tab — compact overview (gauge, month cards, recent log).
 class HomeTab extends ConsumerWidget {
@@ -118,9 +119,41 @@ class _HomeContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           const _HomeServiceStatusCard(),
           const SizedBox(height: AppSpacing.md),
-          Text(
-            isEV ? 'recentCharge'.tr() : 'recentRefueling'.tr(),
-            style: AppTextStyles.label.copyWith(fontSize: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isEV ? 'recentCharge'.tr() : 'recentRefueling'.tr(),
+                  style: AppTextStyles.label.copyWith(fontSize: 12),
+                ),
+              ),
+              TextButton(
+                onPressed: () => LogsTab.open(context),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'viewAll'.tr(),
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.xs),
           if (recent == null)

@@ -8,19 +8,35 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/app_formatters.dart';
 
-/// Donut breakdown: fuel vs dummy service spend.
+/// Donut breakdown: fuel vs service spend for the current month.
 class ExpenseRatioChart extends StatelessWidget {
-  const ExpenseRatioChart({super.key, required this.logs});
+  const ExpenseRatioChart({
+    super.key,
+    required this.logs,
+    this.serviceLogs = const [],
+  });
 
   final List<FuelLog> logs;
+  final List<ServiceLog> serviceLogs;
 
-  /// Placeholder until service logs exist in the schema.
-  static const double dummyServiceCost = 500;
+  static double _currentMonthFuelSpend(List<FuelLog> logs) {
+    final now = DateTime.now();
+    return logs
+        .where((l) => l.date.year == now.year && l.date.month == now.month)
+        .fold<double>(0, (sum, l) => sum + l.cost);
+  }
+
+  static double _currentMonthServiceSpend(List<ServiceLog> logs) {
+    final now = DateTime.now();
+    return logs
+        .where((l) => l.date.year == now.year && l.date.month == now.month)
+        .fold<double>(0, (sum, l) => sum + l.cost);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final fuel = logs.fold<double>(0, (sum, l) => sum + l.cost);
-    final service = logs.isEmpty ? 0.0 : dummyServiceCost;
+    final fuel = _currentMonthFuelSpend(logs);
+    final service = _currentMonthServiceSpend(serviceLogs);
     final total = fuel + service;
 
     if (total <= 0) {

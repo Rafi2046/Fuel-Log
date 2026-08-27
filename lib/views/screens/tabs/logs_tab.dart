@@ -17,6 +17,21 @@ import '../mileage/mileage_log_screen.dart';
 class LogsTab extends ConsumerWidget {
   const LogsTab({super.key});
 
+  static Future<void> open(BuildContext context) {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: Text('logsTitle'.tr()),
+            backgroundColor: AppColors.background,
+          ),
+          body: const LogsTab(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logsAsync = ref.watch(vehicleLogsProvider);

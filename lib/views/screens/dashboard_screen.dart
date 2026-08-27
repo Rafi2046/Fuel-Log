@@ -277,8 +277,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           )
                         : null,
                     onTap: () {
-                      ref.read(selectedVehicleIdProvider.notifier).state =
-                          v.id;
+                      ref.read(selectedVehicleIdProvider.notifier).select(v.id);
                       Navigator.of(context).pop();
                     },
                   );

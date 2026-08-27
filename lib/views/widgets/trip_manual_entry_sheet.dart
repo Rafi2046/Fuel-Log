@@ -12,8 +12,32 @@ import '../../viewmodels/trip_log_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import 'app_primary_button.dart';
 
+/// Optional GPS / live-trip values to pre-fill the manual entry form.
+class TripManualEntryPrefill {
+  const TripManualEntryPrefill({
+    this.initialDistanceKm,
+    this.initialDurationSec,
+    this.initialOrigin,
+    this.initialDestination,
+    this.startedAt,
+    this.endedAt,
+    this.source = 'gps',
+  });
+
+  final double? initialDistanceKm;
+  final int? initialDurationSec;
+  final String? initialOrigin;
+  final String? initialDestination;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
+  final String source;
+}
+
 /// Full manual trip form — all reference fields, still borderless (no boxed inputs).
-Future<void> showTripManualEntrySheet(BuildContext context) {
+Future<void> showTripManualEntrySheet(
+  BuildContext context, {
+  TripManualEntryPrefill? prefill,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -23,12 +47,14 @@ Future<void> showTripManualEntrySheet(BuildContext context) {
         top: Radius.circular(AppSpacing.radiusXl),
       ),
     ),
-    builder: (context) => const TripManualEntrySheet(),
+    builder: (context) => TripManualEntrySheet(prefill: prefill),
   );
 }
 
 class TripManualEntrySheet extends ConsumerStatefulWidget {
-  const TripManualEntrySheet({super.key});
+  const TripManualEntrySheet({super.key, this.prefill});
+
+  final TripManualEntryPrefill? prefill;
 
   @override
   ConsumerState<TripManualEntrySheet> createState() =>
@@ -59,8 +85,39 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
   @override
   void initState() {
     super.initState();
+    _applyPrefill(widget.prefill);
     _startOdoCtrl.addListener(_syncDistanceFromOdo);
     _endOdoCtrl.addListener(_syncDistanceFromOdo);
+  }
+
+  void _applyPrefill(TripManualEntryPrefill? prefill) {
+    if (prefill == null) return;
+
+    if (prefill.initialOrigin != null && prefill.initialOrigin!.isNotEmpty) {
+      _originCtrl.text = prefill.initialOrigin!;
+    }
+    if (prefill.initialDestination != null &&
+        prefill.initialDestination!.isNotEmpty) {
+      _destinationCtrl.text = prefill.initialDestination!;
+    }
+
+    if (prefill.initialDistanceKm != null) {
+      final km = prefill.initialDistanceKm!;
+      _distanceCtrl.text = km.truncateToDouble() == km
+          ? km.toStringAsFixed(0)
+          : km.toStringAsFixed(1);
+    }
+
+    final endedAt = prefill.endedAt ?? DateTime.now();
+    DateTime startedAt = prefill.startedAt ??
+        (prefill.initialDurationSec != null
+            ? endedAt.subtract(Duration(seconds: prefill.initialDurationSec!))
+            : endedAt);
+
+    _startDate = DateTime(startedAt.year, startedAt.month, startedAt.day);
+    _startTime = TimeOfDay.fromDateTime(startedAt);
+    _endDate = DateTime(endedAt.year, endedAt.month, endedAt.day);
+    _endTime = TimeOfDay.fromDateTime(endedAt);
   }
 
   @override
@@ -201,7 +258,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
       totalCost: tripCost != null
           ? drift.Value(tripCost)
           : const drift.Value.absent(),
-      source: 'manual',
+      source: widget.prefill?.source ?? 'manual',
       privacy: _privacy,
       note: note.isNotEmpty ? drift.Value(note) : const drift.Value.absent(),
     );

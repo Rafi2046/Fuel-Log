@@ -174,7 +174,7 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
               icon: Icons.description_outlined,
               color: const Color(0xFF38BDF8),
               title: 'Create Report',
-              subtitle: 'Generate free PDF & CSV history report',
+              subtitle: 'Generate CSV & text history report',
               onTap: () {
                 Navigator.of(context).pop();
                 ReportsScreen.open(context);

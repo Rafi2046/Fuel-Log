@@ -100,4 +100,42 @@ void main() {
     await db.close();
     container.dispose();
   });
+
+  testWidgets('TripManualEntrySheet prefills GPS distance, duration, and places',
+      (tester) async {
+    final startedAt = DateTime(2026, 8, 28, 9, 0);
+    final endedAt = DateTime(2026, 8, 28, 9, 45);
+
+    await tester.pumpWidget(
+      EasyLocalization(
+        supportedLocales: supportedAppLocales,
+        path: translationsPath,
+        fallbackLocale: const Locale('en'),
+        child: MaterialApp(
+          home: Scaffold(
+            body: TripManualEntrySheet(
+              prefill: TripManualEntryPrefill(
+                initialDistanceKm: 12.5,
+                initialDurationSec: 2700,
+                initialOrigin: 'Dhanmondi',
+                initialDestination: 'Gulshan',
+                startedAt: startedAt,
+                endedAt: endedAt,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final textFields = find.byType(TextFormField);
+    expect((tester.widget<TextFormField>(textFields.at(1)).controller?.text),
+        equals('Dhanmondi'));
+    expect((tester.widget<TextFormField>(textFields.at(3)).controller?.text),
+        equals('Gulshan'));
+    expect((tester.widget<TextFormField>(textFields.at(7)).controller?.text),
+        equals('12.5'));
+  });
 }

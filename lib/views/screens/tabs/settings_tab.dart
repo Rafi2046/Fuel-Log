@@ -8,7 +8,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_locales.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/database/app_database.dart';
 import '../../../core/services/backup_restore_service.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
@@ -24,7 +23,6 @@ class SettingsTab extends ConsumerStatefulWidget {
 }
 
 class _SettingsTabState extends ConsumerState<SettingsTab> {
-  bool _darkThemeEnabled = true;
   bool _isExporting = false;
   bool _isRestoring = false;
   final _backupService = const BackupRestoreService();
@@ -129,117 +127,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     if (selected != null && mounted) {
       await context.setLocale(selected);
     }
-  }
-
-  void _pickUnits() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.cardElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.sm,
-              AppSpacing.screenPadding,
-              AppSpacing.md,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'unitPreferences'.tr(),
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  leading: const Icon(
-                    LucideIcons.gauge,
-                    size: 20,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(
-                    'Metric (km, L)',
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Kilometers, Liters, ৳/L',
-                    style: AppTextStyles.caption,
-                  ),
-                  trailing: const Icon(
-                    LucideIcons.check,
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
-                  onTap: () => Navigator.pop(sheetContext),
-                ),
-                ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  leading: const Icon(
-                    LucideIcons.ruler,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-                  title: Text(
-                    'Imperial (mi, gal)',
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Miles, Gallons, MPG',
-                    style: AppTextStyles.caption,
-                  ),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('Imperial units coming in next release'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   Future<void> _handleExport() async {
@@ -402,7 +289,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             _SettingsTile(
               icon: LucideIcons.fileText,
               title: 'Create Vehicle Report',
-              subtitle: 'Export PDF & CSV history for buyer or tax',
+              subtitle: 'Share CSV & text reports for buyer or tax',
               onTap: () => ReportsScreen.open(context),
             ),
             _SettingsTile(
@@ -451,26 +338,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               subtitle: 'languageSubtitle'.tr(),
               valueText: _languageLabel(locale),
               onTap: _pickLanguage,
-            ),
-            _SettingsTile(
-              icon: LucideIcons.gauge,
-              title: 'unitPreferences'.tr(),
-              subtitle: 'unitPreferencesSubtitle'.tr(),
-              valueText: 'km, L',
-              onTap: _pickUnits,
-            ),
-            _SettingsTile(
-              icon: LucideIcons.moon,
-              title: 'darkTheme'.tr(),
-              subtitle: 'darkThemeSubtitle'.tr(),
-              trailing: Transform.scale(
-                scale: 0.82,
-                child: CupertinoSwitch(
-                  value: _darkThemeEnabled,
-                  activeTrackColor: AppColors.primary,
-                  onChanged: (v) => setState(() => _darkThemeEnabled = v),
-                ),
-              ),
             ),
             _SettingsTile(
               icon: LucideIcons.cloudSun,

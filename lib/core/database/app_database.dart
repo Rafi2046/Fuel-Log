@@ -191,6 +191,9 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertReminder(RemindersCompanion reminder) =>
       into(reminders).insert(reminder);
 
+  Future<bool> updateReminder(Reminder reminder) =>
+      update(reminders).replace(reminder);
+
   Future<List<Reminder>> getIncompleteRemindersForVehicle(int vehicleId) {
     return (select(reminders)
           ..where((t) =>

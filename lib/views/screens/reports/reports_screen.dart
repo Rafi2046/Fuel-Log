@@ -162,7 +162,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'PDF & CSV export',
+                        'Share CSV & text reports',
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.textTertiary,
                           fontSize: 11,

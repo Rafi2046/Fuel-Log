@@ -53,6 +53,47 @@ void main() {
     expect(remainingIncomplete.isEmpty, isTrue);
   });
 
+  test('updateReminder replaces existing row instead of inserting duplicate', () async {
+    final vehicleId = await db.insertVehicle(
+      VehiclesCompanion.insert(
+        type: 'Car',
+        name: 'Update Test Car',
+        startOdo: 1000,
+        capacity: 45,
+        fuelType: 'Octane',
+      ),
+    );
+
+    final reminderId = await db.insertReminder(
+      RemindersCompanion.insert(
+        vehicleId: vehicleId,
+        title: 'Engine Oil',
+        targetOdometer: const drift.Value(5000.0),
+      ),
+    );
+
+    final existing = (await db.getRemindersForVehicle(vehicleId)).single;
+
+    await db.updateReminder(
+      Reminder(
+        id: existing.id,
+        vehicleId: vehicleId,
+        title: 'Engine Oil (Updated)',
+        targetDate: existing.targetDate,
+        targetOdometer: 6000.0,
+        isCompleted: existing.isCompleted,
+        oilType: existing.oilType,
+        intervalKm: existing.intervalKm,
+      ),
+    );
+
+    final reminders = await db.getRemindersForVehicle(vehicleId);
+    expect(reminders.length, equals(1));
+    expect(reminders.single.id, equals(reminderId));
+    expect(reminders.single.title, equals('Engine Oil (Updated)'));
+    expect(reminders.single.targetOdometer, equals(6000.0));
+  });
+
   test('deleteVehicle cascades to fuel logs, reminders, service logs, and trip logs', () async {
     final vehicleId = await db.insertVehicle(
       VehiclesCompanion.insert(

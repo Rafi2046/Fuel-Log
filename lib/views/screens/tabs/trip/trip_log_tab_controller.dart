@@ -16,6 +16,8 @@ mixin TripLogTabController on State<TripLogTab> {
   Duration _tripDuration = Duration.zero;
   double _tripDistanceCoveredKm = 0.0;
   LatLng? _lastGpsPoint;
+  LatLng? _tripStartLocation;
+  DateTime? _tripStartedAt;
   bool _isGeneralTripTracking = false;
 
   late final MapController _mapController;
@@ -275,12 +277,64 @@ mixin TripLogTabController on State<TripLogTab> {
     _startNavigation(station);
   }
 
-  Future<void> _startNavigation(MockGasStation station) async {
-    // Start live trip stopwatch
-    _tripTimer?.cancel();
+  void _beginTripTracking() {
+    _tripStartedAt = DateTime.now();
+    _tripStartLocation = _userLocation;
     _tripDuration = Duration.zero;
     _tripDistanceCoveredKm = 0.0;
     _lastGpsPoint = _userLocation;
+  }
+
+  void _resetTripTrackingState() {
+    _tripTimer?.cancel();
+    _tripTimer = null;
+    _cancelGpsTracking();
+    _tripDuration = Duration.zero;
+    _tripDistanceCoveredKm = 0.0;
+    _lastGpsPoint = null;
+    _tripStartLocation = null;
+    _tripStartedAt = null;
+  }
+
+  Future<void> _openTripEntryWithGpsPrefill({
+    String? destinationHint,
+  }) async {
+    final distanceKm = _tripDistanceCoveredKm;
+    final durationSec = _tripDuration.inSeconds;
+    final startedAt = _tripStartedAt ??
+        DateTime.now().subtract(Duration(seconds: durationSec));
+    final endedAt = DateTime.now();
+    final startPoint = _tripStartLocation;
+    final endPoint = _lastGpsPoint ?? _userLocation;
+
+    String? origin;
+    String? destination = destinationHint;
+    if (startPoint != null) {
+      origin = await ReverseGeocodingService.resolveLabel(startPoint);
+    }
+    if (destination == null || destination.isEmpty) {
+      destination = await ReverseGeocodingService.resolveLabel(endPoint);
+    }
+
+    if (!mounted) return;
+
+    await showTripManualEntrySheet(
+      context,
+      prefill: TripManualEntryPrefill(
+        initialDistanceKm: distanceKm > 0 ? distanceKm : null,
+        initialDurationSec: durationSec > 0 ? durationSec : null,
+        initialOrigin: origin,
+        initialDestination: destination,
+        startedAt: startedAt,
+        endedAt: endedAt,
+      ),
+    );
+  }
+
+  Future<void> _startNavigation(MockGasStation station) async {
+    // Start live trip stopwatch
+    _tripTimer?.cancel();
+    _beginTripTracking();
     _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
         setState(() {
@@ -400,46 +454,50 @@ mixin TripLogTabController on State<TripLogTab> {
     } catch (_) {}
   }
 
-  void _onArrivedAtStation(MockGasStation station) {
+  Future<void> _onArrivedAtStation(MockGasStation station) async {
     _cancelGpsTracking();
     _tripTimer?.cancel();
     _chipSnack('🎉 You have arrived at ${station.name}!');
-    showTripManualEntrySheet(context);
-  }
 
-  void _exitNavigation() {
-    _tripTimer?.cancel();
-    _tripTimer = null;
-    _cancelGpsTracking();
+    final destination = station.name;
+    await _openTripEntryWithGpsPrefill(destinationHint: destination);
+
+    if (!mounted) return;
     setState(() {
       _isNavigating = false;
       _navigatingStation = null;
       _activeRoute = null;
       _showStations = true;
-      _tripDuration = Duration.zero;
-      _tripDistanceCoveredKm = 0.0;
-      _lastGpsPoint = null;
+    });
+    _resetTripTrackingState();
+    _animatedMapMove(_userLocation, 15.0);
+  }
+
+  void _exitNavigation() {
+    _resetTripTrackingState();
+    setState(() {
+      _isNavigating = false;
+      _navigatingStation = null;
+      _activeRoute = null;
+      _showStations = true;
     });
     _animatedMapMove(_userLocation, 15.0);
   }
 
-  void _toggleGeneralTripTracking() {
+  Future<void> _toggleGeneralTripTracking() async {
     if (_isGeneralTripTracking) {
-      _tripTimer?.cancel();
-      _tripTimer = null;
-      _cancelGpsTracking();
-      setState(() {
-        _isGeneralTripTracking = false;
-      });
+      final distanceKm = _tripDistanceCoveredKm;
+      final durationMin = _tripDuration.inMinutes;
+      setState(() => _isGeneralTripTracking = false);
       _chipSnack(
-        'Trip finished! Total: ${_tripDistanceCoveredKm.toStringAsFixed(1)} km in ${_tripDuration.inMinutes} mins',
+        'Trip finished! Total: ${distanceKm.toStringAsFixed(1)} km in $durationMin mins',
       );
-      showTripManualEntrySheet(context);
+      await _openTripEntryWithGpsPrefill();
+      if (!mounted) return;
+      _resetTripTrackingState();
     } else {
       _tripTimer?.cancel();
-      _tripDuration = Duration.zero;
-      _tripDistanceCoveredKm = 0.0;
-      _lastGpsPoint = _userLocation;
+      _beginTripTracking();
       setState(() {
         _isGeneralTripTracking = true;
       });

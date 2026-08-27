@@ -46,6 +46,7 @@ class StatsTab extends ConsumerWidget {
         children: [
           AnalyticsCarousel(
             logs: logs,
+            serviceLogs: serviceLogs,
             mileageUnit: mileageUnit,
             isElectric: isEV,
           ),

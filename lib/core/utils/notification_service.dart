@@ -213,4 +213,10 @@ class NotificationService {
     await _flutterLocalNotificationsPlugin.cancel(weatherMorningId);
     await _flutterLocalNotificationsPlugin.cancel(weatherAlertId);
   }
+
+  /// Cancels a scheduled maintenance reminder notification.
+  Future<void> cancelNotification(int id) async {
+    await init();
+    await _flutterLocalNotificationsPlugin.cancel(id);
+  }
 }

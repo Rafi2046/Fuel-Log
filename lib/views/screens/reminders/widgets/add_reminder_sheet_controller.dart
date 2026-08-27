@@ -45,6 +45,7 @@ mixin _AddReminderSheetController on ConsumerState<AddReminderSheet> {
       text: r?.targetOdometer != null ? r!.targetOdometer!.toStringAsFixed(0) : '',
     );
     _selectedTargetDate = r?.targetDate;
+    _selectedOilType = r?.oilType;
 
     _titleController.addListener(_onTitleChanged);
   }
@@ -164,25 +165,46 @@ mixin _AddReminderSheetController on ConsumerState<AddReminderSheet> {
     }
 
     final db = ref.read(databaseProvider);
-    final reminderId = await db.insertReminder(
-      RemindersCompanion.insert(
-        vehicleId: vId,
-        title: finalTitle,
-        targetDate: _selectedTargetDate != null
-            ? drift.Value(_selectedTargetDate!)
-            : const drift.Value.absent(),
-        targetOdometer: targetOdometer != null
-            ? drift.Value(targetOdometer)
-            : const drift.Value.absent(),
-        isCompleted: const drift.Value(false),
-        oilType: _selectedOilType != null
-            ? drift.Value(_selectedOilType)
-            : const drift.Value.absent(),
-        intervalKm: intervalKm != null
-            ? drift.Value(intervalKm)
-            : const drift.Value.absent(),
-      ),
-    );
+    final existing = widget.existingReminder;
+    late final int reminderId;
+
+    if (existing != null) {
+      await db.updateReminder(
+        Reminder(
+          id: existing.id,
+          vehicleId: vId,
+          title: finalTitle,
+          targetDate: _selectedTargetDate,
+          targetOdometer: targetOdometer,
+          isCompleted: existing.isCompleted,
+          oilType: _selectedOilType,
+          intervalKm: intervalKm,
+        ),
+      );
+      reminderId = existing.id;
+
+      await NotificationService().cancelNotification(reminderId);
+    } else {
+      reminderId = await db.insertReminder(
+        RemindersCompanion.insert(
+          vehicleId: vId,
+          title: finalTitle,
+          targetDate: _selectedTargetDate != null
+              ? drift.Value(_selectedTargetDate!)
+              : const drift.Value.absent(),
+          targetOdometer: targetOdometer != null
+              ? drift.Value(targetOdometer)
+              : const drift.Value.absent(),
+          isCompleted: const drift.Value(false),
+          oilType: _selectedOilType != null
+              ? drift.Value(_selectedOilType)
+              : const drift.Value.absent(),
+          intervalKm: intervalKm != null
+              ? drift.Value(intervalKm)
+              : const drift.Value.absent(),
+        ),
+      );
+    }
 
     // If a Date is selected, immediately schedule local notification
     if (_selectedTargetDate != null) {

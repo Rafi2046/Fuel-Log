@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/database/app_database.dart';
+import '../core/services/active_vehicle_prefs.dart';
 
 /// App-wide Drift database instance.
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -15,8 +16,71 @@ final vehiclesProvider = StreamProvider<List<Vehicle>>((ref) {
   return ref.watch(databaseProvider).watchAllVehicles();
 });
 
-/// Currently selected vehicle ID (optional, defaults to first vehicle in DB).
-final selectedVehicleIdProvider = StateProvider<int?>((ref) => null);
+/// Currently selected vehicle ID — hydrated from [ActiveVehiclePrefs] on launch.
+final selectedVehicleIdProvider =
+    StateNotifierProvider<SelectedVehicleIdNotifier, int?>((ref) {
+  final notifier = SelectedVehicleIdNotifier(ref);
+  ref.listen(vehiclesProvider, (previous, next) {
+    next.whenData(notifier.reconcileWithVehicles);
+  });
+  return notifier;
+});
+
+class SelectedVehicleIdNotifier extends StateNotifier<int?> {
+  SelectedVehicleIdNotifier(this._ref) : super(null) {
+    _loadSavedId();
+  }
+
+  final Ref _ref;
+  int? _savedId;
+  bool _prefsLoaded = false;
+
+  Future<void> _loadSavedId() async {
+    _savedId = await ActiveVehiclePrefs.getLastActiveVehicleId();
+    _prefsLoaded = true;
+    final vehicles = _ref.read(vehiclesProvider).valueOrNull;
+    if (vehicles != null) {
+      reconcileWithVehicles(vehicles);
+    }
+  }
+
+  void reconcileWithVehicles(List<Vehicle> vehicles) {
+    if (vehicles.isEmpty) {
+      if (state != null) {
+        state = null;
+        if (_prefsLoaded) {
+          ActiveVehiclePrefs.clearLastActiveVehicleId();
+        }
+      }
+      return;
+    }
+
+    final current = state;
+    if (current != null && vehicles.any((v) => v.id == current)) {
+      return;
+    }
+
+    if (_prefsLoaded &&
+        _savedId != null &&
+        vehicles.any((v) => v.id == _savedId)) {
+      state = _savedId;
+      return;
+    }
+
+    if (!_prefsLoaded) return;
+
+    final fallbackId = vehicles.first.id;
+    state = fallbackId;
+    _savedId = fallbackId;
+    ActiveVehiclePrefs.setLastActiveVehicleId(fallbackId);
+  }
+
+  Future<void> select(int id) async {
+    state = id;
+    _savedId = id;
+    await ActiveVehiclePrefs.setLastActiveVehicleId(id);
+  }
+}
 
 /// Currently selected active vehicle — dynamically uses selectedVehicleIdProvider, fallback to first row.
 final activeVehicleProvider = Provider<AsyncValue<Vehicle?>>((ref) {
