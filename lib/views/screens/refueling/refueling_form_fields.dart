@@ -38,6 +38,8 @@ class RefuelingFormFields extends StatelessWidget {
     required this.onSetupTankLevelChanged,
     required this.onBeforeLevelChanged,
     required this.onAfterLevelChanged,
+    this.onScanReceipt,
+    this.isScanning = false,
   });
 
   final Vehicle vehicle;
@@ -54,6 +56,8 @@ class RefuelingFormFields extends StatelessWidget {
   final bool isSetupTankLevel;
   final double beforeLevelPercent;
   final double afterLevelPercent;
+  final VoidCallback? onScanReceipt;
+  final bool isScanning;
 
   final VoidCallback onOdometerEditingComplete;
   final VoidCallback onTripEditingComplete;
@@ -154,6 +158,8 @@ class RefuelingFormFields extends StatelessWidget {
           onAmountChanged: onAmountChanged,
           onPriceChanged: onPriceChanged,
           onTotalCostChanged: onTotalCostChanged,
+          onScanReceipt: onScanReceipt,
+          isScanning: isScanning,
         ),
         const SizedBox(height: 10),
 

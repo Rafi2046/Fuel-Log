@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/database/app_database.dart';
+import '../../core/services/receipt_ocr_service.dart';
 import '../../viewmodels/fuel_log_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import '../widgets/app_primary_button.dart';
@@ -28,6 +30,8 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   final _totalCostController = TextEditingController();
   final _noteController = TextEditingController();
 
+  final _ocrService = ReceiptOcrService();
+  bool _isScanning = false;
   bool _isFullTank = true;
   bool _isSetupTankLevel = false;
   double _beforeLevelPercent = 20.0;
@@ -242,6 +246,122 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     }
   }
 
+  Future<void> _onScanReceipt() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: const Color(0xFF181822),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded,
+                    color: AppColors.primary),
+                title: const Text('Take Photo of Receipt or Meter'),
+                onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded,
+                    color: AppColors.primary),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    setState(() => _isScanning = true);
+    try {
+      final receipt = await _ocrService.scanReceipt(source: source);
+      if (!mounted) return;
+
+      if (receipt == null) return;
+
+      if (!receipt.hasEssentialData) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not detect readable fuel numbers. Please enter manually.',
+            ),
+            backgroundColor: Color(0xFF333344),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      _isUpdating = true;
+      if (receipt.totalCost != null) {
+        _setText(_totalCostController, receipt.totalCost!.toStringAsFixed(2));
+      }
+      if (receipt.amountLiters != null) {
+        _setText(_amountController, receipt.amountLiters!.toStringAsFixed(2));
+      }
+      if (receipt.unitPrice != null) {
+        _setText(
+            _pricePerUnitController, receipt.unitPrice!.toStringAsFixed(2));
+      }
+      if (receipt.odometer != null) {
+        _setText(_odometerController, receipt.odometer!.toStringAsFixed(0));
+      }
+      _isUpdating = false;
+
+      if (receipt.totalCost != null && receipt.amountLiters != null) {
+        _onAmountChanged();
+      } else if (receipt.totalCost != null) {
+        _onTotalCostChanged();
+      } else if (receipt.amountLiters != null) {
+        _onAmountChanged();
+      }
+
+      final summary = [
+        if (receipt.totalCost != null)
+          '৳${receipt.totalCost!.toStringAsFixed(0)}',
+        if (receipt.amountLiters != null)
+          '${receipt.amountLiters!.toStringAsFixed(1)} L',
+      ].join(' • ');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Scanned successfully: $summary'),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OCR Scanning error: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
+    }
+  }
+
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -293,6 +413,8 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                     isSetupTankLevel: _isSetupTankLevel,
                     beforeLevelPercent: _beforeLevelPercent,
                     afterLevelPercent: _afterLevelPercent,
+                    onScanReceipt: _onScanReceipt,
+                    isScanning: _isScanning,
                     onOdometerEditingComplete: () {
                       _applyTotalToTrip(logs);
                       _tripFocus.requestFocus();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../widgets/app_card.dart';
 import '../../../widgets/app_text_field.dart';
@@ -16,6 +17,8 @@ class RefuelingCostSection extends StatelessWidget {
     required this.onAmountChanged,
     required this.onPriceChanged,
     required this.onTotalCostChanged,
+    this.onScanReceipt,
+    this.isScanning = false,
   });
 
   final TextEditingController amountController;
@@ -25,6 +28,8 @@ class RefuelingCostSection extends StatelessWidget {
   final VoidCallback onAmountChanged;
   final VoidCallback onPriceChanged;
   final VoidCallback onTotalCostChanged;
+  final VoidCallback? onScanReceipt;
+  final bool isScanning;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +59,59 @@ class RefuelingCostSection extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
+              const Spacer(),
+              if (onScanReceipt != null)
+                Material(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  child: InkWell(
+                    onTap: isScanning ? null : onScanReceipt,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusPill),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isScanning)
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.8,
+                                color: AppColors.primary,
+                              ),
+                            )
+                          else
+                            const Icon(
+                              Icons.document_scanner_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
+                          const SizedBox(width: 5),
+                          Text(
+                            isScanning ? 'Scanning...' : 'Scan Receipt',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 10),
