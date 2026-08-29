@@ -19,6 +19,7 @@ import '../../widgets/summary_stat_card.dart';
 import '../../widgets/weather_drive_card.dart';
 import '../mileage/widgets/fuel_log_detail_sheet.dart';
 import '../reminders/reminders_screen.dart';
+import 'dashboard_bottom_bar.dart';
 import 'logs_tab.dart';
 
 /// Home tab — compact overview (gauge, month cards, recent log).
@@ -77,11 +78,11 @@ class _HomeContent extends StatelessWidget {
     final avgMileage = calculateAverageMileage(logs);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
         AppSpacing.sm,
         AppSpacing.screenPadding,
-        AppSpacing.lg,
+        DashboardBottomBar.contentBottomInset(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

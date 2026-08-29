@@ -12,6 +12,7 @@ import '../reports/reports_screen.dart';
 import '../stats/advanced_metric_explorer_screen.dart';
 import '../../widgets/analytics_carousel.dart';
 import '../../widgets/monthly_cost_breakdown.dart';
+import 'dashboard_bottom_bar.dart';
 
 /// Stats home: light summary carousel + costs. Deep charts live in Metric Explorer.
 class StatsTab extends ConsumerWidget {
@@ -37,11 +38,11 @@ class StatsTab extends ConsumerWidget {
         ),
       ),
       data: (logs) => ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.screenPadding,
           AppSpacing.sm,
           AppSpacing.screenPadding,
-          AppSpacing.xl,
+          DashboardBottomBar.contentBottomInset(context),
         ),
         children: [
           AnalyticsCarousel(

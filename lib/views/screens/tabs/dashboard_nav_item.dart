@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_motion.dart';
-import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 
-/// Single item in the dashboard notched bottom navigation.
+/// Single item in the dashboard floating bottom navigation.
 class DashboardNavItem extends StatelessWidget {
   const DashboardNavItem({
     super.key,
@@ -24,32 +23,48 @@ class DashboardNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : AppColors.textTertiary;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.xs,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: AppMotion.fast,
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
-              duration: AppMotion.fast,
-              style: AppTextStyles.caption.copyWith(
-                color: color,
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          curve: AppMotion.emphasized,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: isSelected
+              ? BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.16),
+                      AppColors.primary.withValues(alpha: 0.06),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                )
+              : null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: AppMotion.fast,
+                style: AppTextStyles.caption.copyWith(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  height: 1.1,
+                ),
+                child: Text(label),
               ),
-              child: Text(label),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

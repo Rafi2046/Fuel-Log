@@ -9,7 +9,7 @@ import '../../viewmodels/vehicle_viewmodel.dart';
 import '../widgets/app_app_bar.dart';
 import '../widgets/trip_manual_entry_sheet.dart';
 import 'tabs/dashboard_app_bar.dart';
-import 'tabs/dashboard_nav_item.dart';
+import 'tabs/dashboard_bottom_bar.dart';
 import 'tabs/dashboard_quick_actions_sheet.dart';
 import 'tabs/garage_tab.dart';
 import 'tabs/home_tab.dart';
@@ -212,6 +212,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         }
       },
       child: Scaffold(
+        extendBody: true,
         backgroundColor: AppColors.background,
         appBar: _isTripTab
             ? null
@@ -251,54 +252,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   size: 28,
                 ),
               ),
-        bottomNavigationBar: BottomAppBar(
-          shape: const CircularNotchedRectangle(),
-          notchMargin: 8,
-          color: AppColors.card,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    DashboardNavItem(
-                      icon: Icons.home_rounded,
-                      label: 'navHome'.tr(),
-                      isSelected: _currentIndex == 0,
-                      onTap: () => _onTabTapped(0),
-                    ),
-                    DashboardNavItem(
-                      icon: Icons.route_rounded,
-                      label: 'navTrip'.tr(),
-                      isSelected: _currentIndex == 1,
-                      onTap: () => _onTabTapped(1),
-                    ),
-                  ],
-                ),
-              ),
-              if (!_isTripTab) const SizedBox(width: 48),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    DashboardNavItem(
-                      icon: Icons.bar_chart_rounded,
-                      label: 'navStats'.tr(),
-                      isSelected: _currentIndex == 2,
-                      onTap: () => _onTabTapped(2),
-                    ),
-                    DashboardNavItem(
-                      icon: Icons.settings_rounded,
-                      label: 'navSettings'.tr(),
-                      isSelected: _currentIndex == 3,
-                      onTap: () => _onTabTapped(3),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        bottomNavigationBar: DashboardBottomBar(
+          currentIndex: _currentIndex,
+          onTabTapped: _onTabTapped,
+          showFabGap: !_isTripTab,
         ),
       ),
     );

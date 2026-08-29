@@ -17,6 +17,7 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../reports/reports_screen.dart';
+import 'dashboard_bottom_bar.dart';
 
 /// Settings tab — clean, minimal dark layout.
 class SettingsTab extends ConsumerStatefulWidget {
@@ -290,9 +291,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     final locale = context.locale;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPadding,
-        vertical: AppSpacing.md,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+        AppSpacing.screenPadding,
+        DashboardBottomBar.contentBottomInset(context),
       ),
       children: [
         _SettingsGroup(
