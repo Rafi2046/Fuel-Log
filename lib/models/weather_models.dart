@@ -14,6 +14,9 @@ class WeatherSnapshot {
     required this.fetchedAt,
     required this.latitude,
     required this.longitude,
+    this.relativeHumidity,
+    this.windGustKmh,
+    this.apparentTemperatureC,
   });
 
   final double temperatureC;
@@ -24,6 +27,11 @@ class WeatherSnapshot {
   final DateTime fetchedAt;
   final double latitude;
   final double longitude;
+  final int? relativeHumidity;
+  final double? windGustKmh;
+  final double? apparentTemperatureC;
+
+  String get conditionKey => DriveAdviceEngine.conditionKeyForCode(weatherCode);
 
   Map<String, dynamic> toJson() => {
         'temperatureC': temperatureC,
@@ -34,6 +42,9 @@ class WeatherSnapshot {
         'fetchedAt': fetchedAt.toIso8601String(),
         'latitude': latitude,
         'longitude': longitude,
+        'relativeHumidity': relativeHumidity,
+        'windGustKmh': windGustKmh,
+        'apparentTemperatureC': apparentTemperatureC,
       };
 
   factory WeatherSnapshot.fromJson(Map<String, dynamic> json) {
@@ -46,6 +57,9 @@ class WeatherSnapshot {
       fetchedAt: DateTime.parse(json['fetchedAt'] as String),
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
+      relativeHumidity: (json['relativeHumidity'] as num?)?.toInt(),
+      windGustKmh: (json['windGustKmh'] as num?)?.toDouble(),
+      apparentTemperatureC: (json['apparentTemperatureC'] as num?)?.toDouble(),
     );
   }
 }
@@ -90,11 +104,31 @@ class DriveAdvice {
 class DriveAdviceEngine {
   const DriveAdviceEngine._();
 
+  static String conditionKeyForCode(int code) {
+    if (code == 0) return 'weatherCondClear';
+    if (code == 1) return 'weatherCondMainlyClear';
+    if (code == 2) return 'weatherCondPartlyCloudy';
+    if (code == 3) return 'weatherCondOvercast';
+    if (code == 45 || code == 48) return 'weatherCondFog';
+    if (code >= 51 && code <= 57) return 'weatherCondDrizzle';
+    if (code == 61 || code == 63) return 'weatherCondRain';
+    if (code == 65 || code == 66 || code == 67) return 'weatherCondHeavyRain';
+    if (code >= 71 && code <= 77) return 'weatherCondSnow';
+    if (code == 80 || code == 81) return 'weatherCondRainShowers';
+    if (code == 82) return 'weatherCondHeavyShowers';
+    if (code == 85 || code == 86) return 'weatherCondSnowShowers';
+    if (code == 95) return 'weatherCondThunderstorm';
+    if (code == 96 || code == 99) return 'weatherCondThunderstormHail';
+    return 'weatherCondUnknown';
+  }
+
   static DriveAdvice fromSnapshot(WeatherSnapshot snap) {
     final code = snap.weatherCode;
     final wind = snap.windSpeedKmh;
+    final gust = snap.windGustKmh ?? wind;
     final precip = snap.precipitationMm;
     final vis = snap.visibilityM;
+    final feelsLike = snap.apparentTemperatureC ?? snap.temperatureC;
 
     final isThunder = code >= 95 && code <= 99;
     final isHeavyRain = code == 65 ||
@@ -105,8 +139,14 @@ class DriveAdviceEngine {
     final isFog = code == 45 || code == 48;
     final isLowVis = vis != null && vis < 1000;
     final isSnowHeavy = code == 75 || code == 77;
+    final isVeryStrongWind = wind >= 55 || gust >= 70;
 
-    if (isThunder || isHeavyRain || isFog || isLowVis || isSnowHeavy) {
+    if (isThunder ||
+        isHeavyRain ||
+        isFog ||
+        isLowVis ||
+        isSnowHeavy ||
+        isVeryStrongWind) {
       return DriveAdvice(
         level: DriveAdviceLevel.avoid,
         titleKey: 'weatherAdviceAvoidTitle',
@@ -115,17 +155,26 @@ class DriveAdviceEngine {
       );
     }
 
+    final isRainShowers = code == 80 || code == 81;
     final isLightRain = (code >= 51 && code <= 67) ||
-        (code >= 80 && code <= 82) ||
+        isRainShowers ||
         precip >= 0.2;
-    final isStrongWind = wind >= 40;
+    final isStrongWind = wind >= 40 || gust >= 55;
     final isLightSnow = code >= 71 && code <= 77;
+    final isExtremeHeat = feelsLike >= 38;
 
-    if (isLightRain || isStrongWind || isLightSnow) {
+    if (isLightRain || isStrongWind || isLightSnow || isExtremeHeat) {
+      var titleKey = 'weatherAdviceCautionTitle';
+      var bodyKey = 'weatherAdviceCautionBody';
+      if (isExtremeHeat && !isLightRain && !isStrongWind) {
+        titleKey = 'weatherAdviceHeatTitle';
+        bodyKey = 'weatherAdviceHeatBody';
+      }
+
       return DriveAdvice(
         level: DriveAdviceLevel.caution,
-        titleKey: 'weatherAdviceCautionTitle',
-        bodyKey: 'weatherAdviceCautionBody',
+        titleKey: titleKey,
+        bodyKey: bodyKey,
         snapshot: snap,
       );
     }
@@ -142,9 +191,11 @@ class DriveAdviceEngine {
     if (code == 0) return LucideIcons.sun;
     if (code <= 3) return LucideIcons.cloudSun;
     if (code == 45 || code == 48) return LucideIcons.cloudFog;
-    if (code >= 51 && code <= 67) return LucideIcons.cloudDrizzle;
+    if (code >= 51 && code <= 57) return LucideIcons.cloudDrizzle;
+    if (code >= 61 && code <= 67) return LucideIcons.cloudRain;
     if (code >= 71 && code <= 77) return LucideIcons.snowflake;
     if (code >= 80 && code <= 82) return LucideIcons.cloudRain;
+    if (code >= 85 && code <= 86) return LucideIcons.snowflake;
     if (code >= 95) return LucideIcons.cloudLightning;
     return LucideIcons.cloud;
   }

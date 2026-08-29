@@ -9,6 +9,7 @@ import '../../../../models/mileage_entry_model.dart';
 import '../../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../../viewmodels/mileage_log_viewmodel.dart';
 import '../../../widgets/app_card.dart';
+import '../../../widgets/list_lead_icon.dart';
 import 'fuel_log_detail_sheet.dart';
 
 /// Compact card for a calculated mileage log entry with swipe-to-delete.
@@ -87,24 +88,17 @@ class MileageLogTile extends ConsumerWidget {
         child: AppCard(
           padding: _cardPadding,
           child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Icon(
-                isEV
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ListLeadIcon(
+                icon: isEV
                     ? Icons.battery_charging_full_rounded
                     : Icons.local_gas_station_rounded,
-                color: AppColors.primary,
-                size: 14,
+                iconSize: 14,
+                padding: 5,
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

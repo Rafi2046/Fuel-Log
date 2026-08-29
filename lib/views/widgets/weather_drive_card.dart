@@ -72,57 +72,60 @@ class WeatherDriveCard extends ConsumerWidget {
       ),
       data: (advice) {
         final accent = advice.accentColor(AppColors.primary);
-        final temp = advice.snapshot.temperatureC.round();
+        final snap = advice.snapshot;
+        final temp = snap.temperatureC.round();
+        final condition = snap.conditionKey.tr();
+        final humidity = snap.relativeHumidity;
+        final wind = snap.windSpeedKmh.round();
+
         return _Shell(
           accent: accent,
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  DriveAdviceEngine.weatherIconForCode(
-                    advice.snapshot.weatherCode,
-                  ),
-                  color: accent,
-                  size: 20,
-                ),
+              Icon(
+                DriveAdviceEngine.weatherIconForCode(snap.weatherCode),
+                color: accent,
+                size: 16,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          '$temp°C',
-                          style: AppTextStyles.label.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            advice.titleKey.tr(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption.copyWith(
-                              color: accent,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '$temp°C · $condition',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
                     ),
+                    if (humidity != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        '$humidity% · $wind km/h',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textTertiary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 2),
+                    Text(
+                      advice.titleKey.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
                     Text(
                       advice.bodyKey.tr(),
                       maxLines: 2,
@@ -138,11 +141,14 @@ class WeatherDriveCard extends ConsumerWidget {
               ),
               IconButton(
                 tooltip: 'refresh'.tr(),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 onPressed: () =>
                     ref.read(weatherAdviceProvider.notifier).refresh(),
                 icon: const Icon(
                   LucideIcons.refreshCw,
-                  size: 16,
+                  size: 14,
                   color: AppColors.textTertiary,
                 ),
               ),
@@ -167,6 +173,7 @@ class WeatherDriveTripBanner extends ConsumerWidget {
     return adviceAsync.maybeWhen(
       data: (advice) {
         final accent = advice.accentColor(AppColors.primary);
+        final snap = advice.snapshot;
         return Container(
           margin: const EdgeInsets.fromLTRB(
             AppSpacing.screenPadding,
@@ -185,15 +192,30 @@ class WeatherDriveTripBanner extends ConsumerWidget {
               Icon(advice.lucideIcon, size: 16, color: accent),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  advice.bodyKey.tr(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 11.5,
-                    height: 1.3,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${snap.temperatureC.round()}°C · ${snap.conditionKey.tr()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                    Text(
+                      advice.bodyKey.tr(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

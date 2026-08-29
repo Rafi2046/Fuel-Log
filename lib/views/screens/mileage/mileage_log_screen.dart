@@ -56,7 +56,7 @@ class MileageLogScreen extends ConsumerWidget {
                     AppSpacing.screenPadding,
                     AppSpacing.sm,
                     AppSpacing.screenPadding,
-                    AppSpacing.xs,
+                    AppSpacing.listGap,
                   ),
                   child: MileageSummaryCard(),
                 ),
@@ -64,7 +64,7 @@ class MileageLogScreen extends ConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenPadding,
-                  0,
+                  AppSpacing.listGap,
                   AppSpacing.screenPadding,
                   AppSpacing.sm,
                 ),

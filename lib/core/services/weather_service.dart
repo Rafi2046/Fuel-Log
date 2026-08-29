@@ -11,8 +11,8 @@ class WeatherService {
   WeatherService._();
   static final WeatherService instance = WeatherService._();
 
-  static const _cacheKey = 'weather_snapshot_cache_v1';
-  static const _cacheTtl = Duration(minutes: 25);
+  static const _cacheKey = 'weather_snapshot_cache_v2';
+  static const _cacheTtl = Duration(minutes: 15);
   static const _defaultLat = 23.7925;
   static const _defaultLon = 90.4078;
 
@@ -32,7 +32,9 @@ class WeatherService {
       'latitude': coords.$1.toStringAsFixed(4),
       'longitude': coords.$2.toStringAsFixed(4),
       'current':
-          'temperature_2m,weather_code,precipitation,wind_speed_10m',
+          'temperature_2m,relative_humidity_2m,apparent_temperature,'
+          'precipitation,weather_code,cloud_cover,wind_speed_10m,'
+          'wind_gusts_10m,visibility',
       'wind_speed_unit': 'kmh',
       'timezone': 'auto',
     });
@@ -53,10 +55,14 @@ class WeatherService {
       weatherCode: (current['weather_code'] as num?)?.toInt() ?? 0,
       precipitationMm: (current['precipitation'] as num?)?.toDouble() ?? 0,
       windSpeedKmh: (current['wind_speed_10m'] as num?)?.toDouble() ?? 0,
-      visibilityM: null,
+      visibilityM: (current['visibility'] as num?)?.toDouble(),
       fetchedAt: DateTime.now(),
       latitude: coords.$1,
       longitude: coords.$2,
+      relativeHumidity: (current['relative_humidity_2m'] as num?)?.toInt(),
+      windGustKmh: (current['wind_gusts_10m'] as num?)?.toDouble(),
+      apparentTemperatureC:
+          (current['apparent_temperature'] as num?)?.toDouble(),
     );
 
     await _writeCache(snapshot);
@@ -81,8 +87,8 @@ class WeatherService {
 
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 6),
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 8),
         ),
       );
       return (pos.latitude, pos.longitude);

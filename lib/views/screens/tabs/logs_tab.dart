@@ -11,6 +11,7 @@ import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/list_lead_icon.dart';
 
 import '../mileage/mileage_log_screen.dart';
 import '../mileage/widgets/fuel_log_detail_sheet.dart';
@@ -77,19 +78,9 @@ class LogsTab extends ConsumerWidget {
                 );
               },
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    ),
-                    child: const Icon(
-                      Icons.speed_rounded,
-                      color: AppColors.primary,
-                      size: 16,
-                    ),
-                  ),
+                  const ListLeadIcon(icon: Icons.speed_rounded),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
@@ -193,20 +184,12 @@ class _LogTile extends StatelessWidget {
         vertical: AppSpacing.listCardPaddingV,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Icon(
-              isEV
-                  ? Icons.battery_charging_full_rounded
-                  : Icons.local_gas_station_rounded,
-              color: AppColors.primary,
-              size: 16,
-            ),
+          ListLeadIcon(
+            icon: isEV
+                ? Icons.battery_charging_full_rounded
+                : Icons.local_gas_station_rounded,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(

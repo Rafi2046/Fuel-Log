@@ -14,8 +14,10 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/efficiency_gauge.dart';
+import '../../widgets/list_lead_icon.dart';
 import '../../widgets/summary_stat_card.dart';
 import '../../widgets/weather_drive_card.dart';
+import '../mileage/widgets/fuel_log_detail_sheet.dart';
 import '../reminders/reminders_screen.dart';
 import 'logs_tab.dart';
 
@@ -167,24 +169,22 @@ class _HomeContent extends StatelessWidget {
           else
             AppCard(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm + 2,
+                horizontal: AppSpacing.listCardPaddingH,
+                vertical: AppSpacing.listCardPaddingV,
+              ),
+              onTap: () => FuelLogDetailSheet.show(
+                context,
+                log: recent,
+                unit: unit,
+                isEV: isEV,
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isEV
-                          ? Icons.battery_charging_full_rounded
-                          : Icons.local_gas_station_rounded,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
+                  ListLeadIcon(
+                    icon: isEV
+                        ? Icons.battery_charging_full_rounded
+                        : Icons.local_gas_station_rounded,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -201,18 +201,20 @@ class _HomeContent extends StatelessWidget {
                             fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 1),
                         Text(
                           '${AppDateFormats.formatLogDate(recent.date)} • '
                           '${recent.odometer.toStringAsFixed(0)} km',
-                          style: AppTextStyles.caption,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(fontSize: 11),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     AppCurrency.format(recent.cost),
-                    style: AppTextStyles.title.copyWith(
+                    style: AppTextStyles.body.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
