@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../widgets/clean_glass_panel.dart';
 
 class MetricKpiRow extends StatelessWidget {
   const MetricKpiRow({
@@ -20,37 +22,39 @@ class MetricKpiRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 112,
+    return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: MetricKpiCard(
-              title: 'Cost / km',
+              title: 'metricKpiCostPerKm'.tr(),
               value: costPerKm > 0 ? '৳${costPerKm.toStringAsFixed(2)}' : '—',
-              hint: costPerKm > 0 ? 'per km' : 'Need logs',
+              hint: costPerKm > 0
+                  ? 'metricKpiPerKm'.tr()
+                  : 'metricKpiNeedLogs'.tr(),
               icon: Icons.speed_rounded,
-              accent: const Color(0xFF38BDF8),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: MetricKpiCard(
-              title: 'Spend',
+              title: 'metricKpiSpend'.tr(),
               value: spendLabel,
               hint: periodHint,
               icon: Icons.payments_outlined,
-              accent: AppColors.primary,
+              highlightValue: true,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: MetricKpiCard(
-              title: 'Distance',
-              value: distanceKm > 0 ? '${distanceKm.toStringAsFixed(0)} km' : '—',
-              hint: 'this period',
+              title: 'metricKpiDistance'.tr(),
+              value: distanceKm > 0
+                  ? '${distanceKm.toStringAsFixed(0)} km'
+                  : '—',
+              hint: 'metricKpiThisPeriod'.tr(),
               icon: Icons.route_rounded,
-              accent: const Color(0xFFA855F7),
             ),
           ),
         ],
@@ -65,65 +69,63 @@ class MetricKpiCard extends StatelessWidget {
     required this.value,
     required this.hint,
     required this.icon,
-    required this.accent,
+    this.highlightValue = false,
   });
 
   final String title;
   final String value;
   final String hint;
   final IconData icon;
-  final Color accent;
+  final bool highlightValue;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF16161E),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(color: const Color(0xFF2A2A36)),
-      ),
+    return CleanGlassPanel(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Icon(icon, size: 14, color: accent),
+          Row(
+            children: [
+              Icon(icon, size: 13, color: AppColors.textTertiary),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 10,
+                    height: 1.1,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            title,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.w500,
-              fontSize: 11,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-          Text(
             value,
             style: AppTextStyles.title.copyWith(
-              fontSize: 16,
+              fontSize: highlightValue ? 14 : 13,
               fontWeight: FontWeight.w700,
-              height: 1.15,
+              height: 1.1,
+              color: highlightValue
+                  ? AppColors.textPrimary
+                  : AppColors.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             hint,
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textTertiary,
-              fontSize: 10,
+              fontSize: 9,
               height: 1.1,
             ),
             maxLines: 1,

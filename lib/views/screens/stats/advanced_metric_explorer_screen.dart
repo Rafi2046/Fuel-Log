@@ -38,11 +38,11 @@ class _AdvancedMetricExplorerScreenState
   int _subMetricIndex = 0;
 
   String _short(PeriodFilter p) => switch (p) {
-        PeriodFilter.allTime => 'All',
-        PeriodFilter.thisYear => 'Year',
-        PeriodFilter.last6Months => '6M',
-        PeriodFilter.last12Months => '12M',
-        PeriodFilter.custom => 'Custom',
+        PeriodFilter.allTime => 'metricPeriodAll'.tr(),
+        PeriodFilter.thisYear => 'metricPeriodYear'.tr(),
+        PeriodFilter.last6Months => 'metricPeriod6M'.tr(),
+        PeriodFilter.last12Months => 'metricPeriod12M'.tr(),
+        PeriodFilter.custom => 'metricPeriodCustom'.tr(),
       };
 
   Future<void> _selectPeriod(PeriodFilter period) async {
@@ -93,7 +93,7 @@ class _AdvancedMetricExplorerScreenState
             tooltip: 'report'.tr(),
             onPressed: () => ReportsScreen.open(context),
             icon: const Icon(Icons.description_outlined),
-            color: AppColors.primary,
+            color: AppColors.textSecondary,
           ),
         ],
       ),
@@ -103,42 +103,47 @@ class _AdvancedMetricExplorerScreenState
         ),
         error: (e, _) =>
             Center(child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'}))),
-        data: (_) => ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: MetricPeriodMenu(
-                label: _short(_period),
-                onSelect: _selectPeriod,
+        data: (_) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: MetricPeriodMenu(
+                  label: _short(_period),
+                  onSelect: _selectPeriod,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            MetricKpiRow(
-              costPerKm: distanceKm > 0 ? spend / distanceKm : 0,
-              spendLabel: AppCurrency.format(spend),
-              distanceKm: distanceKm,
-              periodHint: _short(_period),
-            ),
-            const SizedBox(height: 24),
-            MetricFilterChips(
-              index: _categoryIndex,
-              onChanged: (i) => setState(() {
-                _categoryIndex = i;
-                _subMetricIndex = 0;
-              }),
-            ),
-            const SizedBox(height: 16),
-            MetricChartPane(
-              categoryIndex: _categoryIndex,
-              subMetricIndex: _subMetricIndex,
-              onSubMetricChanged: (i) => setState(() => _subMetricIndex = i),
-              fuelLogs: fuelLogs,
-              serviceLogs: serviceLogs,
-              mileageUnit: isEV ? 'km/kWh' : 'km/L',
-              isEV: isEV,
-            ),
-          ],
+              const SizedBox(height: 12),
+              MetricKpiRow(
+                costPerKm: distanceKm > 0 ? spend / distanceKm : 0,
+                spendLabel: AppCurrency.format(spend),
+                distanceKm: distanceKm,
+                periodHint: _short(_period),
+              ),
+              const SizedBox(height: 12),
+              MetricFilterChips(
+                index: _categoryIndex,
+                onChanged: (i) => setState(() {
+                  _categoryIndex = i;
+                  _subMetricIndex = 0;
+                }),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: MetricChartPane(
+                  categoryIndex: _categoryIndex,
+                  subMetricIndex: _subMetricIndex,
+                  onSubMetricChanged: (i) =>
+                      setState(() => _subMetricIndex = i),
+                  fuelLogs: fuelLogs,
+                  serviceLogs: serviceLogs,
+                  mileageUnit: isEV ? 'km/kWh' : 'km/L',
+                  isEV: isEV,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

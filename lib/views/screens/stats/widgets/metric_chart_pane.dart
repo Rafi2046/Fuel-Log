@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -5,13 +6,14 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../widgets/advanced_efficiency_chart.dart';
+import '../../../widgets/clean_glass_panel.dart';
 import '../../../widgets/cost_per_km_chart.dart';
 import '../../../widgets/fill_up_cost_chart.dart';
 import '../../../widgets/fuel_price_chart.dart';
-import '../../../widgets/monthly_cost_breakdown.dart';
 import '../../../widgets/monthly_distance_chart.dart';
 import '../../../widgets/odometer_growth_chart.dart';
 import 'metric_chart_empty.dart';
+import 'metric_monthly_spend_panel.dart';
 
 class MetricChartPane extends StatelessWidget {
   const MetricChartPane({
@@ -33,9 +35,6 @@ class MetricChartPane extends StatelessWidget {
   final String mileageUnit;
   final bool isEV;
 
-  static const _surface = Color(0xFF16161E);
-  static const _border = Color(0xFF2A2A36);
-
   bool get _hasData {
     if (categoryIndex == 1) {
       return fuelLogs.isNotEmpty || serviceLogs.isNotEmpty;
@@ -43,27 +42,51 @@ class MetricChartPane extends StatelessWidget {
     return fuelLogs.length >= 2;
   }
 
+  List<String> get _subMetricLabels {
+    if (categoryIndex == 0) {
+      return [
+        'metricSubConsumption'.tr(),
+        'metricSubPrice'.tr(),
+        'metricSubFillUps'.tr(),
+      ];
+    }
+    if (categoryIndex == 1) {
+      return [
+        'metricSubMonthlySpend'.tr(),
+        'metricKpiCostPerKm'.tr(),
+      ];
+    }
+    return [
+      'metricSubMonthlyKm'.tr(),
+      'metricSubOdometer'.tr(),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      constraints: _hasData ? const BoxConstraints(minHeight: 280) : null,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(color: _border),
-      ),
+    return CleanGlassPanel(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _subMetricRow(),
-          const SizedBox(height: 8),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 280),
-            child: _hasData
-                ? _activeChart()
-                : const MetricExplorerEmptyState(),
+          const SizedBox(height: 6),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              child: _hasData
+                  ? KeyedSubtree(
+                      key: ValueKey('chart_${categoryIndex}_$subMetricIndex'),
+                      child: _activeChart(),
+                    )
+                  : MetricExplorerEmptyState(
+                      key: const ValueKey('empty'),
+                      fuelLogCount: fuelLogs.length,
+                      serviceLogCount: serviceLogs.length,
+                      categoryIndex: categoryIndex,
+                    ),
+            ),
           ),
         ],
       ),
@@ -71,14 +94,7 @@ class MetricChartPane extends StatelessWidget {
   }
 
   Widget _subMetricRow() {
-    final List<String> options;
-    if (categoryIndex == 0) {
-      options = ['Consumption', 'Price', 'Fill-ups'];
-    } else if (categoryIndex == 1) {
-      options = ['Monthly spend', 'Cost / km'];
-    } else {
-      options = ['Monthly km', 'Odometer'];
-    }
+    final options = _subMetricLabels;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -97,43 +113,55 @@ class MetricChartPane extends StatelessWidget {
   }
 
   Widget _activeChart() {
-    final key = ValueKey('chart_${categoryIndex}_$subMetricIndex');
     if (categoryIndex == 0) {
       if (subMetricIndex == 0) {
-        return AdvancedEfficiencyChart(
-          key: key, logs: fuelLogs, unit: mileageUnit,
-        );
+        return AdvancedEfficiencyChart(logs: fuelLogs, unit: mileageUnit);
       } else if (subMetricIndex == 1) {
         return FuelPriceChart(
-          key: key,
           logs: fuelLogs,
           priceUnit: isEV ? '৳/kWh' : '৳/L',
         );
       }
-      return FillUpCostChart(key: key, logs: fuelLogs, chartHeight: 240);
+      return FillUpCostChart(logs: fuelLogs, chartHeight: 220);
     }
     if (categoryIndex == 1) {
       if (subMetricIndex == 0) {
-        return MonthlyCostBreakdown(
-          key: key, fuelLogs: fuelLogs, serviceLogs: serviceLogs,
+        return MetricMonthlySpendPanel(
+          fuelLogs: fuelLogs,
+          serviceLogs: serviceLogs,
         );
       }
-      return CostPerKmChart(
-        key: key,
-        fuelLogs: fuelLogs,
-        serviceLogs: serviceLogs,
-        chartHeight: 240,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: CostPerKmChart(
+              fuelLogs: fuelLogs,
+              serviceLogs: serviceLogs,
+              chartHeight: constraints.maxHeight.clamp(180, 280),
+            ),
+          );
+        },
       );
     }
     if (subMetricIndex == 0) {
-      return MonthlyDistanceChart(key: key, logs: fuelLogs);
+      return MonthlyDistanceChart(logs: fuelLogs);
     }
-    return OdometerGrowthChart(key: key, logs: fuelLogs, chartHeight: 240);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: OdometerGrowthChart(
+            logs: fuelLogs,
+            chartHeight: constraints.maxHeight.clamp(180, 280),
+          ),
+        );
+      },
+    );
   }
 }
 
 class MetricChartTab extends StatelessWidget {
   const MetricChartTab({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -148,13 +176,23 @@ class MetricChartTab extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: selected
+                  ? AppColors.primary.withValues(alpha: 0.7)
+                  : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
         child: Text(
           label,
           style: AppTextStyles.label.copyWith(
-            color: selected ? AppColors.primary : AppColors.textTertiary,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? AppColors.textPrimary : AppColors.textTertiary,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             fontSize: 13,
           ),
         ),
@@ -162,4 +200,3 @@ class MetricChartTab extends StatelessWidget {
     );
   }
 }
-

@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/analytics_period.dart';
+import '../../../widgets/clean_glass_panel.dart';
 
 class MetricPeriodMenu extends StatelessWidget {
   const MetricPeriodMenu({
@@ -14,42 +16,43 @@ class MetricPeriodMenu extends StatelessWidget {
   final String label;
   final ValueChanged<PeriodFilter> onSelect;
 
+  String _periodLabel(PeriodFilter period) => switch (period) {
+        PeriodFilter.allTime => 'metricPeriodAllTime'.tr(),
+        PeriodFilter.thisYear => 'metricPeriodThisYear'.tr(),
+        PeriodFilter.last6Months => 'metricPeriodLast6Months'.tr(),
+        PeriodFilter.last12Months => 'metricPeriodLast12Months'.tr(),
+        PeriodFilter.custom => 'metricPeriodCustomRange'.tr(),
+      };
+
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppSpacing.radiusMd);
     return PopupMenuButton<PeriodFilter>(
       onSelected: onSelect,
-      color: const Color(0xFF1A1A24),
+      color: AppColors.card,
       shape: RoundedRectangleBorder(borderRadius: radius),
       itemBuilder: (context) => PeriodFilter.values
           .map(
             (period) => PopupMenuItem(
               value: period,
               child: Text(
-                switch (period) {
-                  PeriodFilter.allTime => 'All time',
-                  PeriodFilter.thisYear => 'This year',
-                  PeriodFilter.last6Months => 'Last 6 months',
-                  PeriodFilter.last12Months => 'Last 12 months',
-                  PeriodFilter.custom => 'Custom range',
-                },
+                _periodLabel(period),
                 style: AppTextStyles.body.copyWith(fontSize: 14),
               ),
             ),
           )
           .toList(),
-      child: Container(
+      child: CleanGlassPanel(
+        borderRadius: radius,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A24),
-          borderRadius: radius,
-          border: Border.all(color: const Color(0xFF2A2A36)),
-        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 14, color: AppColors.primary),
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 14,
+              color: AppColors.textTertiary,
+            ),
             const SizedBox(width: 8),
             Text(
               label,
@@ -60,8 +63,11 @@ class MetricPeriodMenu extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                size: 18, color: AppColors.textSecondary),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: AppColors.textTertiary,
+            ),
           ],
         ),
       ),
@@ -78,28 +84,30 @@ class MetricFilterChips extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
 
-  static const _items = [
-    (Icons.local_gas_station_rounded, 'Fuel'),
-    (Icons.account_balance_wallet_outlined, 'Costs'),
-    (Icons.route_rounded, 'Distance'),
+  static const _iconKeys = [
+    Icons.local_gas_station_rounded,
+    Icons.account_balance_wallet_outlined,
+    Icons.route_rounded,
+  ];
+
+  static const _labelKeys = [
+    'metricCategoryFuel',
+    'metricCategoryCosts',
+    'metricCategoryDistance',
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return CleanGlassPanel(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A24),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: const Color(0xFF2A2A36)),
-      ),
       child: Row(
         children: [
-          for (var i = 0; i < _items.length; i++)
+          for (var i = 0; i < _labelKeys.length; i++)
             Expanded(
               child: _MetricSegmentCell(
-                icon: _items[i].$1,
-                label: _items[i].$2,
+                icon: _iconKeys[i],
+                label: _labelKeys[i].tr(),
                 selected: index == i,
                 onTap: () => onChanged(i),
               ),
@@ -128,7 +136,7 @@ class _MetricSegmentCell extends StatelessWidget {
     final radius = BorderRadius.circular(AppSpacing.radiusSm);
     return Material(
       color: selected
-          ? AppColors.primary.withValues(alpha: 0.18)
+          ? Colors.white.withValues(alpha: 0.08)
           : Colors.transparent,
       borderRadius: radius,
       child: InkWell(
@@ -142,16 +150,17 @@ class _MetricSegmentCell extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? AppColors.primary : AppColors.textTertiary,
+                color: selected ? AppColors.textPrimary : AppColors.textTertiary,
               ),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
                   label,
                   style: AppTextStyles.label.copyWith(
-                    color:
-                        selected ? AppColors.primary : AppColors.textSecondary,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: 12,
                   ),
                   maxLines: 1,
@@ -165,4 +174,3 @@ class _MetricSegmentCell extends StatelessWidget {
     );
   }
 }
-
