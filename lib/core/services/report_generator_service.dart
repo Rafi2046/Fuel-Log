@@ -109,7 +109,7 @@ class ReportGeneratorService {
         '⛽ Fuel Cost: ${AppCurrency.format(totalFuelSpend)} (${filteredFuel.length} fill-ups)');
     textReport.writeln(
         '🛠️ Service Cost: ${AppCurrency.format(totalServiceSpend)} (${filteredService.length} services)');
-    textReport.writeln('dt Distance: ${totalDistanceKm.toStringAsFixed(0)} km');
+    textReport.writeln('📏 Distance: ${totalDistanceKm.toStringAsFixed(0)} km');
     textReport.writeln('📊 Cost/km: ${AppCurrency.format(avgCostPerKm)} / km');
     textReport.writeln(
         '🚀 Avg Mileage: ${avgEfficiency.toStringAsFixed(1)} km/L');

@@ -146,8 +146,6 @@ class _SingleCostPerKmChart extends StatelessWidget {
         MetricSinglePointHero(
           value: AppCurrency.format(y),
           unit: 'metricKpiPerKm'.tr(),
-          accentStart: const Color(0xFF38BDF8),
-          accentEnd: AppColors.primary,
         ),
         Expanded(
           child: LineChart(
@@ -181,10 +179,22 @@ class _SingleCostPerKmChart extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 28,
-                    getTitlesWidget: (_, __) => MetricChartLayout.axisDateLabel(
-                      point.label,
-                      color: AppColors.textPrimary,
-                    ),
+                    interval: 0.5,
+                    getTitlesWidget: (value, _) {
+                      if ((value - 0.5).abs() > 0.01) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          point.label,
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -194,7 +204,7 @@ class _SingleCostPerKmChart extends StatelessWidget {
                   spots: spots,
                   isCurved: true,
                   curveSmoothness: 0.35,
-                  color: const Color(0xFF38BDF8),
+                  color: AppColors.primary,
                   barWidth: 2.5,
                   isStrokeCapRound: true,
                   dotData: const FlDotData(show: false),
@@ -204,8 +214,8 @@ class _SingleCostPerKmChart extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        const Color(0xFF38BDF8).withValues(alpha: 0.22),
-                        const Color(0xFF38BDF8).withValues(alpha: 0.02),
+                        AppColors.primary.withValues(alpha: 0.22),
+                        AppColors.primary.withValues(alpha: 0.02),
                       ],
                     ),
                   ),
@@ -258,7 +268,7 @@ class _CostPerKmTrendChart extends StatelessWidget {
               Text(
                 '${AppCurrency.format(avg)} / km',
                 style: AppTextStyles.label.copyWith(
-                  color: const Color(0xFF38BDF8),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -317,12 +327,17 @@ class _CostPerKmTrendChart extends StatelessWidget {
                     interval: 1,
                     getTitlesWidget: (value, _) {
                       final i = value.round();
-                      if (i < 0 || i >= data.length) {
+                      if ((value - i).abs() > 0.01 ||
+                          i < 0 ||
+                          i >= data.length) {
                         return const SizedBox.shrink();
                       }
-                      return MetricChartLayout.axisDateLabel(
-                        data[i].label,
-                        color: AppColors.textTertiary,
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: MetricChartLayout.axisDateLabel(
+                          data[i].label,
+                          color: AppColors.textSecondary,
+                        ),
                       );
                     },
                   ),
@@ -342,7 +357,7 @@ class _CostPerKmTrendChart extends StatelessWidget {
                         '${AppCurrency.format(spot.y)} / km\n'
                         '${'metricKpiSpend'.tr()}: ${AppCurrency.format(d.totalCost)}',
                         AppTextStyles.caption.copyWith(
-                          color: const Color(0xFF38BDF8),
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                           height: 1.35,
                         ),
@@ -366,18 +381,18 @@ class _CostPerKmTrendChart extends StatelessWidget {
                   spots: spots,
                   isCurved: true,
                   curveSmoothness: 0.28,
-                  color: const Color(0xFF38BDF8),
+                  color: AppColors.primary,
                   barWidth: 2.5,
                   isStrokeCapRound: true,
-                  shadow: const Shadow(
-                    color: Color(0x5538BDF8),
+                  shadow: Shadow(
+                    color: AppColors.primary.withValues(alpha: 0.33),
                     blurRadius: 8,
                   ),
                   dotData: FlDotData(
                     show: true,
                     getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
                       radius: 3.5,
-                      color: const Color(0xFF38BDF8),
+                      color: AppColors.primary,
                       strokeWidth: 2,
                       strokeColor: AppColors.card,
                     ),
@@ -388,8 +403,8 @@ class _CostPerKmTrendChart extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        const Color(0xFF38BDF8).withValues(alpha: 0.18),
-                        const Color(0xFF38BDF8).withValues(alpha: 0.01),
+                        AppColors.primary.withValues(alpha: 0.18),
+                        AppColors.primary.withValues(alpha: 0.01),
                       ],
                     ),
                   ),

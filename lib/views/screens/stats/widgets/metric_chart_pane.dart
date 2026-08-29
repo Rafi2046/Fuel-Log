@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -59,6 +60,7 @@ class MetricChartPane extends StatefulWidget {
 
 class _MetricChartPaneState extends State<MetricChartPane> {
   late PageController _pageController;
+  int? _suppressSyncForIndex;
 
   bool _hasDataFor(int category) {
     if (category == 1) {
@@ -110,14 +112,12 @@ class _MetricChartPaneState extends State<MetricChartPane> {
       widget.categoryIndex,
       widget.subMetricIndex,
     );
-    if (target < 0 || !_pageController.hasClients) return;
-    final current = _pageController.page?.round() ?? target;
-    if (current == target) return;
-    _pageController.animateToPage(
-      target,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-    );
+    if (target < 0) return;
+    if (_suppressSyncForIndex == target) {
+      _suppressSyncForIndex = null;
+      return;
+    }
+    _schedulePageJump(target);
   }
 
   @override
@@ -126,23 +126,36 @@ class _MetricChartPaneState extends State<MetricChartPane> {
     super.dispose();
   }
 
-  void _goToPage(int category, int sub) {
-    final target = MetricExplorerPages.flatIndex(category, sub);
-    if (target < 0) return;
-    widget.onPageChanged(category, sub);
-    if (_pageController.hasClients) {
+  void _schedulePageJump(int target) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pageController.hasClients) return;
+      final current = _pageController.page?.round();
+      if (current == target) return;
       _pageController.animateToPage(
         target,
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
       );
-    }
+    });
+  }
+
+  void _handlePageChanged(int index) {
+    _suppressSyncForIndex = index;
+    final slot = MetricExplorerPages.slots[index];
+    widget.onPageChanged(slot.category, slot.sub);
+  }
+
+  void _goToPage(int category, int sub) {
+    final target = MetricExplorerPages.flatIndex(category, sub);
+    if (target < 0) return;
+    _suppressSyncForIndex = target;
+    widget.onPageChanged(category, sub);
+    _schedulePageJump(target);
   }
 
   @override
   Widget build(BuildContext context) {
     final labels = _subMetricLabels(widget.categoryIndex);
-    final hasData = _hasDataFor(widget.categoryIndex);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -174,28 +187,25 @@ class _MetricChartPaneState extends State<MetricChartPane> {
               _subMetricRow(labels),
               const SizedBox(height: 8),
               Expanded(
-                child: hasData
-                    ? PageView(
-                        controller: _pageController,
-                        onPageChanged: (index) {
-                          final slot = MetricExplorerPages.slots[index];
-                          widget.onPageChanged(slot.category, slot.sub);
-                        },
-                        children: [
-                          for (final slot in MetricExplorerPages.slots)
-                            KeyedSubtree(
-                              key: ValueKey(
-                                'chart_${slot.category}_${slot.sub}',
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: _handlePageChanged,
+                  children: [
+                    for (final slot in MetricExplorerPages.slots)
+                      KeyedSubtree(
+                        key: ValueKey(
+                          'chart_${slot.category}_${slot.sub}',
+                        ),
+                        child: _hasDataFor(slot.category)
+                            ? _chartFor(slot.category, slot.sub)
+                            : MetricExplorerEmptyState(
+                                fuelLogCount: widget.fuelLogs.length,
+                                serviceLogCount: widget.serviceLogs.length,
+                                categoryIndex: slot.category,
                               ),
-                              child: _chartFor(slot.category, slot.sub),
-                            ),
-                        ],
-                      )
-                    : MetricExplorerEmptyState(
-                        fuelLogCount: widget.fuelLogs.length,
-                        serviceLogCount: widget.serviceLogs.length,
-                        categoryIndex: widget.categoryIndex,
                       ),
+                  ],
+                ),
               ),
             ],
           ),

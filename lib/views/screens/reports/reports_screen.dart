@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,10 +11,11 @@ import '../../../models/vehicle_report_model.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../../widgets/clean_glass_panel.dart';
 import 'widgets/report_card_tile.dart';
 import 'widgets/report_preview_sheet.dart';
 
-/// Full Vehicle Report Center Screen
+/// Vehicle report center — premium glass layout.
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
 
@@ -29,6 +31,7 @@ class ReportsScreen extends ConsumerStatefulWidget {
 
 class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   DateTimeRange? _selectedDateRange;
+  static final _shortDate = DateFormat('d MMM');
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
@@ -79,6 +82,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     }
   }
 
+  String get _dateLabel {
+    if (_selectedDateRange == null) return 'All dates';
+    final start = _shortDate.format(_selectedDateRange!.start);
+    final end = _shortDate.format(_selectedDateRange!.end);
+    return '$start – $end';
+  }
+
   void _generateAndShowReport(VehicleReportType type) {
     final vehicle = ref.read(activeVehicleProvider).valueOrNull;
     final fuelLogs = ref.read(vehicleLogsProvider).valueOrNull ?? [];
@@ -105,6 +115,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     final activeVehicle = ref.watch(activeVehicleProvider).valueOrNull;
+    final reportTypes = VehicleReportType.values;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -113,38 +124,39 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         elevation: 0,
         title: Text(
           'Create Report',
-          style: AppTextStyles.title.copyWith(fontSize: 18),
+          style: AppTextStyles.title.copyWith(fontSize: 17),
         ),
         centerTitle: true,
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding,
-          8,
-          AppSpacing.screenPadding,
-          32,
-        ),
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 32),
         children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(color: AppColors.border),
-            ),
+          CleanGlassPanel(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.22),
+                        AppColors.primary.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: const Icon(
                     LucideIcons.fileText,
                     color: AppColors.primary,
-                    size: 20,
+                    size: 19,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -159,8 +171,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         'Share CSV & text reports',
                         style: AppTextStyles.caption.copyWith(
@@ -171,63 +185,104 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     ],
                   ),
                 ),
-                Material(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  child: InkWell(
-                    onTap: _pickDateRange,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            LucideIcons.calendar,
-                            size: 14,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _selectedDateRange != null ? 'Filtered' : 'All Dates',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                const SizedBox(width: 8),
+                _DateFilterChip(
+                  label: _dateLabel,
+                  active: _selectedDateRange != null,
+                  onTap: _pickDateRange,
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          Text(
-            'Select Report',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
+          const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsets.only(left: 2, bottom: 8),
+            child: Text(
+              'SELECT REPORT',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w600,
+                fontSize: 10,
+                letterSpacing: 0.8,
+              ),
             ),
           ),
-
-          const SizedBox(height: 10),
-
-          ...VehicleReportType.values.map(
-            (type) => ReportCardTile(
-              type: type,
-              onTap: () => _generateAndShowReport(type),
+          CleanGlassPanel(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                for (var i = 0; i < reportTypes.length; i++)
+                  ReportCardTile(
+                    type: reportTypes[i],
+                    onTap: () => _generateAndShowReport(reportTypes[i]),
+                    showDivider: i < reportTypes.length - 1,
+                  ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DateFilterChip extends StatelessWidget {
+  const _DateFilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active
+          ? AppColors.primary.withValues(alpha: 0.14)
+          : Colors.white.withValues(alpha: 0.04),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            border: Border.all(
+              color: active
+                  ? AppColors.primary.withValues(alpha: 0.35)
+                  : Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                LucideIcons.calendar,
+                size: 13,
+                color: active ? AppColors.primary : AppColors.textTertiary,
+              ),
+              const SizedBox(width: 5),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 96),
+                child: Text(
+                  label,
+                  style: AppTextStyles.caption.copyWith(
+                    color: active ? AppColors.primary : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

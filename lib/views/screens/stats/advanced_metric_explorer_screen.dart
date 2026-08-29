@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -43,6 +44,9 @@ class _AdvancedMetricExplorerScreenState
   }
 
   void _onMetricPageChanged(int category, int sub) {
+    if (_categoryIndex == category && _subMetricIndices[category] == sub) {
+      return;
+    }
     setState(() {
       _categoryIndex = category;
       _subMetricIndices[category] = sub;
@@ -57,6 +61,19 @@ class _AdvancedMetricExplorerScreenState
   void _swipeToPreviousCategory() {
     if (_categoryIndex <= 0) return;
     _setCategory(_categoryIndex - 1);
+  }
+
+  void _handleCategoryBarSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 280) return;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (velocity < 0) {
+        _swipeToNextCategory();
+      } else {
+        _swipeToPreviousCategory();
+      }
+    });
   }
 
   String _short(PeriodFilter p) => switch (p) {
@@ -139,14 +156,8 @@ class _AdvancedMetricExplorerScreenState
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onHorizontalDragEnd: (details) {
-                  final velocity = details.primaryVelocity ?? 0;
-                  if (velocity < -280) {
-                    _swipeToNextCategory();
-                  } else if (velocity > 280) {
-                    _swipeToPreviousCategory();
-                  }
-                },
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragEnd: _handleCategoryBarSwipe,
                 child: MetricFilterChips(
                   index: _categoryIndex,
                   onChanged: _setCategory,
