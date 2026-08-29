@@ -10,6 +10,7 @@ import '../../../core/utils/vehicle_display.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../vehicle_setup_screen.dart';
+import 'garage/confirm_delete_vehicle.dart';
 import 'garage/widgets/garage_empty_state.dart';
 import 'garage/widgets/garage_slots_header.dart';
 import 'garage_vehicle_card.dart';
@@ -62,123 +63,7 @@ class GarageTab extends ConsumerWidget {
     WidgetRef ref,
     Vehicle vehicle,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.65),
-      builder: (context) {
-        return Dialog(
-          backgroundColor: AppColors.card,
-          elevation: 12,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            side: BorderSide(color: AppColors.border.withValues(alpha: 0.9)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: AppColors.error,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'deleteVehicleTitle'.tr(),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'deleteVehicleMessage'.tr(
-                    namedArgs: {'name': vehicle.name},
-                  ),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySecondary.copyWith(
-                    height: 1.4,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          side: const BorderSide(color: AppColors.borderStrong),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm + 4,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
-                          ),
-                        ),
-                        child: Text('cancel'.tr()),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                          foregroundColor: AppColors.textPrimary,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm + 4,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
-                          ),
-                        ),
-                        child: Text('delete'.tr()),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (confirmed != true) return;
-
-    final ok =
-        await ref.read(vehicleProvider.notifier).deleteVehicle(vehicle.id);
-    if (!context.mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? 'vehicleDeleted'.tr() : 'vehicleDeleteFailed'.tr(),
-          style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-        ),
-        backgroundColor: AppColors.cardElevated,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    await deleteVehicleWithConfirmation(context, ref, vehicle);
   }
 
   @override

@@ -7,6 +7,7 @@
   "logsTitle": "Logs",
   "garageTitle": "My Garage",
   "switchVehicleTitle": "Switch Vehicle",
+  "switchVehicleDeleteHint": "Swipe left on a vehicle to delete",
   "manageGarage": "Manage Garage",
   "settingsTitle": "Settings",
   "filterLogs": "Filter Logs",

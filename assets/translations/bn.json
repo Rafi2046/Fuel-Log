@@ -7,6 +7,7 @@
   "logsTitle": "লগস",
   "garageTitle": "আমার গ্যারেজ",
   "switchVehicleTitle": "গাড়ি বদলান",
+  "switchVehicleDeleteHint": "ডিলিট করতে বামে সোয়াইপ করুন",
   "manageGarage": "গ্যারেজ ম্যানেজ করুন",
   "settingsTitle": "সেটিংস",
   "filterLogs": "লগ ফিল্টার",
