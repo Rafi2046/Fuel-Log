@@ -462,23 +462,18 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                   reminder,
                   state.currentOdometer,
                 ),
-                onEdit: () {
+                onEdit: () async {
                   if (vehicle == null) return;
                   final numId = int.tryParse(reminder.id);
+                  if (numId == null) return;
+                  final db = ref.read(databaseProvider);
+                  final driftReminder = await db.getReminderById(numId);
+                  if (driftReminder == null || !context.mounted) return;
                   AddReminderSheet.show(
                     context,
                     vehicleId: vehicle.id,
                     currentOdometer: state.currentOdometer,
-                    existingReminder: numId != null
-                        ? Reminder(
-                            id: numId,
-                            vehicleId: reminder.vehicleId,
-                            title: reminder.title,
-                            targetDate: reminder.targetDate,
-                            targetOdometer: reminder.targetOdo,
-                            isCompleted: reminder.isCompleted,
-                          )
-                        : null,
+                    existingReminder: driftReminder,
                     onSave: () {
                       ref.read(remindersProvider.notifier).loadReminders();
                     },

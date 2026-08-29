@@ -49,7 +49,7 @@ class BackupRestoreService {
 
     final payload = {
       'app': 'Fuel-Log',
-      'schemaVersion': 6,
+      'schemaVersion': 7,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
       'data': {
         'vehicles': vehicles.map((v) => {

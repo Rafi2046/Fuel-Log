@@ -1,8 +1,11 @@
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/database/app_database.dart';
+import '../core/utils/notification_service.dart';
 import '../models/reminder_model.dart';
 import 'fuel_log_viewmodel.dart';
+import 'service_log_viewmodel.dart';
 import 'vehicle_viewmodel.dart';
 
 /// State for vehicle maintenance reminders
@@ -114,13 +117,22 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
 
   ServiceReminder _mapDriftToModel(Reminder r, double currentOdo) {
     final serviceType = _mapServiceType(r.title);
+
+    final lastServiceOdo = r.intervalKm != null && r.targetOdometer != null
+        ? r.targetOdometer! - r.intervalKm!
+        : currentOdo;
+
+    final lastServiceDate = r.targetDate != null
+        ? r.targetDate!.subtract(const Duration(days: 90))
+        : DateTime.now();
+
     return ServiceReminder(
       id: r.id.toString(),
       vehicleId: r.vehicleId,
       title: r.title,
       serviceType: serviceType,
-      lastServiceOdo: currentOdo,
-      lastServiceDate: DateTime.now(),
+      lastServiceOdo: lastServiceOdo,
+      lastServiceDate: lastServiceDate,
       intervalKm: r.intervalKm,
       targetOdo: r.targetOdometer,
       targetDate: r.targetDate,
@@ -168,10 +180,82 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
 
   Future<void> markAsDone(String id, {double? cost, String? notes}) async {
     final numId = int.tryParse(id);
-    if (numId != null) {
-      final db = ref.read(databaseProvider);
-      await db.markReminderCompleted(numId);
+    if (numId == null) return;
+
+    final vehicle = ref.read(activeVehicleProvider).valueOrNull;
+    if (vehicle == null) return;
+
+    final db = ref.read(databaseProvider);
+    final existing = await db.getReminderById(numId);
+    if (existing == null) return;
+
+    final currentOdo = state.currentOdometer;
+    final now = DateTime.now();
+
+    await db.markReminderCompleted(numId);
+    await NotificationService().cancelNotification(numId);
+
+    if (cost != null && cost > 0) {
+      await ref.read(serviceLogServiceProvider).addServiceLog(
+            vehicleId: vehicle.id,
+            date: now,
+            category: 'Maintenance',
+            title: existing.title,
+            cost: cost,
+            odometer: currentOdo,
+            note: notes,
+          );
     }
+
+    double? newTargetOdo;
+    if (existing.intervalKm != null) {
+      newTargetOdo = currentOdo + existing.intervalKm!;
+    } else if (existing.targetOdometer != null) {
+      final priorSpan = existing.targetOdometer! - currentOdo;
+      newTargetOdo = currentOdo + (priorSpan > 0 ? priorSpan : 5000);
+    }
+
+    DateTime? newTargetDate;
+    if (existing.targetDate != null) {
+      var next = DateTime(
+        existing.targetDate!.year + 1,
+        existing.targetDate!.month,
+        existing.targetDate!.day,
+      );
+      while (!next.isAfter(now)) {
+        next = DateTime(next.year + 1, next.month, next.day);
+      }
+      newTargetDate = next;
+    }
+
+    final newId = await db.insertReminder(
+      RemindersCompanion.insert(
+        vehicleId: existing.vehicleId,
+        title: existing.title,
+        targetDate: newTargetDate != null
+            ? Value(newTargetDate)
+            : const Value.absent(),
+        targetOdometer: newTargetOdo != null
+            ? Value(newTargetOdo)
+            : const Value.absent(),
+        oilType: existing.oilType != null
+            ? Value(existing.oilType!)
+            : const Value.absent(),
+        intervalKm: existing.intervalKm != null
+            ? Value(existing.intervalKm!)
+            : const Value.absent(),
+      ),
+    );
+
+    if (newTargetDate != null) {
+      await NotificationService().scheduleNotification(
+        id: newId,
+        title: existing.title,
+        scheduledDate: newTargetDate,
+        body: 'Maintenance Due Today: ${existing.title}',
+      );
+    }
+
     await loadReminders();
   }
 }

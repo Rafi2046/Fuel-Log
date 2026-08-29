@@ -94,6 +94,47 @@ void main() {
     expect(reminders.single.targetOdometer, equals(6000.0));
   });
 
+  test('markReminderCompleted allows inserting next cycle reminder', () async {
+    final vehicleId = await db.insertVehicle(
+      VehiclesCompanion.insert(
+        type: 'Car',
+        name: 'Cycle Reset Car',
+        startOdo: 10000,
+        capacity: 45,
+        fuelType: 'Octane',
+      ),
+    );
+
+    final reminderId = await db.insertReminder(
+      RemindersCompanion.insert(
+        vehicleId: vehicleId,
+        title: 'Engine Oil',
+        targetOdometer: const drift.Value(15000.0),
+        intervalKm: const drift.Value(5000.0),
+        oilType: const drift.Value('Fully Synthetic'),
+      ),
+    );
+
+    await db.markReminderCompleted(reminderId);
+
+    const currentOdo = 12000.0;
+    final newId = await db.insertReminder(
+      RemindersCompanion.insert(
+        vehicleId: vehicleId,
+        title: 'Engine Oil',
+        targetOdometer: drift.Value(currentOdo + 5000),
+        intervalKm: const drift.Value(5000.0),
+        oilType: const drift.Value('Fully Synthetic'),
+      ),
+    );
+
+    final active = await db.getIncompleteRemindersForVehicle(vehicleId);
+    expect(active.length, equals(1));
+    expect(active.single.id, equals(newId));
+    expect(active.single.targetOdometer, equals(17000.0));
+    expect(active.single.intervalKm, equals(5000.0));
+  });
+
   test('deleteVehicle cascades to fuel logs, reminders, service logs, and trip logs', () async {
     final vehicleId = await db.insertVehicle(
       VehiclesCompanion.insert(

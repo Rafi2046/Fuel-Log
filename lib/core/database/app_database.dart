@@ -221,6 +221,10 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  Future<Reminder?> getReminderById(int id) {
+    return (select(reminders)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
   Future<int> markReminderCompleted(int id) {
     return (update(reminders)..where((t) => t.id.equals(id)))
         .write(const RemindersCompanion(isCompleted: Value(true)));

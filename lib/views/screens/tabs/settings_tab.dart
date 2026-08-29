@@ -10,6 +10,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/backup_restore_service.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/reminder_viewmodel.dart';
+import '../../../viewmodels/service_log_viewmodel.dart';
+import '../../../viewmodels/trip_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../reports/reports_screen.dart';
@@ -245,8 +248,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
       // Invalidate providers so UI instantly syncs across all tabs
       ref.invalidate(vehiclesProvider);
+      ref.invalidate(selectedVehicleIdProvider);
       ref.invalidate(activeVehicleProvider);
       ref.invalidate(vehicleLogsProvider);
+      ref.invalidate(serviceLogsProvider);
+      ref.invalidate(vehicleTripsProvider);
+      ref.invalidate(remindersProvider);
 
       if (!mounted) return;
       _toast(
