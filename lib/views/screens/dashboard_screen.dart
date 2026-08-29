@@ -5,8 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import '../widgets/app_app_bar.dart';
 import '../widgets/trip_manual_entry_sheet.dart';
@@ -18,6 +16,7 @@ import 'tabs/home_tab.dart';
 import 'tabs/settings_tab.dart';
 import 'tabs/stats_tab.dart';
 import 'tabs/trip_log_tab.dart';
+import 'tabs/vehicle_switcher_sheet.dart';
 
 /// Main shell: IndexedStack tabs + notched FAB bottom bar.
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -186,141 +185,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.cardElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
-      builder: (context) {
-        final currentActive = ref.read(activeVehicleProvider).valueOrNull;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenPadding,
-              vertical: AppSpacing.md,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Switch Vehicle',
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ...vehicles.map((v) {
-                  final isSelected = v.id == currentActive?.id;
-                  final type = v.type.toLowerCase();
-                  final isBike = type == 'bike' ||
-                      type.contains('bike') ||
-                      type.contains('motorcycle') ||
-                      type.contains('scooter');
-                  final icon = isBike
-                      ? Icons.two_wheeler_rounded
-                      : Icons.directions_car_filled_rounded;
-
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: isSelected
-                            ? Colors.white
-                            : AppColors.textSecondary,
-                        size: 22,
-                      ),
-                    ),
-                    title: Text(
-                      v.name,
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    subtitle: v.model != null && v.model!.isNotEmpty
-                        ? Text(
-                            '${v.model} • ${v.fuelType}',
-                            style: AppTextStyles.caption,
-                          )
-                        : Text(v.fuelType, style: AppTextStyles.caption),
-                    trailing: isSelected
-                        ? const Icon(
-                            Icons.check_circle_rounded,
-                            color: AppColors.primary,
-                          )
-                        : null,
-                    onTap: () {
-                      ref.read(selectedVehicleIdProvider.notifier).select(v.id);
-                      Navigator.of(context).pop();
-                    },
-                  );
-                }),
-                const Divider(color: AppColors.divider, height: 24),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: const Icon(
-                      Icons.garage_rounded,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
-                  ),
-                  title: Text(
-                    'Manage Garage',
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: AppColors.textTertiary,
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _openGarage();
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    VehicleSwitcherSheet.show(
+      context,
+      onManageGarage: _openGarage,
     );
   }
 

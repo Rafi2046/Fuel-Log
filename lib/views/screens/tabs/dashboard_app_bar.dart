@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/utils/vehicle_display.dart';
 import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/clean_glass_panel.dart';
@@ -83,15 +84,8 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
     final hasAlerts =
         reminders.overdueCount + reminders.dueSoonCount > 0;
 
-    final type = activeVehicle?.type.toLowerCase() ?? '';
-    final isBike = type == 'bike' ||
-        type.contains('bike') ||
-        type.contains('motorcycle') ||
-        type.contains('scooter') ||
-        (activeVehicle?.name.toLowerCase().contains('bike') ?? false) ||
-        (activeVehicle?.name.toLowerCase().contains('r15') ?? false);
-    final vehicleIcon = isBike
-        ? Icons.two_wheeler_rounded
+    final vehicleIcon = activeVehicle != null
+        ? VehicleDisplay.iconFor(activeVehicle!)
         : Icons.directions_car_filled_rounded;
     final vehicleName = activeVehicle?.name ?? 'My Garage';
     final subtitle = activeVehicle?.fuelType ?? 'Add Vehicle';

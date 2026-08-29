@@ -6,8 +6,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/utils/vehicle_display.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
-import '../../widgets/app_primary_button.dart';
+import '../../widgets/clean_glass_panel.dart';
 import '../vehicle_setup_screen.dart';
 import 'garage/widgets/garage_empty_state.dart';
 import 'garage/widgets/garage_slots_header.dart';
@@ -20,30 +21,10 @@ const int kMaxVehicles = 3;
 class GarageTab extends ConsumerWidget {
   const GarageTab({super.key});
 
-  /// Car vs bike icon from saved [Vehicle.type] (and light name fallback).
-  IconData _iconFor(Vehicle vehicle) {
-    if (_isBike(vehicle)) return Icons.two_wheeler_rounded;
-    return Icons.directions_car_filled_rounded;
-  }
+  /// Car vs bike icon from saved [Vehicle.type].
+  IconData _iconFor(Vehicle vehicle) => VehicleDisplay.iconFor(vehicle);
 
-  bool _isBike(Vehicle vehicle) {
-    final type = vehicle.type.toLowerCase().trim();
-    if (type == 'bike' ||
-        type.contains('bike') ||
-        type.contains('motorcycle') ||
-        type.contains('scooter')) {
-      return true;
-    }
-    final name = vehicle.name.toLowerCase();
-    // Fallback for older rows that may have wrong type.
-    if (name.contains('bike') ||
-        name.contains('r15') ||
-        name.contains('scooter') ||
-        name.contains('motorcycle')) {
-      return true;
-    }
-    return false;
-  }
+  bool _isBike(Vehicle vehicle) => VehicleDisplay.isBike(vehicle);
 
   String _typeLabel(Vehicle vehicle) =>
       _isBike(vehicle) ? 'vehicleTypeBike'.tr() : 'vehicleTypeCar'.tr();
@@ -223,47 +204,49 @@ class GarageTab extends ConsumerWidget {
               GarageEmptyState(
                 onAddPressed: () => _onAddPressed(context, 0),
               )
-            else
-              for (var i = 0; i < vehicles.length; i++) ...[
-                Dismissible(
-                  key: ValueKey('vehicle_${vehicles[i].id}'),
-                  direction: DismissDirection.endToStart,
-                  confirmDismiss: (_) async {
-                    await _confirmDelete(context, ref, vehicles[i]);
-                    return false;
-                  },
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: AppSpacing.md),
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.18),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusLg),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: AppColors.error,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: GarageVehicleCard(
-                      name: vehicles[i].name,
-                      subtitle: _subtitle(vehicles[i]),
-                      fuelType: vehicles[i].fuelType,
-                      icon: _iconFor(vehicles[i]),
-                      onDelete: () =>
-                          _confirmDelete(context, ref, vehicles[i]),
-                    ),
-                  ),
+            else ...[
+              CleanGlassPanel(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < vehicles.length; i++)
+                      Dismissible(
+                        key: ValueKey('vehicle_${vehicles[i].id}'),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (_) async {
+                          await _confirmDelete(context, ref, vehicles[i]);
+                          return false;
+                        },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: AppSpacing.md),
+                          color: AppColors.error.withValues(alpha: 0.12),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: AppColors.error,
+                            size: 20,
+                          ),
+                        ),
+                        child: GarageVehicleCard(
+                          name: vehicles[i].name,
+                          subtitle: _subtitle(vehicles[i]),
+                          fuelType: vehicles[i].fuelType,
+                          icon: _iconFor(vehicles[i]),
+                          embedded: true,
+                          showDivider: i < vehicles.length - 1,
+                          onDelete: () =>
+                              _confirmDelete(context, ref, vehicles[i]),
+                        ),
+                      ),
+                  ],
                 ),
-              ],
+              ),
+            ],
             if (!isEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              AppPrimaryButton(
+              const SizedBox(height: 10),
+              _GarageAddButton(
                 label: 'addNewVehicle'.tr(),
-                icon: Icons.add_rounded,
                 onPressed: vehicles.length >= kMaxVehicles
                     ? null
                     : () => _onAddPressed(context, vehicles.length),
@@ -285,6 +268,64 @@ class GarageTab extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _GarageAddButton extends StatelessWidget {
+  const _GarageAddButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final radius = BorderRadius.circular(AppSpacing.radiusMd);
+
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Material(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: radius,
+          child: Container(
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.32),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.add_rounded,
+                  size: 17,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
