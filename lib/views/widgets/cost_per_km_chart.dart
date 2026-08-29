@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -7,8 +9,10 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/app_formatters.dart';
+import 'metric_chart_layout.dart';
+import 'metric_single_point_hero.dart';
 
-/// Line chart displaying Cost Per Kilometer (৳/km) efficiency over time.
+/// Cost per km trend for Metric Explorer.
 class CostPerKmChart extends StatelessWidget {
   const CostPerKmChart({
     super.key,
@@ -24,12 +28,11 @@ class CostPerKmChart extends StatelessWidget {
   List<_CostPerKmData> get _monthlyData {
     if (fuelLogs.isEmpty) return [];
 
-    // Group logs by year-month
-    final Map<String, double> fuelMap = {};
-    final Map<String, double> serviceMap = {};
-    final Map<String, double> minOdoMap = {};
-    final Map<String, double> maxOdoMap = {};
-    final Map<String, DateTime> dateOrder = {};
+    final fuelMap = <String, double>{};
+    final serviceMap = <String, double>{};
+    final minOdoMap = <String, double>{};
+    final maxOdoMap = <String, double>{};
+    final dateOrder = <String, DateTime>{};
 
     final sortedFuel = List<FuelLog>.from(fuelLogs)
       ..sort((a, b) => a.date.compareTo(b.date));
@@ -40,12 +43,8 @@ class CostPerKmChart extends StatelessWidget {
       fuelMap[key] = (fuelMap[key] ?? 0) + log.cost;
       dateOrder[key] = DateTime(log.date.year, log.date.month);
 
-      if (!minOdoMap.containsKey(key) || log.odometer < minOdoMap[key]!) {
-        minOdoMap[key] = log.odometer;
-      }
-      if (!maxOdoMap.containsKey(key) || log.odometer > maxOdoMap[key]!) {
-        maxOdoMap[key] = log.odometer;
-      }
+      minOdoMap[key] = math.min(minOdoMap[key] ?? log.odometer, log.odometer);
+      maxOdoMap[key] = math.max(maxOdoMap[key] ?? log.odometer, log.odometer);
     }
 
     for (final log in serviceLogs) {
@@ -57,220 +56,351 @@ class CostPerKmChart extends StatelessWidget {
     final keys = dateOrder.keys.toList()
       ..sort((a, b) => dateOrder[a]!.compareTo(dateOrder[b]!));
 
-    final List<_CostPerKmData> result = [];
-
-    for (int i = 0; i < keys.length; i++) {
+    final result = <_CostPerKmData>[];
+    for (var i = 0; i < keys.length; i++) {
       final key = keys[i];
       final monthDate = dateOrder[key]!;
       final totalCost = (fuelMap[key] ?? 0.0) + (serviceMap[key] ?? 0.0);
 
-      double distance = 0.0;
+      double distance;
       if (i > 0) {
         final prevKey = keys[i - 1];
         distance = (maxOdoMap[key] ?? 0) - (maxOdoMap[prevKey] ?? 0);
       } else {
         distance = (maxOdoMap[key] ?? 0) - (minOdoMap[key] ?? 0);
       }
+      if (distance <= 0) distance = 100.0;
 
-      if (distance <= 0) distance = 100.0; // Graceful fallback estimation
-
-      final costPerKm = totalCost / distance;
-      result.add(_CostPerKmData(
-        label: '${_monthName(monthDate.month)} ${monthDate.year.toString().substring(2)}',
-        costPerKm: costPerKm,
-        totalCost: totalCost,
-        distanceKm: distance,
-      ));
+      result.add(
+        _CostPerKmData(
+          label: DateFormat('MMM yy').format(monthDate),
+          costPerKm: totalCost / distance,
+          totalCost: totalCost,
+          distanceKm: distance,
+        ),
+      );
     }
 
     return result.take(12).toList();
-  }
-
-  static String _monthName(int month) {
-    const names = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return names[(month - 1).clamp(0, 11)];
   }
 
   @override
   Widget build(BuildContext context) {
     final data = _monthlyData;
     if (data.isEmpty) {
-      return SizedBox(
-        height: chartHeight,
-        child: const Center(
-          child: Text(
-            'Need more logs to calculate cost per km',
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
+      return Center(
+        child: Text(
+          'metricKpiNeedLogs'.tr(),
+          style: AppTextStyles.caption,
         ),
       );
     }
 
-    final spots = <FlSpot>[];
-    double maxY = 0;
-    for (int i = 0; i < data.length; i++) {
-      final val = data[i].costPerKm;
-      spots.add(FlSpot(i.toDouble(), val));
-      if (val > maxY) maxY = val;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = _finiteHeight(constraints.maxHeight);
+        final chart = data.length == 1
+            ? _SingleCostPerKmChart(point: data.first)
+            : _CostPerKmTrendChart(data: data);
+
+        return Padding(
+          padding: MetricChartLayout.chartPadding,
+          child: SizedBox(
+            height: height,
+            width: double.infinity,
+            child: chart,
+          ),
+        );
+      },
+    );
+  }
+
+  double _finiteHeight(double maxHeight) {
+    if (maxHeight.isFinite && maxHeight > AppSpacing.md + 80) {
+      return maxHeight - AppSpacing.sm;
     }
+    return chartHeight;
+  }
+}
 
-    final chartMaxY = math.max(15.0, (maxY * 1.25).ceilToDouble());
-    final avgCostPerKm = spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
+class _SingleCostPerKmChart extends StatelessWidget {
+  const _SingleCostPerKmChart({required this.point});
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Cost Per Kilometer (৳/km)',
-                    style: AppTextStyles.label.copyWith(
+  final _CostPerKmData point;
+
+  @override
+  Widget build(BuildContext context) {
+    final y = point.costPerKm;
+    final safeMaxY = y <= 0 ? 15.0 : y * 1.22;
+    final spots = [
+      FlSpot(0, y * 0.08),
+      FlSpot(0.22, y * 0.42),
+      FlSpot(0.5, y),
+      FlSpot(0.78, y * 0.42),
+      FlSpot(1, y * 0.08),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MetricSinglePointHero(
+          value: AppCurrency.format(y),
+          unit: 'metricKpiPerKm'.tr(),
+          accentStart: const Color(0xFF38BDF8),
+          accentEnd: AppColors.primary,
+        ),
+        Expanded(
+          child: LineChart(
+            LineChartData(
+              minX: 0,
+              maxX: 1,
+              minY: 0,
+              maxY: safeMaxY,
+              clipData: const FlClipData.all(),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: safeMaxY / 2,
+                getDrawingHorizontalLine: (_) => FlLine(
+                  color: Colors.white.withValues(alpha: 0.04),
+                  strokeWidth: 1,
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                leftTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    getTitlesWidget: (_, __) => MetricChartLayout.axisDateLabel(
+                      point.label,
                       color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Average: ${AppCurrency.format(avgCostPerKm)} / km',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF38BDF8),
-                      fontWeight: FontWeight.w600,
+                ),
+              ),
+              lineTouchData: const LineTouchData(enabled: false),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  curveSmoothness: 0.35,
+                  color: const Color(0xFF38BDF8),
+                  barWidth: 2.5,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFF38BDF8).withValues(alpha: 0.22),
+                        const Color(0xFF38BDF8).withValues(alpha: 0.02),
+                      ],
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CostPerKmTrendChart extends StatelessWidget {
+  const _CostPerKmTrendChart({required this.data});
+
+  final List<_CostPerKmData> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final spots = <FlSpot>[
+      for (var i = 0; i < data.length; i++)
+        FlSpot(i.toDouble(), data[i].costPerKm),
+    ];
+    final maxY = spots.map((s) => s.y).reduce(math.max);
+    final minY = spots.map((s) => s.y).reduce(math.min);
+    final range = math.max(1.0, maxY - minY);
+    final safeMaxY = maxY + range * 0.18;
+    final safeMinY = math.max(0.0, minY - range * 0.12);
+    final avg = spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
+    final edgePad = MetricChartLayout.edgePad(data.length);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+          child: Row(
+            children: [
+              Text(
+                'avg'.tr(),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textTertiary,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${AppCurrency.format(avg)} / km',
+                style: AppTextStyles.label.copyWith(
+                  color: const Color(0xFF38BDF8),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: chartHeight - 50,
-            child: LineChart(
-              LineChartData(
-                minY: 0,
-                maxY: chartMaxY,
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) => const FlLine(
-                    color: AppColors.divider,
-                    strokeWidth: 1,
-                  ),
+        ),
+        Expanded(
+          child: LineChart(
+            LineChartData(
+              minX: -edgePad,
+              maxX: data.length - 1 + edgePad,
+              minY: safeMinY,
+              maxY: safeMaxY,
+              clipData: const FlClipData.all(),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: (safeMaxY - safeMinY) / 2,
+                getDrawingHorizontalLine: (_) => FlLine(
+                  color: Colors.white.withValues(alpha: 0.04),
+                  strokeWidth: 1,
                 ),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 36,
-                      getTitlesWidget: (val, _) => Text(
-                        '৳${val.toInt()}',
-                        style: const TextStyle(
-                          color: AppColors.textTertiary,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 24,
-                      getTitlesWidget: (val, _) {
-                        final idx = val.toInt();
-                        if (idx >= 0 && idx < data.length) {
-                          return Text(
-                            data[idx].label,
-                            style: const TextStyle(
-                              color: AppColors.textTertiary,
-                              fontSize: 10,
-                            ),
-                          );
-                        }
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 34,
+                    interval: (safeMaxY - safeMinY) / 2,
+                    getTitlesWidget: (value, _) {
+                      if (value < safeMinY + 0.01 || value > safeMaxY - 0.01) {
                         return const SizedBox.shrink();
-                      },
-                    ),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => const Color(0xFF1E1E2E),
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final idx = spot.x.toInt();
-                        if (idx < 0 || idx >= data.length) return null;
-                        final d = data[idx];
-                        return LineTooltipItem(
-                          '${d.label}\n৳${spot.y.toStringAsFixed(2)} / km\n(Total: ৳${d.totalCost.toStringAsFixed(0)})',
-                          const TextStyle(
-                            color: Color(0xFF38BDF8),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        );
-                      }).toList();
+                      }
+                      return Text(
+                        AppCurrency.format(value),
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 9,
+                          color: AppColors.textTertiary,
+                        ),
+                      );
                     },
                   ),
                 ),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    color: const Color(0xFF38BDF8),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    interval: 1,
+                    getTitlesWidget: (value, _) {
+                      final i = value.round();
+                      if (i < 0 || i >= data.length) {
+                        return const SizedBox.shrink();
+                      }
+                      return MetricChartLayout.axisDateLabel(
+                        data[i].label,
+                        color: AppColors.textTertiary,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  fitInsideHorizontally: true,
+                  getTooltipColor: (_) => AppColors.cardElevated,
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((spot) {
+                      final idx = spot.x.round();
+                      if (idx < 0 || idx >= data.length) return null;
+                      final d = data[idx];
+                      return LineTooltipItem(
+                        '${d.label}\n'
+                        '${AppCurrency.format(spot.y)} / km\n'
+                        '${'metricKpiSpend'.tr()}: ${AppCurrency.format(d.totalCost)}',
+                        AppTextStyles.caption.copyWith(
                           color: const Color(0xFF38BDF8),
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
-                    ),
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
+              extraLinesData: ExtraLinesData(
+                horizontalLines: [
+                  HorizontalLine(
+                    y: avg,
+                    color: Colors.white.withValues(alpha: 0.12),
+                    strokeWidth: 1,
+                    dashArray: [4, 4],
                   ),
                 ],
               ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  curveSmoothness: 0.28,
+                  color: const Color(0xFF38BDF8),
+                  barWidth: 2.5,
+                  isStrokeCapRound: true,
+                  shadow: const Shadow(
+                    color: Color(0x5538BDF8),
+                    blurRadius: 8,
+                  ),
+                  dotData: FlDotData(
+                    show: true,
+                    getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
+                      radius: 3.5,
+                      color: const Color(0xFF38BDF8),
+                      strokeWidth: 2,
+                      strokeColor: AppColors.card,
+                    ),
+                  ),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFF38BDF8).withValues(alpha: 0.18),
+                        const Color(0xFF38BDF8).withValues(alpha: 0.01),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -10,10 +10,10 @@ import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../reports/reports_screen.dart';
+import 'widgets/metric_overview_card.dart';
 import 'widgets/metric_chart_pane.dart';
 import 'widgets/metric_date_range_picker.dart';
 import 'widgets/metric_filter_chips.dart';
-import 'widgets/metric_kpi_row.dart';
 
 /// Deep analytics — airy premium layout (filters + chart).
 class AdvancedMetricExplorerScreen extends ConsumerStatefulWidget {
@@ -35,7 +35,29 @@ class _AdvancedMetricExplorerScreenState
   PeriodFilter _period = PeriodFilter.last6Months;
   DateTimeRange? _customRange;
   int _categoryIndex = 0;
-  int _subMetricIndex = 0;
+  final _subMetricIndices = [0, 0, 0];
+
+  void _setCategory(int index) {
+    if (index == _categoryIndex) return;
+    setState(() => _categoryIndex = index);
+  }
+
+  void _onMetricPageChanged(int category, int sub) {
+    setState(() {
+      _categoryIndex = category;
+      _subMetricIndices[category] = sub;
+    });
+  }
+
+  void _swipeToNextCategory() {
+    if (_categoryIndex >= 2) return;
+    _setCategory(_categoryIndex + 1);
+  }
+
+  void _swipeToPreviousCategory() {
+    if (_categoryIndex <= 0) return;
+    _setCategory(_categoryIndex - 1);
+  }
 
   String _short(PeriodFilter p) => switch (p) {
         PeriodFilter.allTime => 'metricPeriodAll'.tr(),
@@ -104,38 +126,38 @@ class _AdvancedMetricExplorerScreenState
         error: (e, _) =>
             Center(child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'}))),
         data: (_) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
           child: Column(
             children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: MetricPeriodMenu(
-                  label: _short(_period),
-                  onSelect: _selectPeriod,
-                ),
-              ),
-              const SizedBox(height: 12),
-              MetricKpiRow(
+              MetricOverviewCard(
+                periodLabel: _short(_period),
+                onPeriodSelect: _selectPeriod,
                 costPerKm: distanceKm > 0 ? spend / distanceKm : 0,
                 spendLabel: AppCurrency.format(spend),
                 distanceKm: distanceKm,
                 periodHint: _short(_period),
               ),
-              const SizedBox(height: 12),
-              MetricFilterChips(
-                index: _categoryIndex,
-                onChanged: (i) => setState(() {
-                  _categoryIndex = i;
-                  _subMetricIndex = 0;
-                }),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity < -280) {
+                    _swipeToNextCategory();
+                  } else if (velocity > 280) {
+                    _swipeToPreviousCategory();
+                  }
+                },
+                child: MetricFilterChips(
+                  index: _categoryIndex,
+                  onChanged: _setCategory,
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Expanded(
                 child: MetricChartPane(
                   categoryIndex: _categoryIndex,
-                  subMetricIndex: _subMetricIndex,
-                  onSubMetricChanged: (i) =>
-                      setState(() => _subMetricIndex = i),
+                  subMetricIndex: _subMetricIndices[_categoryIndex],
+                  onPageChanged: _onMetricPageChanged,
                   fuelLogs: fuelLogs,
                   serviceLogs: serviceLogs,
                   mileageUnit: isEV ? 'km/kWh' : 'km/L',

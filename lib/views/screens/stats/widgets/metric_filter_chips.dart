@@ -45,6 +45,8 @@ class MetricPeriodMenu extends StatelessWidget {
       child: CleanGlassPanel(
         borderRadius: radius,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 148),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -53,23 +55,28 @@ class MetricPeriodMenu extends StatelessWidget {
               size: 14,
               color: AppColors.textTertiary,
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTextStyles.label.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             const Icon(
               Icons.keyboard_arrow_down_rounded,
-              size: 18,
+              size: 16,
               color: AppColors.textTertiary,
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -136,38 +143,48 @@ class _MetricSegmentCell extends StatelessWidget {
     final radius = BorderRadius.circular(AppSpacing.radiusSm);
     return Material(
       color: selected
-          ? Colors.white.withValues(alpha: 0.08)
+          ? AppColors.primary.withValues(alpha: 0.12)
           : Colors.transparent,
       borderRadius: radius,
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 15,
-                color: selected ? AppColors.textPrimary : AppColors.textTertiary,
-              ),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  label,
-                  style: AppTextStyles.label.copyWith(
-                    color: selected
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(
+              color: selected
+                  ? AppColors.primary.withValues(alpha: 0.35)
+                  : Colors.transparent,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 15,
+                  color: selected ? AppColors.primary : AppColors.textTertiary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: AppTextStyles.label.copyWith(
+                      color: selected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

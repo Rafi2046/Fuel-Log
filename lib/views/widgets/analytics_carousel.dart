@@ -21,7 +21,7 @@ class AnalyticsCarousel extends StatefulWidget {
     required this.mileageUnit,
     this.serviceLogs = const [],
     this.isElectric = false,
-    this.chartHeight = 220,
+    this.chartHeight = 248,
   });
 
   final List<FuelLog> logs;

@@ -97,7 +97,10 @@ class MetricExplorerEmptyState extends StatelessWidget {
           ),
         ),
         if (_needsTwoFuelLogs)
-          _MetricUnlockSteps(fuelLogCount: fuelLogCount)
+          _MetricUnlockSteps(
+            fuelLogCount: fuelLogCount,
+            onAddRefueling: () => _openRefueling(context),
+          )
         else
           _MetricEmptyInfoLine(text: 'metricEmptyTipCosts'.tr()),
         const SizedBox(height: 10),
@@ -114,32 +117,44 @@ class MetricExplorerEmptyState extends StatelessWidget {
           label: 'actionRefueling'.tr(),
           icon: Icons.local_gas_station_rounded,
           compact: true,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const RefuelingFormScreen(),
-              ),
-            );
-          },
+          onPressed: () => _openRefueling(context),
         ),
       ],
     );
   }
 }
 
+void _openRefueling(BuildContext context) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => const RefuelingFormScreen(),
+    ),
+  );
+}
+
 class _MetricUnlockSteps extends StatelessWidget {
-  const _MetricUnlockSteps({required this.fuelLogCount});
+  const _MetricUnlockSteps({
+    required this.fuelLogCount,
+    required this.onAddRefueling,
+  });
 
   final int fuelLogCount;
+  final VoidCallback onAddRefueling;
 
   @override
   Widget build(BuildContext context) {
+    final step1Done = fuelLogCount >= 1;
+    final step2Done = fuelLogCount >= 2;
+    final step2Actionable = fuelLogCount == 1;
+
     return Row(
       children: [
         Expanded(
           child: _StepTile(
             label: 'metricEmptyStep1'.tr(),
-            done: fuelLogCount >= 1,
+            done: step1Done,
+            highlighted: !step1Done,
+            onTap: step1Done ? null : onAddRefueling,
           ),
         ),
         Padding(
@@ -153,7 +168,20 @@ class _MetricUnlockSteps extends StatelessWidget {
         Expanded(
           child: _StepTile(
             label: 'metricEmptyStep2'.tr(),
-            done: fuelLogCount >= 2,
+            done: step2Done,
+            highlighted: step2Actionable,
+            onTap: step2Actionable
+                ? onAddRefueling
+                : () {
+                    if (!step1Done) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('metricEmptyStep1Required'.tr()),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
           ),
         ),
       ],
@@ -162,39 +190,52 @@ class _MetricUnlockSteps extends StatelessWidget {
 }
 
 class _StepTile extends StatelessWidget {
-  const _StepTile({required this.label, required this.done});
+  const _StepTile({
+    required this.label,
+    required this.done,
+    required this.highlighted,
+    this.onTap,
+  });
 
   final String label;
   final bool done;
+  final bool highlighted;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final radius = BorderRadius.circular(AppSpacing.radiusMd);
+    final borderColor = done
+        ? AppColors.primary.withValues(alpha: 0.28)
+        : highlighted
+            ? AppColors.primary.withValues(alpha: 0.45)
+            : Colors.white.withValues(alpha: 0.07);
+
+    final content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: done
-            ? AppColors.primary.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: done
-              ? AppColors.primary.withValues(alpha: 0.28)
-              : Colors.white.withValues(alpha: 0.07),
-        ),
+        borderRadius: radius,
+        border: Border.all(color: borderColor, width: highlighted ? 1.2 : 1),
       ),
       child: Row(
         children: [
           Icon(
             done ? Icons.check_circle_rounded : Icons.circle_outlined,
             size: 16,
-            color: done ? AppColors.primary : AppColors.textTertiary,
+            color: done
+                ? AppColors.primary
+                : highlighted
+                    ? AppColors.primary
+                    : AppColors.textTertiary,
           ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               label,
               style: AppTextStyles.caption.copyWith(
-                color: done ? AppColors.textPrimary : AppColors.textSecondary,
+                color: done || highlighted
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
               ),
@@ -204,6 +245,22 @@ class _StepTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    return Material(
+      color: done
+          ? AppColors.primary.withValues(alpha: 0.1)
+          : highlighted
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.03),
+      borderRadius: radius,
+      child: onTap == null
+          ? content
+          : InkWell(
+              onTap: onTap,
+              borderRadius: radius,
+              child: content,
+            ),
     );
   }
 }
