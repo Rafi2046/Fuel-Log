@@ -188,7 +188,7 @@ class RefuelingFormFields extends StatelessWidget {
               Row(
                 children: [
                   const Icon(
-                    Icons.storefront_outlined,
+                    Icons.local_gas_station_outlined,
                     color: AppColors.textTertiary,
                     size: 15,
                   ),

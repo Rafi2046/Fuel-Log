@@ -34,45 +34,42 @@ class AppPrimaryButton extends StatelessWidget {
 
     return Opacity(
       opacity: enabled ? 1 : 0.5,
-      child: Material(
-        color: AppColors.primary,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: enabled ? onPressed : null,
-          borderRadius: radius,
-          child: Container(
-            height: height,
-            width: double.infinity,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              boxShadow: enabled && !compact ? AppShadows.floating : null,
-            ),
-            child: isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      color: AppColors.textPrimary,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(label, style: AppTextStyles.button),
-                      if (icon != null) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Icon(
-                          icon,
-                          size: 20,
-                          color: AppColors.textPrimary,
-                        ),
-                      ],
-                    ],
-                  ),
+      child: GestureDetector(
+        onTap: enabled ? onPressed : null,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: height,
+          width: double.infinity,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: radius,
+            boxShadow: enabled && !compact ? AppShadows.floating : null,
           ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: AppColors.textPrimary,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(label, style: AppTextStyles.button),
+                    if (icon != null) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Icon(
+                        icon,
+                        size: 20,
+                        color: AppColors.textPrimary,
+                      ),
+                    ],
+                  ],
+                ),
         ),
       ),
     );

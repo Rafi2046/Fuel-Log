@@ -129,6 +129,9 @@ class LogsTab extends ConsumerWidget {
                 child: Dismissible(
                   key: ValueKey(log.id),
                   direction: DismissDirection.endToStart,
+                  dismissThresholds: const {
+                    DismissDirection.endToStart: 0.35,
+                  },
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -149,7 +152,16 @@ class LogsTab extends ConsumerWidget {
                       SnackBar(content: Text('logDeleted'.tr())),
                     );
                   },
-                  child: _LogTile(log: log, unit: unit, isEV: isEV),
+                  child: GestureDetector(
+                    onTap: () => FuelLogDetailSheet.show(
+                      context,
+                      log: log,
+                      unit: unit,
+                      isEV: isEV,
+                    ),
+                    behavior: HitTestBehavior.opaque,
+                    child: _LogTile(log: log, unit: unit, isEV: isEV),
+                  ),
                 ),
               );
             }),
@@ -179,12 +191,6 @@ class _LogTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.listCardPaddingH,
         vertical: AppSpacing.listCardPaddingV,
-      ),
-      onTap: () => FuelLogDetailSheet.show(
-        context,
-        log: log,
-        unit: unit,
-        isEV: isEV,
       ),
       child: Row(
         children: [

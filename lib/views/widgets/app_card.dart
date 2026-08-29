@@ -43,13 +43,10 @@ class AppCard extends StatelessWidget {
 
     if (onTap == null) return panel;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: panel,
-      ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: panel,
     );
   }
 }

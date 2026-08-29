@@ -12,7 +12,6 @@ import '../../../../models/mileage_entry_model.dart';
 import '../../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../../viewmodels/mileage_log_viewmodel.dart';
 import '../../../widgets/app_primary_button.dart';
-import '../../../widgets/app_text_field.dart';
 import '../../../widgets/clean_glass_panel.dart';
 
 /// Bottom sheet showing full refueling log details with optional station edit.
@@ -30,24 +29,39 @@ class FuelLogDetailSheet extends ConsumerStatefulWidget {
   final bool isEV;
   final MileageEntryModel? entry;
 
+  static bool _isOpen = false;
+
   static Future<void> show(
     BuildContext context, {
     required FuelLog log,
     required String unit,
     required bool isEV,
     MileageEntryModel? entry,
-  }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => FuelLogDetailSheet(
-        log: log,
-        unit: unit,
-        isEV: isEV,
-        entry: entry,
-      ),
-    );
+  }) async {
+    if (_isOpen) return;
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (!navigator.mounted) return;
+
+    _isOpen = true;
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        useRootNavigator: true,
+        builder: (sheetContext) => FuelLogDetailSheet(
+          log: log,
+          unit: unit,
+          isEV: isEV,
+          entry: entry,
+        ),
+      );
+    } finally {
+      _isOpen = false;
+    }
   }
 
   @override
@@ -81,6 +95,7 @@ class _FuelLogDetailSheetState extends ConsumerState<FuelLogDetailSheet> {
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (ok) {
+      FocusManager.instance.primaryFocus?.unfocus();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('fuelLogStationSaved'.tr())),
       );
@@ -192,18 +207,15 @@ class _FuelLogDetailSheetState extends ConsumerState<FuelLogDetailSheet> {
                 ),
                 if (log.note != null && log.note!.isNotEmpty)
                   _DetailRow(label: 'note'.tr(), value: log.note!),
-                const SizedBox(height: AppSpacing.sm),
-                AppTextField(
+                const SizedBox(height: AppSpacing.xs),
+                _PumpField(
+                  controller: _stationController,
                   label: 'fuelLogStation'.tr(),
                   hint: 'fuelLogStationHint'.tr(),
-                  controller: _stationController,
-                  prefixIcon: Icons.storefront_outlined,
-                  dense: true,
-                  textInputAction: TextInputAction.done,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 AppPrimaryButton(
-                  label: 'refuelSaveRefueling'.tr(),
+                  label: 'save'.tr(),
                   onPressed: _isSaving ? null : _saveStation,
                   isLoading: _isSaving,
                   compact: true,
@@ -212,6 +224,73 @@ class _FuelLogDetailSheetState extends ConsumerState<FuelLogDetailSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PumpField extends StatelessWidget {
+  const _PumpField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textTertiary,
+                fontSize: 11,
+              ),
+            ),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              textInputAction: TextInputAction.done,
+              style: AppTextStyles.body.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+              cursorColor: AppColors.primary,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: AppTextStyles.caption.copyWith(
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 9,
+                ),
+                prefixIcon: const Icon(
+                  Icons.local_gas_station_outlined,
+                  color: AppColors.textTertiary,
+                  size: 16,
+                ),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 34,
+                  minHeight: 34,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

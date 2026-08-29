@@ -52,6 +52,9 @@ class MileageLogTile extends ConsumerWidget {
     return Dismissible(
       key: ValueKey(log.id),
       direction: DismissDirection.endToStart,
+      dismissThresholds: const {
+        DismissDirection.endToStart: 0.35,
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -72,8 +75,7 @@ class MileageLogTile extends ConsumerWidget {
           const SnackBar(content: Text('Log deleted successfully')),
         );
       },
-      child: AppCard(
-        padding: _cardPadding,
+      child: GestureDetector(
         onTap: () => FuelLogDetailSheet.show(
           context,
           log: log,
@@ -81,7 +83,10 @@ class MileageLogTile extends ConsumerWidget {
           isEV: isEV,
           entry: entry,
         ),
-        child: Row(
+        behavior: HitTestBehavior.opaque,
+        child: AppCard(
+          padding: _cardPadding,
+          child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
@@ -183,6 +188,7 @@ class MileageLogTile extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

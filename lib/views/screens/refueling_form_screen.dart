@@ -83,13 +83,19 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
 
   void _onOdometerFocusChange() {
     if (!_odometerFocus.hasFocus) {
-      _applyTotalToTrip(ref.read(vehicleLogsProvider).valueOrNull);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _applyTotalToTrip(ref.read(vehicleLogsProvider).valueOrNull);
+      });
     }
   }
 
   void _onTripFocusChange() {
     if (!_tripFocus.hasFocus) {
-      _applyTripToTotal(ref.read(vehicleLogsProvider).valueOrNull);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _applyTripToTotal(ref.read(vehicleLogsProvider).valueOrNull);
+      });
     }
   }
 
@@ -400,7 +406,10 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
       final logs = next.valueOrNull;
       final lastOdometer =
           logs != null && logs.isNotEmpty ? logs.first.odometer : null;
-      _seedOdometerIfNeeded(lastOdometer);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _seedOdometerIfNeeded(lastOdometer);
+      });
     });
 
     final activeAsync = ref.watch(activeVehicleProvider);

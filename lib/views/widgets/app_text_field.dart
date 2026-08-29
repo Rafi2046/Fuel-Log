@@ -76,14 +76,20 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             isDense: dense,
             contentPadding: dense
-                ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+                ? const EdgeInsets.symmetric(horizontal: 8, vertical: 10)
                 : null,
             prefixIcon: prefixIcon == null
                 ? null
                 : Icon(
                     prefixIcon,
                     color: AppColors.textTertiary,
-                    size: dense ? 18 : 20,
+                    size: dense ? 16 : 20,
+                  ),
+            prefixIconConstraints: prefixIcon == null
+                ? null
+                : BoxConstraints(
+                    minWidth: dense ? 36 : 48,
+                    minHeight: dense ? 36 : 48,
                   ),
             suffixText: suffixText,
             suffixStyle: AppTextStyles.label.copyWith(
