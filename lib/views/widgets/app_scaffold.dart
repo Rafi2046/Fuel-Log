@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
+import 'app_app_bar.dart';
 
 /// Consistent dark scaffold with optional padded body.
 class AppScaffold extends StatelessWidget {
@@ -31,8 +32,8 @@ class AppScaffold extends StatelessWidget {
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       appBar: title == null
           ? null
-          : AppBar(
-              title: Text(title!),
+          : AppAppBar(
+              title: title,
               actions: actions,
             ),
       floatingActionButton: floatingActionButton,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_shadows.dart';
 import '../../core/constants/app_spacing.dart';
+import 'clean_glass_panel.dart';
 
-/// Soft squircle dark surface used as the primary content container.
+/// Primary content container — clean glass surface on dark backgrounds.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -24,26 +24,31 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppSpacing.radiusLg);
-    final content = Container(
-      width: double.infinity,
+
+    Widget panel = CleanGlassPanel(
+      borderRadius: radius,
       padding: padding,
-      decoration: BoxDecoration(
-        color: elevated ? AppColors.cardElevated : AppColors.card,
-        borderRadius: radius,
-        border: showBorder ? Border.all(color: AppColors.border) : null,
-        boxShadow: elevated ? AppShadows.card : null,
-      ),
       child: child,
     );
 
-    if (onTap == null) return content;
+    if (elevated) {
+      panel = DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          boxShadow: AppShadows.card,
+        ),
+        child: panel,
+      );
+    }
+
+    if (onTap == null) return panel;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
-        child: content,
+        child: panel,
       ),
     );
   }

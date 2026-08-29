@@ -17,4 +17,5 @@ abstract final class AppSpacing {
   static const double cardPadding = 20.0;
   static const double sectionGap = lg;
   static const double buttonHeight = 56.0;
+  static const double buttonHeightCompact = 46.0;
 }

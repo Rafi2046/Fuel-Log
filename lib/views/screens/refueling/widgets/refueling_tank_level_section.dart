@@ -151,7 +151,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                     label: 'Before Refueling',
                     percent: beforeLevelPercent,
                     onChanged: onBeforeLevelChanged,
-                    activeColor: AppColors.warning,
+                    activeColor: AppColors.textSecondary,
                   ),
                   const SizedBox(height: 10),
 
@@ -164,7 +164,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                         onAfterLevelChanged(val);
                       }
                     },
-                    activeColor: AppColors.success,
+                    activeColor: AppColors.primary,
                   ),
                   const SizedBox(height: 10),
                   const Divider(color: AppColors.divider, height: 1),
@@ -193,7 +193,6 @@ class RefuelingTankLevelSection extends StatelessWidget {
                             label: 'Calculated',
                             value: '+${addedFuel.toStringAsFixed(1)} $unit',
                             icon: Icons.add_circle_outline_rounded,
-                            valueColor: AppColors.success,
                           ),
                         ),
                         Container(width: 1, height: 24, color: AppColors.divider),
@@ -202,7 +201,6 @@ class RefuelingTankLevelSection extends StatelessWidget {
                             label: 'Est. Remaining',
                             value: '${estimatedFuelAfter.toStringAsFixed(1)} $unit',
                             icon: Icons.battery_charging_full_rounded,
-                            valueColor: AppColors.primary,
                           ),
                         ),
                       ],
@@ -293,10 +291,12 @@ class _LevelSliderWidget extends StatelessWidget {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isSelected ? activeColor : AppColors.surface,
+                  color: isSelected
+                      ? AppColors.textSecondary
+                      : AppColors.surface,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                   border: Border.all(
-                    color: isSelected ? activeColor : AppColors.border,
+                    color: isSelected ? AppColors.textSecondary : AppColors.border,
                     width: 0.8,
                   ),
                 ),
@@ -326,13 +326,11 @@ class _EstimateStatTile extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
-    this.valueColor,
   });
 
   final String label;
   final String value;
   final IconData icon;
-  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +354,7 @@ class _EstimateStatTile extends StatelessWidget {
             style: AppTextStyles.caption.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 10,
-              color: valueColor ?? AppColors.textPrimary,
+              color: AppColors.textPrimary,
             ),
           ),
         ),

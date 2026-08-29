@@ -15,9 +15,10 @@ import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/trip_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
+import '../../widgets/clean_glass_panel.dart';
 import '../reports/reports_screen.dart';
 
-/// Settings tab with natural, clean layout and Lucide icons.
+/// Settings tab — clean, minimal dark layout.
 class SettingsTab extends ConsumerStatefulWidget {
   const SettingsTab({super.key});
 
@@ -45,82 +46,84 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     final current = context.locale;
     final selected = await showModalBottomSheet<Locale>(
       context: context,
-      backgroundColor: AppColors.cardElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.sm,
-              AppSpacing.screenPadding,
-              AppSpacing.md,
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusXl),
+          ),
+          child: CleanGlassPanel(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppSpacing.radiusXl),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.sm,
+                  AppSpacing.screenPadding,
+                  AppSpacing.md,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'language'.tr(),
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                for (final locale in supportedAppLocales) ...[
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    leading: Icon(
-                      LucideIcons.globe,
-                      size: 20,
-                      color: locale.languageCode == current.languageCode
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
-                    ),
-                    title: Text(
-                      _languageLabel(locale),
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight:
-                            locale.languageCode == current.languageCode
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                        color:
-                            locale.languageCode == current.languageCode
-                                ? AppColors.primary
-                                : AppColors.textPrimary,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                    trailing: locale.languageCode == current.languageCode
-                        ? const Icon(
-                            LucideIcons.check,
-                            size: 18,
-                            color: AppColors.primary,
-                          )
-                        : null,
-                    onTap: () => Navigator.pop(sheetContext, locale),
-                  ),
-                ],
-              ],
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'language'.tr(),
+                      style: AppTextStyles.title.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    for (final locale in supportedAppLocales) ...[
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                        leading: Icon(
+                          LucideIcons.globe,
+                          size: 20,
+                          color: locale.languageCode == current.languageCode
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
+                        title: Text(
+                          _languageLabel(locale),
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: locale.languageCode == current.languageCode
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: locale.languageCode == current.languageCode
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                        trailing: locale.languageCode == current.languageCode
+                            ? const Icon(
+                                LucideIcons.check,
+                                size: 18,
+                                color: AppColors.primary,
+                              )
+                            : null,
+                        onTap: () => Navigator.pop(sheetContext, locale),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -159,15 +162,18 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       final shouldRestore = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E28),
+          backgroundColor: AppColors.cardElevated,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            side: const BorderSide(color: Color(0xFF2E2E3C)),
+            side: const BorderSide(color: AppColors.border),
           ),
           title: Row(
             children: [
-              const Icon(LucideIcons.triangleAlert,
-                  color: AppColors.warning, size: 22),
+              const Icon(
+                LucideIcons.triangleAlert,
+                color: AppColors.warning,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Restore Backup?',
@@ -188,9 +194,9 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14141B),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: const Color(0xFF2A2A38)),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,6 +233,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
@@ -246,7 +253,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       final restored =
           await _backupService.restoreBackupFromFile(file: file, db: db);
 
-      // Invalidate providers so UI instantly syncs across all tabs
       ref.invalidate(vehiclesProvider);
       ref.invalidate(selectedVehicleIdProvider);
       ref.invalidate(activeVehicleProvider);
@@ -289,7 +295,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         vertical: AppSpacing.md,
       ),
       children: [
-        // Section 1: Data & Storage
         _SettingsGroup(
           title: 'dataStorage'.tr(),
           children: [
@@ -334,8 +339,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-
-        // Section 2: Preferences
         _SettingsGroup(
           title: 'preferences'.tr(),
           children: [
@@ -364,14 +367,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
-
-        // Minimalist App Footer
         Center(
           child: Column(
             children: [
               Icon(
                 LucideIcons.fuel,
-                size: 24,
+                size: 22,
                 color: AppColors.textTertiary.withValues(alpha: 0.7),
               ),
               const SizedBox(height: 6),
@@ -428,25 +429,23 @@ class _SettingsGroup extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.card,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(
-              color: AppColors.border.withValues(alpha: 0.8),
-            ),
           ),
-          child: Column(
-            children: [
-              for (var i = 0; i < children.length; i++) ...[
-                children[i],
-                if (i < children.length - 1)
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.border.withValues(alpha: 0.4),
-                    indent: 48,
-                  ),
+          child: CleanGlassPanel(
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  children[i],
+                  if (i < children.length - 1)
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.border.withValues(alpha: 0.5),
+                      indent: 48,
+                    ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ],
@@ -482,14 +481,12 @@ class _SettingsTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           child: Row(
             children: [
-              // Clean Lucide Icon without background container
               Icon(
                 icon,
                 size: 20,
                 color: AppColors.textSecondary,
               ),
               const SizedBox(width: 14),
-              // Title & Subtitle
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,7 +511,6 @@ class _SettingsTile extends StatelessWidget {
                   ],
                 ),
               ),
-              // Trailing value or control
               if (valueText != null) ...[
                 Text(
                   valueText!,

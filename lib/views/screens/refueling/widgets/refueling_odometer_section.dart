@@ -70,12 +70,9 @@ class RefuelingOdometerSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    width: 0.8,
-                  ),
+                  color: AppColors.border.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -83,13 +80,13 @@ class RefuelingOdometerSection extends StatelessWidget {
                     const Icon(
                       Icons.history_rounded,
                       size: 10,
-                      color: AppColors.primary,
+                      color: AppColors.textTertiary,
                     ),
                     const SizedBox(width: 3),
                     Text(
                       'Last: $lastOdoStr',
                       style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                         fontSize: 10,
                       ),
@@ -122,8 +119,8 @@ class RefuelingOdometerSection extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: AppTextField(
-                  label: 'Trip Distance',
-                  hint: 'since last',
+                  label: 'Trip',
+                  hint: '0',
                   controller: tripOdometerController,
                   focusNode: tripFocus,
                   dense: true,
@@ -136,6 +133,15 @@ class RefuelingOdometerSection extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Km since last refuel. Trip and total odometer update each other.',
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 10,
+              color: AppColors.textTertiary,
+              height: 1.35,
+            ),
           ),
         ],
       ),

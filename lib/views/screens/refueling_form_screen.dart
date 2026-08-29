@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_spacing.dart';
 import '../../core/database/app_database.dart';
 import '../../core/services/receipt_ocr_service.dart';
 import '../../viewmodels/fuel_log_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import '../widgets/app_primary_button.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/clean_glass_panel.dart';
 import 'refueling/refueling_form_fields.dart';
 
 /// Log a fuel fill-up or EV charge against the active vehicle.
@@ -48,6 +50,15 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     super.initState();
     _odometerFocus.addListener(_onOdometerFocusChange);
     _tripFocus.addListener(_onTripFocusChange);
+    Future.microtask(_trySeedOdometerFromLogs);
+  }
+
+  void _trySeedOdometerFromLogs() {
+    if (!mounted || _seededLastOdometer) return;
+    final logs = ref.read(vehicleLogsProvider).valueOrNull;
+    final lastOdometer =
+        logs != null && logs.isNotEmpty ? logs.first.odometer : null;
+    _seedOdometerIfNeeded(lastOdometer);
   }
 
   @override
@@ -249,38 +260,45 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   Future<void> _onScanReceipt() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: const Color(0xFF181822),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetCtx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        child: CleanGlassPanel(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.camera_alt_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                    title: const Text('Take Photo of Receipt or Meter'),
+                    onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.photo_library_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                    title: const Text('Choose from Gallery'),
+                    onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: const Icon(Icons.camera_alt_rounded,
-                    color: AppColors.primary),
-                title: const Text('Take Photo of Receipt or Meter'),
-                onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_rounded,
-                    color: AppColors.primary),
-                title: const Text('Choose from Gallery'),
-                onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -368,17 +386,20 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(vehicleLogsProvider, (_, next) {
+      if (_seededLastOdometer || !next.hasValue) return;
+      final logs = next.valueOrNull;
+      final lastOdometer =
+          logs != null && logs.isNotEmpty ? logs.first.odometer : null;
+      _seedOdometerIfNeeded(lastOdometer);
+    });
+
     final activeAsync = ref.watch(activeVehicleProvider);
     final logsAsync = ref.watch(vehicleLogsProvider);
     final isSaving = ref.watch(fuelLogProvider).isLoading;
 
     final logs = logsAsync.valueOrNull ?? [];
     final lastOdometer = logs.isNotEmpty ? logs.first.odometer : null;
-    if (!_seededLastOdometer) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _seedOdometerIfNeeded(lastOdometer);
-      });
-    }
 
     return AppScaffold(
       title: 'Refueling',
@@ -397,7 +418,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   child: RefuelingFormFields(
                     vehicle: vehicle,
                     odometerController: _odometerController,
@@ -455,9 +476,11 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
               AppPrimaryButton(
                 label: vehicle.isElectric ? 'Save Charge' : 'Save Refueling',
-                icon: Icons.check_circle_rounded,
+                icon: Icons.check_rounded,
+                compact: true,
                 isLoading: isSaving,
                 onPressed: isSaving ? null : () => _onSave(vehicle),
               ),

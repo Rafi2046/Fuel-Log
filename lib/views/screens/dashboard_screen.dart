@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
+import '../widgets/app_app_bar.dart';
 import '../widgets/trip_manual_entry_sheet.dart';
 import 'tabs/dashboard_app_bar.dart';
 import 'tabs/dashboard_nav_item.dart';
@@ -171,7 +172,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
           backgroundColor: AppColors.background,
-          appBar: AppBar(title: Text('garageTitle'.tr())),
+          appBar: AppAppBar(title: 'garageTitle'.tr()),
           body: const GarageTab(),
         ),
       ),

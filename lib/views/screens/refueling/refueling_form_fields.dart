@@ -5,6 +5,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/clean_glass_panel.dart';
 import '../../widgets/app_text_field.dart';
 import 'widgets/refueling_cost_section.dart';
 import 'widgets/refueling_odometer_section.dart';
@@ -78,20 +79,16 @@ class RefuelingFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Sleek Thin Vehicle Info Bar
-        Container(
+        CleanGlassPanel(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.cardElevated,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.border, width: 0.8),
-          ),
           child: Row(
             children: [
               Icon(
                 isEV
                     ? Icons.bolt_rounded
                     : Icons.directions_car_filled_rounded,
-                color: AppColors.primary,
+                color: AppColors.textSecondary,
                 size: 18,
               ),
               const SizedBox(width: 8),
@@ -109,7 +106,7 @@ class RefuelingFormFields extends StatelessWidget {
                     Text(
                       '${vehicle.fuelType} • ${vehicle.capacity.toStringAsFixed(0)} ${isEV ? "kWh" : "L"}',
                       style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textTertiary,
                         fontSize: 11,
                       ),
                     ),
@@ -119,15 +116,16 @@ class RefuelingFormFields extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  color: AppColors.border.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
                   isEV ? 'EV' : 'Fuel',
-                  style: const TextStyle(
+                  style: AppTextStyles.caption.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),

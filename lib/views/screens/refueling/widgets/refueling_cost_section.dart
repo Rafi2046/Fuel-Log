@@ -62,23 +62,20 @@ class RefuelingCostSection extends StatelessWidget {
               const Spacer(),
               if (onScanReceipt != null)
                 Material(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  color: AppColors.border.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   child: InkWell(
                     onTap: isScanning ? null : onScanReceipt,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusPill),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.35),
-                          width: 1,
-                        ),
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -89,21 +86,21 @@ class RefuelingCostSection extends StatelessWidget {
                               height: 12,
                               child: CircularProgressIndicator(
                                 strokeWidth: 1.8,
-                                color: AppColors.primary,
+                                color: AppColors.textSecondary,
                               ),
                             )
                           else
                             const Icon(
-                              Icons.document_scanner_rounded,
+                              Icons.document_scanner_outlined,
                               size: 14,
-                              color: AppColors.primary,
+                              color: AppColors.textSecondary,
                             ),
                           const SizedBox(width: 5),
                           Text(
                             isScanning ? 'Scanning...' : 'Scan Receipt',
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),
                           ),

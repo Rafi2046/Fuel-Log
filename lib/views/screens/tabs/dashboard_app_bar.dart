@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
+import '../../widgets/app_app_bar.dart';
 import '../reminders/reminders_screen.dart';
 
 /// Tab-aware app bar for [DashboardScreen] with modern luxury styling.
@@ -30,14 +31,12 @@ PreferredSizeWidget buildDashboardAppBar({
       final vehicleName = activeVehicle?.name ?? 'My Garage';
       final subtitle = activeVehicle?.fuelType ?? 'Add Vehicle';
 
-      return AppBar(
+      return AppAppBar(
         automaticallyImplyLeading: false,
         centerTitle: false,
-        elevation: 0,
-        backgroundColor: AppColors.background,
         toolbarHeight: 64,
         titleSpacing: AppSpacing.screenPadding,
-        title: Material(
+        titleWidget: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onVehicleTap,
@@ -169,9 +168,9 @@ PreferredSizeWidget buildDashboardAppBar({
         ],
       );
     case 1:
-      return AppBar(
+      return AppAppBar(
         automaticallyImplyLeading: false,
-        title: Text('logsTitle'.tr()),
+        title: 'logsTitle'.tr(),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
@@ -182,19 +181,19 @@ PreferredSizeWidget buildDashboardAppBar({
         ],
       );
     case 2:
-      return AppBar(
+      return AppAppBar(
         automaticallyImplyLeading: false,
-        title: Text(
+        titleWidget: Text(
           'statsTitle'.tr(),
           style: AppTextStyles.title.copyWith(color: AppColors.primary),
         ),
       );
     case 3:
-      return AppBar(
+      return AppAppBar(
         automaticallyImplyLeading: false,
-        title: Text('settingsTitle'.tr()),
+        title: 'settingsTitle'.tr(),
       );
     default:
-      return AppBar(automaticallyImplyLeading: false);
+      return const AppAppBar(automaticallyImplyLeading: false);
   }
 }
