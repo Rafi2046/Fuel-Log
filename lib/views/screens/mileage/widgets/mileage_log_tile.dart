@@ -9,8 +9,9 @@ import '../../../../models/mileage_entry_model.dart';
 import '../../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../../viewmodels/mileage_log_viewmodel.dart';
 import '../../../widgets/app_card.dart';
+import 'fuel_log_detail_sheet.dart';
 
-/// Card item presenting a calculated mileage log entry with swipe-to-delete support.
+/// Compact card for a calculated mileage log entry with swipe-to-delete.
 class MileageLogTile extends ConsumerWidget {
   const MileageLogTile({
     super.key,
@@ -22,6 +23,11 @@ class MileageLogTile extends ConsumerWidget {
   final MileageEntryModel entry;
   final String unit;
   final bool isEV;
+
+  static const _cardPadding = EdgeInsets.symmetric(
+    horizontal: AppSpacing.listCardPaddingH,
+    vertical: AppSpacing.listCardPaddingV,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,6 +47,7 @@ class MileageLogTile extends ConsumerWidget {
     }
 
     final pricePerUnit = log.amount > 0 ? (log.cost / log.amount) : 0.0;
+    final station = log.stationName?.trim();
 
     return Dismissible(
       key: ValueKey(log.id),
@@ -55,7 +62,7 @@ class MileageLogTile extends ConsumerWidget {
         child: const Icon(
           Icons.delete_outline_rounded,
           color: Colors.white,
-          size: 28,
+          size: 24,
         ),
       ),
       onDismissed: (_) async {
@@ -66,164 +73,114 @@ class MileageLogTile extends ConsumerWidget {
         );
       },
       child: AppCard(
-        child: Column(
+        padding: _cardPadding,
+        onTap: () => FuelLogDetailSheet.show(
+          context,
+          log: log,
+          unit: unit,
+          isEV: isEV,
+          entry: entry,
+        ),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Row: Date & Efficiency Pill
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      isEV
-                          ? Icons.battery_charging_full_rounded
-                          : Icons.local_gas_station_rounded,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      AppDateFormats.formatLogDate(log.date),
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                    border: Border.all(
-                      color: badgeColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Icon(
+                isEV
+                    ? Icons.battery_charging_full_rounded
+                    : Icons.local_gas_station_rounded,
+                color: AppColors.primary,
+                size: 14,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Icon(Icons.speed_rounded, size: 13, color: badgeColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        formattedEfficiency,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: badgeColor,
+                      Expanded(
+                        child: Text(
+                          AppDateFormats.formatLogDate(log.date),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                          border: Border.all(
+                            color: badgeColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.speed_rounded, size: 11, color: badgeColor),
+                            const SizedBox(width: 3),
+                            Text(
+                              formattedEfficiency,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: badgeColor,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Middle Row: Distance Driven & Fuel details
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '${log.amount.toStringAsFixed(1)} $unit',
-                          style: AppTextStyles.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (pricePerUnit > 0)
-                          Text(
-                            ' @ ${AppCurrency.format(pricePerUnit)}/$unit',
-                            style: AppTextStyles.caption,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Odometer: ${log.odometer.toStringAsFixed(0)} km',
-                      style: AppTextStyles.caption,
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      AppCurrency.format(log.cost),
-                      style: AppTextStyles.title.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (entry.distanceDriven != null)
-                      Container(
-                        margin: const EdgeInsets.only(top: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardElevated,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                          border: Border.all(color: AppColors.border, width: 0.8),
-                        ),
-                        child: Text(
-                          '+${entry.distanceDriven!.toStringAsFixed(0)} km',
-                          style: AppTextStyles.caption.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.success,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-
-            // Bottom tags: Full Tank & Notes
-            if (log.isFullTank || (log.note != null && log.note!.isNotEmpty)) ...[
-              const SizedBox(height: AppSpacing.sm),
-              const Divider(color: AppColors.divider, height: 1),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: log.isFullTank
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : AppColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      log.isFullTank ? 'Full Tank' : 'Partial Tank',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: log.isFullTank ? AppColors.primary : AppColors.warning,
-                      ),
-                    ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${log.amount.toStringAsFixed(1)} $unit'
+                    '${pricePerUnit > 0 ? ' @ ${AppCurrency.format(pricePerUnit)}/$unit' : ''}'
+                    ' • ${log.odometer.toStringAsFixed(0)} km'
+                    '${entry.distanceDriven != null ? ' • +${entry.distanceDriven!.toStringAsFixed(0)} km' : ''}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(fontSize: 11),
                   ),
-                  if (log.note != null && log.note!.isNotEmpty) ...[
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
+                  if (station != null && station.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        log.note!,
+                        station,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.caption.copyWith(
-                          fontStyle: FontStyle.italic,
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
-            ],
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              AppCurrency.format(log.cost),
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
           ],
         ),
       ),

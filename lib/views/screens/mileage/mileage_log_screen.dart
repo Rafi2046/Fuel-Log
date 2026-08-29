@@ -48,28 +48,32 @@ class MileageLogScreen extends ConsumerWidget {
           }
 
           return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             slivers: [
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenPadding,
-                    vertical: AppSpacing.md,
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.screenPadding,
+                    AppSpacing.sm,
+                    AppSpacing.screenPadding,
+                    AppSpacing.xs,
                   ),
                   child: MileageSummaryCard(),
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.screenPadding,
-                  vertical: AppSpacing.xs,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  0,
+                  AppSpacing.screenPadding,
+                  AppSpacing.sm,
                 ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final entry = processedEntries[index];
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.listGap),
                         child: MileageLogTile(
                           entry: entry,
                           unit: unit,

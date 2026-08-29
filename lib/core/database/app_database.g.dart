@@ -695,6 +695,17 @@ class $FuelLogsTable extends FuelLogs with TableInfo<$FuelLogsTable, FuelLog> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _stationNameMeta = const VerificationMeta(
+    'stationName',
+  );
+  @override
+  late final GeneratedColumn<String> stationName = GeneratedColumn<String>(
+    'station_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -705,6 +716,7 @@ class $FuelLogsTable extends FuelLogs with TableInfo<$FuelLogsTable, FuelLog> {
     cost,
     isFullTank,
     note,
+    stationName,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -776,6 +788,15 @@ class $FuelLogsTable extends FuelLogs with TableInfo<$FuelLogsTable, FuelLog> {
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('station_name')) {
+      context.handle(
+        _stationNameMeta,
+        stationName.isAcceptableOrUnknown(
+          data['station_name']!,
+          _stationNameMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -817,6 +838,10 @@ class $FuelLogsTable extends FuelLogs with TableInfo<$FuelLogsTable, FuelLog> {
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       ),
+      stationName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}station_name'],
+      ),
     );
   }
 
@@ -837,6 +862,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
   final double cost;
   final bool isFullTank;
   final String? note;
+  final String? stationName;
   const FuelLog({
     required this.id,
     required this.vehicleId,
@@ -846,6 +872,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
     required this.cost,
     required this.isFullTank,
     this.note,
+    this.stationName,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -860,6 +887,9 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    if (!nullToAbsent || stationName != null) {
+      map['station_name'] = Variable<String>(stationName);
+    }
     return map;
   }
 
@@ -873,6 +903,9 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
       cost: Value(cost),
       isFullTank: Value(isFullTank),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      stationName: stationName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stationName),
     );
   }
 
@@ -890,6 +923,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
       cost: serializer.fromJson<double>(json['cost']),
       isFullTank: serializer.fromJson<bool>(json['isFullTank']),
       note: serializer.fromJson<String?>(json['note']),
+      stationName: serializer.fromJson<String?>(json['stationName']),
     );
   }
   @override
@@ -904,6 +938,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
       'cost': serializer.toJson<double>(cost),
       'isFullTank': serializer.toJson<bool>(isFullTank),
       'note': serializer.toJson<String?>(note),
+      'stationName': serializer.toJson<String?>(stationName),
     };
   }
 
@@ -916,6 +951,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
     double? cost,
     bool? isFullTank,
     Value<String?> note = const Value.absent(),
+    Value<String?> stationName = const Value.absent(),
   }) => FuelLog(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -925,6 +961,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
     cost: cost ?? this.cost,
     isFullTank: isFullTank ?? this.isFullTank,
     note: note.present ? note.value : this.note,
+    stationName: stationName.present ? stationName.value : this.stationName,
   );
   FuelLog copyWithCompanion(FuelLogsCompanion data) {
     return FuelLog(
@@ -938,6 +975,9 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
           ? data.isFullTank.value
           : this.isFullTank,
       note: data.note.present ? data.note.value : this.note,
+      stationName: data.stationName.present
+          ? data.stationName.value
+          : this.stationName,
     );
   }
 
@@ -951,7 +991,8 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
           ..write('amount: $amount, ')
           ..write('cost: $cost, ')
           ..write('isFullTank: $isFullTank, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('stationName: $stationName')
           ..write(')'))
         .toString();
   }
@@ -966,6 +1007,7 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
     cost,
     isFullTank,
     note,
+    stationName,
   );
   @override
   bool operator ==(Object other) =>
@@ -978,7 +1020,8 @@ class FuelLog extends DataClass implements Insertable<FuelLog> {
           other.amount == this.amount &&
           other.cost == this.cost &&
           other.isFullTank == this.isFullTank &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.stationName == this.stationName);
 }
 
 class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
@@ -990,6 +1033,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
   final Value<double> cost;
   final Value<bool> isFullTank;
   final Value<String?> note;
+  final Value<String?> stationName;
   const FuelLogsCompanion({
     this.id = const Value.absent(),
     this.vehicleId = const Value.absent(),
@@ -999,6 +1043,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
     this.cost = const Value.absent(),
     this.isFullTank = const Value.absent(),
     this.note = const Value.absent(),
+    this.stationName = const Value.absent(),
   });
   FuelLogsCompanion.insert({
     this.id = const Value.absent(),
@@ -1009,6 +1054,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
     required double cost,
     this.isFullTank = const Value.absent(),
     this.note = const Value.absent(),
+    this.stationName = const Value.absent(),
   }) : vehicleId = Value(vehicleId),
        date = Value(date),
        odometer = Value(odometer),
@@ -1023,6 +1069,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
     Expression<double>? cost,
     Expression<bool>? isFullTank,
     Expression<String>? note,
+    Expression<String>? stationName,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1033,6 +1080,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
       if (cost != null) 'cost': cost,
       if (isFullTank != null) 'is_full_tank': isFullTank,
       if (note != null) 'note': note,
+      if (stationName != null) 'station_name': stationName,
     });
   }
 
@@ -1045,6 +1093,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
     Value<double>? cost,
     Value<bool>? isFullTank,
     Value<String?>? note,
+    Value<String?>? stationName,
   }) {
     return FuelLogsCompanion(
       id: id ?? this.id,
@@ -1055,6 +1104,7 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
       cost: cost ?? this.cost,
       isFullTank: isFullTank ?? this.isFullTank,
       note: note ?? this.note,
+      stationName: stationName ?? this.stationName,
     );
   }
 
@@ -1085,6 +1135,9 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (stationName.present) {
+      map['station_name'] = Variable<String>(stationName.value);
+    }
     return map;
   }
 
@@ -1098,7 +1151,8 @@ class FuelLogsCompanion extends UpdateCompanion<FuelLog> {
           ..write('amount: $amount, ')
           ..write('cost: $cost, ')
           ..write('isFullTank: $isFullTank, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('stationName: $stationName')
           ..write(')'))
         .toString();
   }
@@ -3777,6 +3831,7 @@ typedef $$FuelLogsTableCreateCompanionBuilder =
       required double cost,
       Value<bool> isFullTank,
       Value<String?> note,
+      Value<String?> stationName,
     });
 typedef $$FuelLogsTableUpdateCompanionBuilder =
     FuelLogsCompanion Function({
@@ -3788,6 +3843,7 @@ typedef $$FuelLogsTableUpdateCompanionBuilder =
       Value<double> cost,
       Value<bool> isFullTank,
       Value<String?> note,
+      Value<String?> stationName,
     });
 
 final class $$FuelLogsTableReferences
@@ -3853,6 +3909,11 @@ class $$FuelLogsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stationName => $composableBuilder(
+    column: $table.stationName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3924,6 +3985,11 @@ class $$FuelLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get stationName => $composableBuilder(
+    column: $table.stationName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$VehiclesTableOrderingComposer get vehicleId {
     final $$VehiclesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3979,6 +4045,11 @@ class $$FuelLogsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get stationName => $composableBuilder(
+    column: $table.stationName,
+    builder: (column) => column,
+  );
 
   $$VehiclesTableAnnotationComposer get vehicleId {
     final $$VehiclesTableAnnotationComposer composer = $composerBuilder(
@@ -4040,6 +4111,7 @@ class $$FuelLogsTableTableManager
                 Value<double> cost = const Value.absent(),
                 Value<bool> isFullTank = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> stationName = const Value.absent(),
               }) => FuelLogsCompanion(
                 id: id,
                 vehicleId: vehicleId,
@@ -4049,6 +4121,7 @@ class $$FuelLogsTableTableManager
                 cost: cost,
                 isFullTank: isFullTank,
                 note: note,
+                stationName: stationName,
               ),
           createCompanionCallback:
               ({
@@ -4060,6 +4133,7 @@ class $$FuelLogsTableTableManager
                 required double cost,
                 Value<bool> isFullTank = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> stationName = const Value.absent(),
               }) => FuelLogsCompanion.insert(
                 id: id,
                 vehicleId: vehicleId,
@@ -4069,6 +4143,7 @@ class $$FuelLogsTableTableManager
                 cost: cost,
                 isFullTank: isFullTank,
                 note: note,
+                stationName: stationName,
               ),
           withReferenceMapper: (p0) => p0
               .map(

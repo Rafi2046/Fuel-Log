@@ -49,7 +49,7 @@ class BackupRestoreService {
 
     final payload = {
       'app': 'Fuel-Log',
-      'schemaVersion': 7,
+      'schemaVersion': 8,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
       'data': {
         'vehicles': vehicles.map((v) => {
@@ -73,6 +73,7 @@ class BackupRestoreService {
               'cost': f.cost,
               'isFullTank': f.isFullTank,
               'note': f.note,
+              'stationName': f.stationName,
             }).toList(),
         'tripLogs': tripLogs.map((t) => {
               'id': t.id,
@@ -258,6 +259,9 @@ class BackupRestoreService {
             cost: (map['cost'] as num).toDouble(),
             isFullTank: drift.Value(map['isFullTank'] as bool? ?? false),
             note: map['note'] != null ? drift.Value(map['note'] as String) : const drift.Value.absent(),
+            stationName: map['stationName'] != null
+                ? drift.Value(map['stationName'] as String)
+                : const drift.Value.absent(),
           ),
         );
       }

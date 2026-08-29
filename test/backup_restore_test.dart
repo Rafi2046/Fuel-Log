@@ -101,7 +101,7 @@ void main() {
     // 3. Inspect JSON summary
     final summary = backupService.inspectBackupJson(jsonStr);
     expect(summary.app, equals('Fuel-Log'));
-    expect(summary.schemaVersion, equals(7));
+    expect(summary.schemaVersion, equals(8));
     expect(summary.vehicleCount, equals(2));
     expect(summary.fuelLogCount, equals(1));
     expect(summary.tripLogCount, equals(1));

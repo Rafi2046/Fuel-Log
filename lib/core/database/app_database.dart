@@ -55,6 +55,8 @@ class FuelLogs extends Table {
       boolean().withDefault(const Constant(false))();
 
   TextColumn get note => text().nullable()();
+
+  TextColumn get stationName => text().nullable()();
 }
 
 /// Maintenance and service reminders per vehicle.
@@ -138,9 +140,9 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
-  /// Bumped for Vehicles brand column (v7).
+  /// Bumped for FuelLogs stationName column (v8).
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -150,6 +152,9 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 7) {
             await m.addColumn(vehicles, vehicles.brand);
+          }
+          if (from < 8) {
+            await m.addColumn(fuelLogs, fuelLogs.stationName);
           }
         },
       );
@@ -177,6 +182,8 @@ class AppDatabase extends _$AppDatabase {
   Future<int> deleteFuelLog(int id) {
     return (delete(fuelLogs)..where((t) => t.id.equals(id))).go();
   }
+
+  Future<bool> updateFuelLog(FuelLog log) => update(fuelLogs).replace(log);
 
   Stream<List<Vehicle>> watchAllVehicles() => select(vehicles).watch();
 

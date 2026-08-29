@@ -32,6 +32,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   final _pricePerUnitController = TextEditingController();
   final _totalCostController = TextEditingController();
   final _noteController = TextEditingController();
+  final _stationController = TextEditingController();
 
   final _ocrService = ReceiptOcrService();
   bool _isScanning = false;
@@ -76,6 +77,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     _pricePerUnitController.dispose();
     _totalCostController.dispose();
     _noteController.dispose();
+    _stationController.dispose();
     super.dispose();
   }
 
@@ -217,6 +219,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final amount = double.tryParse(_amountController.text.trim());
     final cost = double.tryParse(_totalCostController.text.trim());
     final note = _noteController.text.trim();
+    final stationName = _stationController.text.trim();
     final isEV = vehicle.isElectric;
 
     if (odometer == null || odometer < 0) {
@@ -240,6 +243,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
           cost: cost,
           isFullTank: _isFullTank,
           note: note.isEmpty ? null : note,
+          stationName: stationName.isEmpty ? null : stationName,
         );
 
     if (!mounted) return;
@@ -436,6 +440,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                     pricePerUnitController: _pricePerUnitController,
                     totalCostController: _totalCostController,
                     noteController: _noteController,
+                    stationController: _stationController,
                     lastOdometer: lastOdometer,
                     isFullTank: _isFullTank,
                     isSetupTankLevel: _isSetupTankLevel,

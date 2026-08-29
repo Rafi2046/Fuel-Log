@@ -28,6 +28,7 @@ class FuelLogViewModel extends StateNotifier<AsyncValue<void>> {
     required double cost,
     required bool isFullTank,
     String? note,
+    String? stationName,
   }) async {
     state = const AsyncLoading();
     try {
@@ -42,6 +43,9 @@ class FuelLogViewModel extends StateNotifier<AsyncValue<void>> {
           note: note == null || note.isEmpty
               ? const Value.absent()
               : Value(note),
+          stationName: stationName == null || stationName.isEmpty
+              ? const Value.absent()
+              : Value(stationName),
         ),
       );
 
@@ -70,6 +74,18 @@ class FuelLogViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> deleteFuelLog(int id) async {
     await _db.deleteFuelLog(id);
+  }
+
+  Future<bool> updateFuelLog(FuelLog log) async {
+    state = const AsyncLoading();
+    try {
+      await _db.updateFuelLog(log);
+      state = const AsyncData(null);
+      return true;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      return false;
+    }
   }
 }
 

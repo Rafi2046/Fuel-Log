@@ -10,8 +10,10 @@ import '../../../core/utils/app_formatters.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/app_scaffold.dart';
 
 import '../mileage/mileage_log_screen.dart';
+import '../mileage/widgets/fuel_log_detail_sheet.dart';
 
 /// Logs tab — real Drift fuel/charge entries for the active vehicle.
 class LogsTab extends ConsumerWidget {
@@ -20,12 +22,8 @@ class LogsTab extends ConsumerWidget {
   static Future<void> open(BuildContext context) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            title: Text('logsTitle'.tr()),
-            backgroundColor: AppColors.background,
-          ),
+        builder: (_) => AppScaffold(
+          title: 'logsTitle'.tr(),
           body: const LogsTab(),
         ),
       ),
@@ -59,10 +57,18 @@ class LogsTab extends ConsumerWidget {
         }
 
         return ListView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            AppSpacing.sm,
+            AppSpacing.screenPadding,
+            AppSpacing.sm,
+          ),
           children: [
-            // Top Mileage Log Banner Button
-            GestureDetector(
+            AppCard(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.listCardPaddingH,
+                vertical: AppSpacing.listCardPaddingV,
+              ),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -70,63 +76,56 @@ class LogsTab extends ConsumerWidget {
                   ),
                 );
               },
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.cardElevated,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.speed_rounded,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mileage Log & Efficiency',
-                            style: AppTextStyles.body.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'View fuel efficiency, km/L stats & breakdown',
-                            style: AppTextStyles.caption,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
+                    child: const Icon(
+                      Icons.speed_rounded,
                       color: AppColors.primary,
+                      size: 16,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mileage Log & Efficiency',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'View fuel efficiency, km/L stats & breakdown',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.textTertiary,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.listGap),
 
             ...logs.map((log) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                padding: const EdgeInsets.only(bottom: AppSpacing.listGap),
                 child: Dismissible(
                   key: ValueKey(log.id),
                   direction: DismissDirection.endToStart,
@@ -174,40 +173,80 @@ class _LogTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final station = log.stationName?.trim();
+
     return AppCard(
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.listCardPaddingH,
+        vertical: AppSpacing.listCardPaddingV,
+      ),
+      onTap: () => FuelLogDetailSheet.show(
+        context,
+        log: log,
+        unit: unit,
+        isEV: isEV,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(
+              isEV
+                  ? Icons.battery_charging_full_rounded
+                  : Icons.local_gas_station_rounded,
+              color: AppColors.primary,
+              size: 16,
+            ),
           ),
-          child: Icon(
-            isEV
-                ? Icons.battery_charging_full_rounded
-                : Icons.local_gas_station_rounded,
-            color: AppColors.primary,
-            size: 24,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppDateFormats.formatLogDate(log.date),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  '${log.amount.toStringAsFixed(1)} $unit • '
+                  '${log.odometer.toStringAsFixed(0)} km'
+                  '${log.isFullTank ? (isEV ? ' • ${'fullCharge'.tr()}' : ' • ${'fullTank'.tr()}') : ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(fontSize: 11),
+                ),
+                if (station != null && station.isNotEmpty)
+                  Text(
+                    station,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-        title: Text(
-          AppDateFormats.formatLogDate(log.date),
-          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${log.amount.toStringAsFixed(1)} $unit • '
-          '${log.odometer.toStringAsFixed(0)} km'
-          '${log.isFullTank ? (isEV ? ' • ${'fullCharge'.tr()}' : ' • ${'fullTank'.tr()}') : ''}',
-          style: AppTextStyles.caption,
-        ),
-        trailing: Text(
-          AppCurrency.format(log.cost),
-          style: AppTextStyles.title.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            AppCurrency.format(log.cost),
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

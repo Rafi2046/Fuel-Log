@@ -25,6 +25,7 @@ class RefuelingFormFields extends StatelessWidget {
     required this.pricePerUnitController,
     required this.totalCostController,
     required this.noteController,
+    required this.stationController,
     required this.lastOdometer,
     required this.isFullTank,
     required this.isSetupTankLevel,
@@ -53,6 +54,7 @@ class RefuelingFormFields extends StatelessWidget {
   final TextEditingController pricePerUnitController;
   final TextEditingController totalCostController;
   final TextEditingController noteController;
+  final TextEditingController stationController;
   final double? lastOdometer;
   final bool isFullTank;
   final bool isSetupTankLevel;
@@ -177,7 +179,45 @@ class RefuelingFormFields extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Section 4: Optional Note
+        // Section 4: Fuel station (optional)
+        AppCard(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.storefront_outlined,
+                    color: AppColors.textTertiary,
+                    size: 15,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    'refuelStationOptional'.tr(),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              AppTextField(
+                label: 'fuelLogStation'.tr(),
+                hint: 'refuelStationHint'.tr(),
+                controller: stationController,
+                prefixIcon: Icons.local_gas_station_outlined,
+                dense: true,
+                textInputAction: TextInputAction.next,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Section 5: Optional Note
         AppCard(
           padding: const EdgeInsets.all(12),
           child: Column(
