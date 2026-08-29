@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -219,15 +220,15 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final isEV = vehicle.isElectric;
 
     if (odometer == null || odometer < 0) {
-      _toast('Enter a valid odometer reading.');
+      _toast('refuelInvalidOdometer'.tr());
       return;
     }
     if (amount == null || amount <= 0) {
-      _toast(isEV ? 'Enter charge amount (kWh).' : 'Enter fuel amount.');
+      _toast(isEV ? 'refuelInvalidCharge'.tr() : 'refuelInvalidFuel'.tr());
       return;
     }
     if (cost == null || cost < 0) {
-      _toast('Enter a valid total cost.');
+      _toast('refuelInvalidCost'.tr());
       return;
     }
 
@@ -245,15 +246,17 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
 
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Log Saved Successfully'),
+        SnackBar(
+          content: Text('refuelSavedSuccess'.tr()),
           backgroundColor: AppColors.primary,
         ),
       );
       Navigator.of(context).pop();
     } else {
       final err = ref.read(fuelLogProvider);
-      _toast('Could not save log${err.hasError ? ' (${err.error})' : ''}');
+      _toast(
+        '${'refuelSaveFailed'.tr()}${err.hasError ? ' (${err.error})' : ''}',
+      );
     }
   }
 
@@ -285,7 +288,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                       Icons.camera_alt_outlined,
                       color: AppColors.textSecondary,
                     ),
-                    title: const Text('Take Photo of Receipt or Meter'),
+                    title: Text('refuelOcrCamera'.tr()),
                     onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
                   ),
                   ListTile(
@@ -293,7 +296,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                       Icons.photo_library_outlined,
                       color: AppColors.textSecondary,
                     ),
-                    title: const Text('Choose from Gallery'),
+                    title: Text('refuelOcrGallery'.tr()),
                     onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
                   ),
                 ],
@@ -315,10 +318,8 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
 
       if (!receipt.hasEssentialData) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Could not detect readable fuel numbers. Please enter manually.',
-            ),
+          SnackBar(
+            content: Text('refuelOcrFailed'.tr()),
             backgroundColor: Color(0xFF333344),
             behavior: SnackBarBehavior.floating,
           ),
@@ -359,7 +360,9 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ Scanned successfully: $summary'),
+          content: Text(
+            'refuelOcrSuccess'.tr(namedArgs: {'summary': summary}),
+          ),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
         ),
@@ -368,7 +371,9 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OCR Scanning error: $e'),
+          content: Text(
+            'refuelOcrError'.tr(namedArgs: {'error': '$e'}),
+          ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -402,15 +407,17 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final lastOdometer = logs.isNotEmpty ? logs.first.odometer : null;
 
     return AppScaffold(
-      title: 'Refueling',
+      title: 'refuelingTitle'.tr(),
       padding: appScreenPadding,
       body: activeAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
+        ),
         data: (vehicle) {
           if (vehicle == null) {
-            return const Center(
-              child: Text('No vehicle found. Add a vehicle first.'),
+            return Center(
+              child: Text('refuelNoVehicle'.tr()),
             );
           }
 
@@ -478,7 +485,9 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               AppPrimaryButton(
-                label: vehicle.isElectric ? 'Save Charge' : 'Save Refueling',
+                label: vehicle.isElectric
+                    ? 'refuelSaveCharge'.tr()
+                    : 'refuelSaveRefueling'.tr(),
                 icon: Icons.check_rounded,
                 compact: true,
                 isLoading: isSaving,

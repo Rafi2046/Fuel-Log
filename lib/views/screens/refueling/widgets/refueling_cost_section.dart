@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -33,8 +34,9 @@ class RefuelingCostSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amountLabel = isEV ? 'Charge' : 'Gas / Fuel';
-    final unitSuffix = isEV ? 'kWh' : 'L';
+    final amountLabel =
+        isEV ? 'refuelChargeAmount'.tr() : 'refuelGasFuel'.tr();
+    final unitSuffix = isEV ? 'kwhUnit'.tr() : 'literUnit'.tr();
 
     return AppCard(
       padding: const EdgeInsets.all(12),
@@ -52,7 +54,7 @@ class RefuelingCostSection extends StatelessWidget {
               ),
               const SizedBox(width: 5),
               Text(
-                'Fuel & Expense Details',
+                'refuelFuelExpenseSection'.tr(),
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -97,7 +99,7 @@ class RefuelingCostSection extends StatelessWidget {
                             ),
                           const SizedBox(width: 5),
                           Text(
-                            isScanning ? 'Scanning...' : 'Scan Receipt',
+                            isScanning ? 'refuelScanning'.tr() : 'refuelScanReceipt'.tr(),
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.w600,
@@ -134,7 +136,7 @@ class RefuelingCostSection extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: AppTextField(
-                  label: 'Price / $unitSuffix',
+                  label: 'refuelPricePerUnit'.tr(namedArgs: {'unit': unitSuffix}),
                   hint: '0.0',
                   controller: pricePerUnitController,
                   dense: true,
@@ -149,8 +151,8 @@ class RefuelingCostSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           AppTextField(
-            label: 'Total Cost',
-            hint: 'e.g. 5000',
+            label: 'refuelTotalCost'.tr(),
+            hint: 'refuelTotalCostHint'.tr(),
             controller: totalCostController,
             dense: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),

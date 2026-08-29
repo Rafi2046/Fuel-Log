@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -36,7 +37,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unit = isEV ? 'kWh' : 'L';
+    final unit = isEV ? 'kwhUnit'.tr() : 'literUnit'.tr();
     final addedFuel = ((afterLevelPercent - beforeLevelPercent) / 100.0 * tankCapacity)
         .clamp(0.0, tankCapacity);
     final estimatedFuelAfter = ((afterLevelPercent / 100.0) * tankCapacity)
@@ -47,10 +48,10 @@ class RefuelingTankLevelSection extends StatelessWidget {
       children: [
         // 1. Full Tank Toggle Row
         AppToggleRow(
-          title: isEV ? 'Full Charge (100%)?' : 'Full Tank?',
+          title: isEV ? 'refuelFullCharge'.tr() : 'refuelFullTank'.tr(),
           subtitle: isEV
-              ? 'Was battery charged to 100% full capacity?'
-              : 'Was tank filled completely to full?',
+              ? 'refuelFullChargeSubtitle'.tr()
+              : 'refuelFullTankSubtitle'.tr(),
           value: isFullTank,
           onChanged: onFullTankChanged,
         ),
@@ -71,7 +72,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'Set Up Tank Level',
+                            'refuelSetupTankLevel'.tr(),
                             style: AppTextStyles.caption.copyWith(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -91,8 +92,8 @@ class RefuelingTankLevelSection extends StatelessWidget {
                       const SizedBox(height: 1),
                       Text(
                         isFullTank
-                            ? 'Disabled when Full Tank is active (auto 100%)'
-                            : 'Set custom fuel level before and after refueling',
+                            ? 'refuelSetupTankDisabled'.tr()
+                            : 'refuelSetupTankEnabled'.tr(),
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 10,
                           color: AppColors.textTertiary,
@@ -135,7 +136,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'Fuel Level Before & After',
+                        'refuelFuelLevelSection'.tr(),
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -148,7 +149,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
 
                   // Fuel Level BEFORE Slider
                   _LevelSliderWidget(
-                    label: 'Before Refueling',
+                    label: 'refuelBeforeRefueling'.tr(),
                     percent: beforeLevelPercent,
                     onChanged: onBeforeLevelChanged,
                     activeColor: AppColors.textSecondary,
@@ -157,7 +158,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
 
                   // Fuel Level AFTER Slider
                   _LevelSliderWidget(
-                    label: 'After Refueling',
+                    label: 'refuelAfterRefueling'.tr(),
                     percent: afterLevelPercent,
                     onChanged: (val) {
                       if (val >= beforeLevelPercent) {
@@ -182,7 +183,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _EstimateStatTile(
-                            label: 'Capacity',
+                            label: 'refuelCapacity'.tr(),
                             value: '${tankCapacity.toStringAsFixed(0)} $unit',
                             icon: Icons.local_gas_station_rounded,
                           ),
@@ -190,7 +191,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                         Container(width: 1, height: 24, color: AppColors.divider),
                         Expanded(
                           child: _EstimateStatTile(
-                            label: 'Calculated',
+                            label: 'refuelCalculated'.tr(),
                             value: '+${addedFuel.toStringAsFixed(1)} $unit',
                             icon: Icons.add_circle_outline_rounded,
                           ),
@@ -198,7 +199,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                         Container(width: 1, height: 24, color: AppColors.divider),
                         Expanded(
                           child: _EstimateStatTile(
-                            label: 'Est. Remaining',
+                            label: 'refuelEstRemaining'.tr(),
                             value: '${estimatedFuelAfter.toStringAsFixed(1)} $unit',
                             icon: Icons.battery_charging_full_rounded,
                           ),
@@ -302,9 +303,9 @@ class _LevelSliderWidget extends StatelessWidget {
                 ),
                 child: Text(
                   preset == 0
-                      ? 'Empty'
+                      ? 'refuelTankEmpty'.tr()
                       : preset == 100
-                          ? 'Full'
+                          ? 'refuelTankFull'.tr()
                           : '${preset.round()}%',
                   style: TextStyle(
                     fontSize: 9,

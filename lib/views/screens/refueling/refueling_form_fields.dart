@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -121,7 +122,7 @@ class RefuelingFormFields extends StatelessWidget {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
-                  isEV ? 'EV' : 'Fuel',
+                  isEV ? 'refuelChipEv'.tr() : 'refuelChipFuel'.tr(),
                   style: AppTextStyles.caption.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -191,7 +192,7 @@ class RefuelingFormFields extends StatelessWidget {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    'Notes (Optional)',
+                    'refuelNotesOptional'.tr(),
                     style: AppTextStyles.caption.copyWith(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -202,8 +203,8 @@ class RefuelingFormFields extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               AppTextField(
-                label: 'Note',
-                hint: 'Station name, payment method, discount, etc.',
+                label: 'note'.tr(),
+                hint: 'refuelNoteHint'.tr(),
                 controller: noteController,
                 prefixIcon: Icons.notes_rounded,
                 dense: true,

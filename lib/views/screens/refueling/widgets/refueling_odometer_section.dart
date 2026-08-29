@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -32,8 +33,8 @@ class RefuelingOdometerSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lastOdoStr = lastOdometer != null && lastOdometer! > 0
-        ? '${lastOdometer!.toStringAsFixed(0)} km'
-        : '0 km';
+        ? '${lastOdometer!.toStringAsFixed(0)} ${'km'.tr()}'
+        : '0 ${'km'.tr()}';
 
     return AppCard(
       padding: const EdgeInsets.all(12),
@@ -54,7 +55,7 @@ class RefuelingOdometerSection extends StatelessWidget {
                     const SizedBox(width: 5),
                     Flexible(
                       child: Text(
-                        'Odometer Readings',
+                        'refuelOdometerSection'.tr(),
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 12,
@@ -84,7 +85,7 @@ class RefuelingOdometerSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 3),
                     Text(
-                      'Last: $lastOdoStr',
+                      'refuelLastOdometer'.tr(namedArgs: {'reading': lastOdoStr}),
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
@@ -102,7 +103,7 @@ class RefuelingOdometerSection extends StatelessWidget {
             children: [
               Expanded(
                 child: AppTextField(
-                  label: 'Total Odometer',
+                  label: 'refuelTotalOdometer'.tr(),
                   hint: lastOdometer != null ? '${lastOdometer!.round()}' : '0',
                   controller: odometerController,
                   focusNode: odometerFocus,
@@ -110,7 +111,7 @@ class RefuelingOdometerSection extends StatelessWidget {
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   prefixIcon: Icons.speed_rounded,
-                  suffixText: 'km',
+                  suffixText: 'km'.tr(),
                   onChanged: (_) => onOdometerChanged(),
                   onEditingComplete: onOdometerEditingComplete,
                   textInputAction: TextInputAction.next,
@@ -119,7 +120,7 @@ class RefuelingOdometerSection extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: AppTextField(
-                  label: 'Trip',
+                  label: 'refuelTrip'.tr(),
                   hint: '0',
                   controller: tripOdometerController,
                   focusNode: tripFocus,
@@ -127,7 +128,7 @@ class RefuelingOdometerSection extends StatelessWidget {
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   prefixIcon: Icons.add_road_rounded,
-                  suffixText: 'km',
+                  suffixText: 'km'.tr(),
                   onEditingComplete: onTripEditingComplete,
                   textInputAction: TextInputAction.next,
                 ),
@@ -136,7 +137,7 @@ class RefuelingOdometerSection extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Km since last refuel. Trip and total odometer update each other.',
+            'refuelTripHelper'.tr(),
             style: AppTextStyles.caption.copyWith(
               fontSize: 10,
               color: AppColors.textTertiary,
