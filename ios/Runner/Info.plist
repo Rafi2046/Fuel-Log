@@ -16,6 +16,13 @@
 		<string>Fuel Log needs camera access to scan fuel receipts and pump meters.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Fuel Log needs photo library access to pick receipt images for OCR scanning.</string>
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>Allow Flutter tools on your computer to connect and debug this app on your device.</string>
+		<key>NSBonjourServices</key>
+		<array>
+			<string>_dartVmService._tcp</string>
+			<string>_dartobservatory._tcp</string>
+		</array>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>

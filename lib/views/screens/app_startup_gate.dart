@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/services/onboarding_prefs.dart';
@@ -21,13 +22,43 @@ final onboardingSeenProvider = FutureProvider<bool>((ref) {
 /// EVERY SUBSEQUENT LAUNCH (onboarding already seen):
 ///   → Has vehicles  → Dashboard (directly, no splash)
 ///   → No vehicles   → Vehicle Setup (directly, no splash)
-class AppStartupGate extends ConsumerWidget {
+class AppStartupGate extends ConsumerStatefulWidget {
   const AppStartupGate({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppStartupGate> createState() => _AppStartupGateState();
+}
+
+class _AppStartupGateState extends ConsumerState<AppStartupGate> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final onboardingSeenAsync = ref.watch(onboardingSeenProvider);
     final vehiclesAsync = ref.watch(vehiclesProvider);
+
+    if (onboardingSeenAsync.hasError || vehiclesAsync.hasError) {
+      final error = onboardingSeenAsync.error ?? vehiclesAsync.error;
+      return Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'Startup failed: $error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+        ),
+      );
+    }
 
     // Wait silently while loading
     if (onboardingSeenAsync.isLoading || vehiclesAsync.isLoading) {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -26,9 +28,9 @@ class NotificationService {
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
 
     const initSettings = InitializationSettings(
@@ -49,6 +51,20 @@ class NotificationService {
     _isInitialized = true;
   }
 
+  Future<bool> _ensureIosPermissions() async {
+    final ios = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+    if (ios == null) return true;
+
+    final granted = await ios.requestPermissions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    return granted ?? false;
+  }
+
   /// Schedules a local notification at a specific [scheduledDate].
   Future<void> scheduleNotification({
     required int id,
@@ -57,6 +73,9 @@ class NotificationService {
     String? body,
   }) async {
     await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
 
     final now = DateTime.now();
     if (scheduledDate.isBefore(now)) {
@@ -117,6 +136,9 @@ class NotificationService {
     required String body,
   }) async {
     await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
 
     const androidDetails = AndroidNotificationDetails(
       'maintenance_reminders',
@@ -164,6 +186,9 @@ class NotificationService {
     required String body,
   }) async {
     await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
     await _flutterLocalNotificationsPlugin.show(
       id,
       title,
@@ -178,6 +203,9 @@ class NotificationService {
     String body = 'Check today’s conditions before you take the car out.',
   }) async {
     await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(

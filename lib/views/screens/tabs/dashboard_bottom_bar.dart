@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_spacing.dart';
 import '../../widgets/clean_glass_panel.dart';
@@ -7,8 +8,8 @@ import 'dashboard_nav_item.dart';
 
 /// Floating glass bottom bar — matches [HomeDashboardAppBar] styling.
 ///
-/// On iOS uses real backdrop blur ([FrostedGlassPanel]). Swipe left/right on
-/// the bar to move between tabs (Home → Trip → Stats → Settings).
+/// Tap and horizontal swipe are handled by a top interaction layer so Android
+/// child gestures cannot block tab switching.
 class DashboardBottomBar extends StatefulWidget {
   const DashboardBottomBar({
     super.key,
@@ -37,35 +38,83 @@ class DashboardBottomBar extends StatefulWidget {
 
 class _DashboardBottomBarState extends State<DashboardBottomBar> {
   static const _tabCount = 4;
-  static const _swipeDistanceThreshold = 36.0;
-  static const _swipeVelocityThreshold = 120.0;
+  static const _swipeDistanceThreshold = 22.0;
+  static const _tapSlop = 14.0;
 
+  final _interactionKey = GlobalKey();
   double _dragDx = 0;
+  double _dragDy = 0;
+  double? _downLocalX;
 
-  void _onHorizontalDragStart(DragStartDetails _) => _dragDx = 0;
-
-  void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    _dragDx += details.delta.dx;
+  void _resetDrag() {
+    _dragDx = 0;
+    _dragDy = 0;
+    _downLocalX = null;
   }
 
-  void _onHorizontalDragEnd(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
+  int? _tabIndexForLocalX(double localX, double width) {
+    if (widget.showFabGap) {
+      final fabStart = (width - DashboardBottomBar.fabGap) / 2;
+      final fabEnd = fabStart + DashboardBottomBar.fabGap;
+      if (localX >= fabStart && localX <= fabEnd) return null;
 
-    final swipeLeft = _dragDx < -_swipeDistanceThreshold ||
-        velocity < -_swipeVelocityThreshold;
-    final swipeRight = _dragDx > _swipeDistanceThreshold ||
-        velocity > _swipeVelocityThreshold;
+      final halfWidth = width / 2;
+      if (localX < halfWidth) {
+        return localX < halfWidth / 2 ? 0 : 1;
+      }
+      final rightLocal = localX - halfWidth;
+      return rightLocal < halfWidth / 2 ? 2 : 3;
+    }
 
-    if (swipeLeft) {
-      final next = (widget.currentIndex + 1).clamp(0, _tabCount - 1);
-      if (next != widget.currentIndex) widget.onTabTapped(next);
+    final quarter = width / _tabCount;
+    return (localX / quarter).floor().clamp(0, _tabCount - 1);
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+    _resetDrag();
+    _downLocalX = event.localPosition.dx;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    _dragDx += event.delta.dx;
+    _dragDy += event.delta.dy;
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    final isSwipe = _dragDx.abs() >= _swipeDistanceThreshold &&
+        _dragDx.abs() > _dragDy.abs();
+
+    if (isSwipe) {
+      if (_dragDx < 0) {
+        final next = (widget.currentIndex + 1).clamp(0, _tabCount - 1);
+        if (next != widget.currentIndex) {
+          HapticFeedback.selectionClick();
+          widget.onTabTapped(next);
+        }
+      } else {
+        final prev = (widget.currentIndex - 1).clamp(0, _tabCount - 1);
+        if (prev != widget.currentIndex) {
+          HapticFeedback.selectionClick();
+          widget.onTabTapped(prev);
+        }
+      }
+      _resetDrag();
       return;
     }
 
-    if (swipeRight) {
-      final prev = (widget.currentIndex - 1).clamp(0, _tabCount - 1);
-      if (prev != widget.currentIndex) widget.onTabTapped(prev);
+    final isTap = _dragDx.abs() <= _tapSlop && _dragDy.abs() <= _tapSlop;
+    final downX = _downLocalX;
+    final box = _interactionKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (isTap && downX != null && box != null) {
+      final tab = _tabIndexForLocalX(downX, box.size.width);
+      if (tab != null && tab != widget.currentIndex) {
+        HapticFeedback.selectionClick();
+        widget.onTabTapped(tab);
+      }
     }
+
+    _resetDrag();
   }
 
   @override
@@ -75,60 +124,73 @@ class _DashboardBottomBarState extends State<DashboardBottomBar> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, DashboardBottomBar.outerBottomPad),
-          child: GestureDetector(
-            onHorizontalDragStart: _onHorizontalDragStart,
-            onHorizontalDragUpdate: _onHorizontalDragUpdate,
-            onHorizontalDragEnd: _onHorizontalDragEnd,
-            behavior: HitTestBehavior.opaque,
-            child: FrostedGlassPanel(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              child: SizedBox(
-                height: DashboardBottomBar.barHeight,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          DashboardNavItem(
-                            icon: Icons.home_rounded,
-                            label: 'navHome'.tr(),
-                            isSelected: widget.currentIndex == 0,
-                            onTap: () => widget.onTabTapped(0),
+          padding: const EdgeInsets.fromLTRB(
+            14,
+            0,
+            14,
+            DashboardBottomBar.outerBottomPad,
+          ),
+          child: FrostedGlassPanel(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: SizedBox(
+              height: DashboardBottomBar.barHeight,
+              child: Stack(
+                children: [
+                  IgnorePointer(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              DashboardNavItem(
+                                icon: Icons.home_rounded,
+                                label: 'navHome'.tr(),
+                                isSelected: widget.currentIndex == 0,
+                              ),
+                              DashboardNavItem(
+                                icon: Icons.route_rounded,
+                                label: 'navTrip'.tr(),
+                                isSelected: widget.currentIndex == 1,
+                              ),
+                            ],
                           ),
-                          DashboardNavItem(
-                            icon: Icons.route_rounded,
-                            label: 'navTrip'.tr(),
-                            isSelected: widget.currentIndex == 1,
-                            onTap: () => widget.onTabTapped(1),
+                        ),
+                        if (widget.showFabGap)
+                          const SizedBox(width: DashboardBottomBar.fabGap),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              DashboardNavItem(
+                                icon: Icons.bar_chart_rounded,
+                                label: 'navStats'.tr(),
+                                isSelected: widget.currentIndex == 2,
+                              ),
+                              DashboardNavItem(
+                                icon: Icons.settings_rounded,
+                                label: 'navSettings'.tr(),
+                                isSelected: widget.currentIndex == 3,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    if (widget.showFabGap) const SizedBox(width: DashboardBottomBar.fabGap),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          DashboardNavItem(
-                            icon: Icons.bar_chart_rounded,
-                            label: 'navStats'.tr(),
-                            isSelected: widget.currentIndex == 2,
-                            onTap: () => widget.onTabTapped(2),
-                          ),
-                          DashboardNavItem(
-                            icon: Icons.settings_rounded,
-                            label: 'navSettings'.tr(),
-                            isSelected: widget.currentIndex == 3,
-                            onTap: () => widget.onTabTapped(3),
-                          ),
-                        ],
-                      ),
+                  ),
+                  Positioned.fill(
+                    key: _interactionKey,
+                    child: Listener(
+                      onPointerDown: _onPointerDown,
+                      onPointerMove: _onPointerMove,
+                      onPointerUp: _onPointerUp,
+                      onPointerCancel: (_) => _resetDrag(),
+                      behavior: HitTestBehavior.opaque,
+                      child: const SizedBox.expand(),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
