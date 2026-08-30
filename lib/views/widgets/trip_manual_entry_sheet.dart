@@ -29,6 +29,7 @@ class TripManualEntryPrefill {
     this.startedAt,
     this.endedAt,
     this.source = 'gps',
+    this.routeJson,
   });
 
   final double? initialDistanceKm;
@@ -38,6 +39,7 @@ class TripManualEntryPrefill {
   final DateTime? startedAt;
   final DateTime? endedAt;
   final String source;
+  final String? routeJson;
 }
 
 /// Full manual trip form — all reference fields, still borderless (no boxed inputs).
@@ -349,6 +351,9 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
       source: widget.prefill?.source ?? 'manual',
       privacy: _privacy,
       note: note.isNotEmpty ? drift.Value(note) : const drift.Value.absent(),
+      routeJson: widget.prefill?.routeJson != null
+          ? drift.Value(widget.prefill!.routeJson)
+          : const drift.Value.absent(),
     );
 
     setState(() => _isSaving = true);

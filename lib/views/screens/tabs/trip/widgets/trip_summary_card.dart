@@ -9,6 +9,7 @@ import '../../../../../core/constants/app_text_styles.dart';
 import '../../../../../core/database/app_database.dart';
 import '../../../../../core/services/trip_category_prefs.dart';
 import '../../../../../core/utils/app_formatters.dart';
+import '../../../../../core/utils/mileage_calculator.dart';
 import '../../../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../../../viewmodels/vehicle_viewmodel.dart';
 
@@ -83,24 +84,9 @@ class TripSummaryCard extends ConsumerWidget {
 
     String mileageText = '—';
     final logs = ref.watch(vehicleLogsProvider).valueOrNull ?? const [];
-    if (derivedCost != null && derivedCost > 0 && trip.distanceKm > 0) {
-      FuelLog? latestPriced;
-      for (final log in logs) {
-        if (log.amount > 0 && log.cost > 0) {
-          latestPriced = log;
-          break;
-        }
-      }
-      if (latestPriced != null) {
-        final unitPrice = latestPriced.cost / latestPriced.amount;
-        if (unitPrice > 0) {
-          final unitsUsed = derivedCost / unitPrice;
-          if (unitsUsed > 0) {
-            mileageText =
-                '${(trip.distanceKm / unitsUsed).toStringAsFixed(1)} $mileageUnit';
-          }
-        }
-      }
+    final avgMileage = calculateAverageMileage(logs);
+    if (avgMileage > 0) {
+      mileageText = '${avgMileage.toStringAsFixed(1)} $mileageUnit';
     }
 
     return Container(
@@ -314,7 +300,7 @@ class TripSummaryCard extends ConsumerWidget {
                     ),
                     Expanded(
                       child: _TripStat(
-                        label: 'tripStatMileage'.tr(),
+                        label: 'avgMileage'.tr(),
                         value: mileageText,
                       ),
                     ),

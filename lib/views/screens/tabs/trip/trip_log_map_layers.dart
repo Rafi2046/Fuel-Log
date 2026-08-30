@@ -78,6 +78,16 @@ mixin TripLogMapLayersMixin on TripLogTabController {
                     ),
                   ],
                 ),
+              if (_isGeneralTripTracking && _tripTrackPoints.length >= 2)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: List<LatLng>.from(_tripTrackPoints),
+                      strokeWidth: 5.0,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
               MarkerLayer(markers: _buildMarkers()),
             ],
           ),

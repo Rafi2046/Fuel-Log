@@ -52,7 +52,7 @@ class StartTripFab extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isTracking ? 'End Trip & Log' : 'startTrip'.tr(),
+                  isTracking ? 'endTripLog'.tr() : 'startTrip'.tr(),
                   style: AppTextStyles.button.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,

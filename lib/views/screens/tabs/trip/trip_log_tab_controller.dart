@@ -12,6 +12,7 @@ mixin TripLogTabController on State<TripLogTab> {
   List<MockGasStation> _stations = [];
   LatLng _userLocation = kDefaultUserLocation;
   Timer? _gpsPollingTimer;
+  StreamSubscription<Position>? _gpsStream;
   Timer? _tripTimer;
   Duration _tripDuration = Duration.zero;
   double _tripDistanceCoveredKm = 0.0;
@@ -19,6 +20,7 @@ mixin TripLogTabController on State<TripLogTab> {
   LatLng? _tripStartLocation;
   DateTime? _tripStartedAt;
   bool _isGeneralTripTracking = false;
+  final List<LatLng> _tripTrackPoints = [];
 
   late final MapController _mapController;
   late final PageController _carouselController;
@@ -56,6 +58,7 @@ mixin TripLogTabController on State<TripLogTab> {
   void dispose() {
     _tripTimer?.cancel();
     _gpsPollingTimer?.cancel();
+    _gpsStream?.cancel();
     _mapController.dispose();
     _carouselController.dispose();
     super.dispose();
@@ -331,6 +334,9 @@ mixin TripLogTabController on State<TripLogTab> {
     _tripDuration = Duration.zero;
     _tripDistanceCoveredKm = 0.0;
     _lastGpsPoint = _userLocation;
+    _tripTrackPoints
+      ..clear()
+      ..add(_userLocation);
   }
 
   void _resetTripTrackingState() {
@@ -342,6 +348,7 @@ mixin TripLogTabController on State<TripLogTab> {
     _lastGpsPoint = null;
     _tripStartLocation = null;
     _tripStartedAt = null;
+    _tripTrackPoints.clear();
   }
 
   Future<void> _openTripEntryWithGpsPrefill({
@@ -375,6 +382,14 @@ mixin TripLogTabController on State<TripLogTab> {
         initialDestination: destination,
         startedAt: startedAt,
         endedAt: endedAt,
+        source: 'gps',
+        routeJson: _tripTrackPoints.length >= 2
+            ? jsonEncode(
+                _tripTrackPoints
+                    .map((p) => [p.latitude, p.longitude])
+                    .toList(),
+              )
+            : null,
       ),
     );
   }
@@ -421,6 +436,69 @@ mixin TripLogTabController on State<TripLogTab> {
   void _cancelGpsTracking() {
     _gpsPollingTimer?.cancel();
     _gpsPollingTimer = null;
+    _gpsStream?.cancel();
+    _gpsStream = null;
+  }
+
+  Future<bool> _ensureGpsReady() async {
+    final enabled = await Geolocator.isLocationServiceEnabled();
+    if (!enabled) {
+      _chipSnack('liveTripNeedGps'.tr());
+      return false;
+    }
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      _chipSnack('liveTripNeedPermission'.tr());
+      return false;
+    }
+    return true;
+  }
+
+  void _startLiveGpsStream() {
+    _cancelGpsTracking();
+    const distanceCalc = Distance();
+    _gpsStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 8,
+      ),
+    ).listen(
+      (position) {
+        if (!mounted) return;
+        if (!_isGeneralTripTracking && !_isNavigating) return;
+        if (position.accuracy > 45) return;
+
+        final currentLatLng = LatLng(position.latitude, position.longitude);
+        if (_lastGpsPoint != null) {
+          final deltaM = distanceCalc.as(
+            LengthUnit.Meter,
+            _lastGpsPoint!,
+            currentLatLng,
+          );
+          if (deltaM >= 5.0 && deltaM < 400.0) {
+            _tripDistanceCoveredKm += (deltaM / 1000.0);
+            _lastGpsPoint = currentLatLng;
+            _tripTrackPoints.add(currentLatLng);
+          }
+        } else {
+          _lastGpsPoint = currentLatLng;
+          _tripTrackPoints.add(currentLatLng);
+        }
+
+        setState(() => _userLocation = currentLatLng);
+        _animatedMapMove(
+          currentLatLng,
+          _mapController.camera.zoom,
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.linear,
+        );
+      },
+      onError: (_) {},
+    );
   }
 
   void _startLiveGpsTracking(MockGasStation station) {
@@ -539,74 +617,42 @@ mixin TripLogTabController on State<TripLogTab> {
 
   Future<void> _toggleGeneralTripTracking() async {
     if (_isGeneralTripTracking) {
+      _cancelGpsTracking();
       final distanceKm = _tripDistanceCoveredKm;
       final durationMin = _tripDuration.inMinutes;
       setState(() => _isGeneralTripTracking = false);
       _chipSnack(
-        'Trip finished! Total: ${distanceKm.toStringAsFixed(1)} km in $durationMin mins',
+        'liveTripFinished'.tr(
+          namedArgs: {
+            'km': distanceKm.toStringAsFixed(1),
+            'min': '$durationMin',
+          },
+        ),
       );
       await _openTripEntryWithGpsPrefill();
       if (!mounted) return;
       _resetTripTrackingState();
-    } else {
-      _tripTimer?.cancel();
-      _beginTripTracking();
-      setState(() {
-        _isGeneralTripTracking = true;
-      });
-
-      _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) {
-          setState(() {
-            _tripDuration += const Duration(seconds: 1);
-          });
-        }
-      });
-
-      const distanceCalc = Distance();
-      _gpsPollingTimer?.cancel();
-      _gpsPollingTimer = Timer.periodic(
-        const Duration(milliseconds: 2500),
-        (_) async {
-          if (!mounted || !_isGeneralTripTracking) return;
-          try {
-            final position = await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
-                accuracy: LocationAccuracy.high,
-                timeLimit: Duration(seconds: 4),
-              ),
-            );
-            if (!mounted || !_isGeneralTripTracking) return;
-            final currentLatLng =
-                LatLng(position.latitude, position.longitude);
-            if (_lastGpsPoint != null) {
-              final deltaM = distanceCalc.as(
-                LengthUnit.Meter,
-                _lastGpsPoint!,
-                currentLatLng,
-              );
-              if (deltaM >= 2.0 && deltaM < 500.0) {
-                _tripDistanceCoveredKm += (deltaM / 1000.0);
-                _lastGpsPoint = currentLatLng;
-              }
-            } else {
-              _lastGpsPoint = currentLatLng;
-            }
-            setState(() {
-              _userLocation = currentLatLng;
-            });
-            _animatedMapMove(
-              currentLatLng,
-              _mapController.camera.zoom,
-              duration: const Duration(milliseconds: 140),
-              curve: Curves.linear,
-            );
-          } catch (_) {}
-        },
-      );
-
-      _chipSnack('Trip tracking started! Live timer & distance active');
+      return;
     }
+
+    if (!await _ensureGpsReady()) return;
+    await _fetchLiveLocation();
+    if (!mounted) return;
+
+    _tripTimer?.cancel();
+    _beginTripTracking();
+    setState(() => _isGeneralTripTracking = true);
+
+    _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _tripDuration += const Duration(seconds: 1);
+        });
+      }
+    });
+
+    _startLiveGpsStream();
+    _chipSnack('liveTripStarted'.tr());
   }
 
   Future<void> _onTopNavigateChip() async {
