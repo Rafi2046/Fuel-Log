@@ -43,7 +43,11 @@ mixin TripLogTabController on State<TripLogTab> {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _fetchLiveLocation();
+        if (!mounted) return;
+        _fetchLiveLocation();
+        try {
+          _mapController.move(_userLocation, _mapZoom);
+        } catch (_) {}
       });
     }
   }
@@ -57,13 +61,45 @@ mixin TripLogTabController on State<TripLogTab> {
     super.dispose();
   }
 
-  void _animatedMapMove(LatLng destLocation, double destZoom) {
+  void _animatedMapMove(
+    LatLng destLocation,
+    double destZoom, {
+    Duration duration = const Duration(milliseconds: 320),
+    Curve curve = Curves.easeInOutCubic,
+  }) {
     if (!mounted) return;
-    _mapZoom = destZoom;
-    _mapCenter = destLocation;
-    try {
-      _mapController.move(destLocation, destZoom);
-    } catch (_) {}
+
+    final clampedZoom = destZoom.clamp(8.5, 18.0);
+
+    void applyInstantMove() {
+      try {
+        _mapController.move(destLocation, clampedZoom);
+        _mapZoom = clampedZoom;
+        _mapCenter = destLocation;
+      } catch (_) {}
+    }
+
+    if (duration <= Duration.zero) {
+      applyInstantMove();
+      return;
+    }
+
+    final impl = _mapController;
+    if (impl is MapControllerImpl) {
+      try {
+        impl.moveAnimatedRaw(
+          destLocation,
+          clampedZoom,
+          duration: duration,
+          curve: curve,
+          hasGesture: false,
+          source: MapEventSource.mapController,
+        );
+        return;
+      } catch (_) {}
+    }
+
+    applyInstantMove();
   }
 
   /// Used on tab focus — non-blocking location warm-up.
@@ -258,14 +294,26 @@ mixin TripLogTabController on State<TripLogTab> {
   }
 
   void _zoomIn() {
-    if (_mapZoom < 18.0) {
-      _animatedMapMove(_mapCenter, (_mapZoom + 1.0).clamp(8.5, 18.0));
+    final zoom = _mapController.camera.zoom;
+    if (zoom < 18.0) {
+      _animatedMapMove(
+        _mapController.camera.center,
+        zoom + 1.0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
   void _zoomOut() {
-    if (_mapZoom > 9.0) {
-      _animatedMapMove(_mapCenter, (_mapZoom - 1.0).clamp(8.5, 18.0));
+    final zoom = _mapController.camera.zoom;
+    if (zoom > 9.0) {
+      _animatedMapMove(
+        _mapController.camera.center,
+        zoom - 1.0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
@@ -444,8 +492,13 @@ mixin TripLogTabController on State<TripLogTab> {
         }
       });
 
-      // Smooth camera follow as you drive
-      _animatedMapMove(currentLatLng, _mapZoom);
+      // Light camera follow while driving — short pan, no zoom animation.
+      _animatedMapMove(
+        currentLatLng,
+        _mapController.camera.zoom,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.linear,
+      );
 
       // Arrival detection within 30 meters
       if (remainingMeters < 30) {
@@ -542,9 +595,12 @@ mixin TripLogTabController on State<TripLogTab> {
             setState(() {
               _userLocation = currentLatLng;
             });
-            try {
-              _animatedMapMove(currentLatLng, _mapZoom);
-            } catch (_) {}
+            _animatedMapMove(
+              currentLatLng,
+              _mapController.camera.zoom,
+              duration: const Duration(milliseconds: 140),
+              curve: Curves.linear,
+            );
           } catch (_) {}
         },
       );

@@ -4,13 +4,12 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
   Widget buildTripMapScaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F12),
-      extendBody: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
           _buildMapLayer(),
           _buildTopHud(),
-          _buildZoomControls(),
+          _buildZoomControls(context),
           _buildBottomArea(context),
         ],
       ),
@@ -73,10 +72,26 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
     );
   }
 
-  Widget _buildZoomControls() {
+  double _estimateBottomOverlayHeight() {
+    if (_isNavigating && _navigatingStation != null) return 136;
+    if (_showStations && _stations.isNotEmpty) return 128;
+
+    var height = 48.0; // Start Trip row
+    final showWeather = !_isNavigating &&
+        !_isGeneralTripTracking &&
+        !(_showStations && _stations.isNotEmpty);
+    if (showWeather) height += 64; // weather strip + margin
+    return height;
+  }
+
+  Widget _buildZoomControls(BuildContext context) {
+    final bottom = DashboardBottomBar.overlayBottom(context) +
+        _estimateBottomOverlayHeight() +
+        12;
+
     return Positioned(
       right: AppSpacing.screenPadding,
-      bottom: _isNavigating ? 175 : (_showStations ? 172 : 76),
+      bottom: bottom,
       child: TripMapZoomControls(
         onZoomIn: _zoomIn,
         onZoomOut: _zoomOut,
@@ -89,7 +104,7 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 12,
+      bottom: DashboardBottomBar.overlayBottom(context),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

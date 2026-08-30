@@ -27,6 +27,11 @@ mixin TripLogMapLayersMixin on TripLogTabController {
                     InteractiveFlag.doubleTapZoom |
                     InteractiveFlag.scrollWheelZoom,
               ),
+              onMapReady: () {
+                try {
+                  _mapController.move(_mapCenter, _mapZoom);
+                } catch (_) {}
+              },
               onPositionChanged: (camera, _) {
                 _mapZoom = camera.zoom;
                 _mapCenter = camera.center;
@@ -38,10 +43,12 @@ mixin TripLogMapLayersMixin on TripLogTabController {
                 userAgentPackageName: 'com.example.fuel_log',
                 maxNativeZoom: 19,
                 maxZoom: 18,
-                keepBuffer: 4,
-                panBuffer: 2,
-                retinaMode: true,
-                tileDisplay: const TileDisplay.instantaneous(),
+                retinaMode: false,
+                keepBuffer: 6,
+                panBuffer: 3,
+                tileDisplay: const TileDisplay.fadeIn(
+                  duration: Duration(milliseconds: 100),
+                ),
                 tileBuilder: (context, tileWidget, tile) {
                   return ColorFiltered(
                     colorFilter: const ColorFilter.matrix(<double>[

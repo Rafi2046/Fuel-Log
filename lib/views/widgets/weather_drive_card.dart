@@ -179,7 +179,7 @@ class WeatherDriveTripBanner extends ConsumerWidget {
             AppSpacing.screenPadding,
             0,
             AppSpacing.screenPadding,
-            10,
+            6,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(

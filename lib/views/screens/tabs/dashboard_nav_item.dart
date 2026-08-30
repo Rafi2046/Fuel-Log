@@ -24,7 +24,7 @@ class DashboardNavItem extends StatelessWidget {
     return AnimatedContainer(
       duration: AppMotion.fast,
       curve: AppMotion.emphasized,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: isSelected
           ? BoxDecoration(
               gradient: LinearGradient(
@@ -44,7 +44,7 @@ class DashboardNavItem extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 22),
+          Icon(icon, color: color, size: 20),
           const SizedBox(height: 2),
           Text(
             label,
