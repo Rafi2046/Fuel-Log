@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_spacing.dart';
 import '../../widgets/clean_glass_panel.dart';
+import 'dashboard_bar_metrics.dart';
 import 'dashboard_nav_item.dart';
 
 /// Floating glass bottom bar — matches [HomeDashboardAppBar] styling.
@@ -20,11 +21,12 @@ class DashboardBottomBar extends StatefulWidget {
   final ValueChanged<int> onTabTapped;
   final bool showFabGap;
 
-  static const horizontalInset = 14.0;
+  static const horizontalInset = DashboardBarMetrics.horizontalInset;
   static const topFloatPad = 4.0;
-  static const barHeight = 48.0;
+  static const barHeight = DashboardBarMetrics.barHeight;
+  static const innerContentHeight = DashboardBarMetrics.innerContentHeight;
   static const homeIndicatorGap = 4.0;
-  static const fabGap = 56.0;
+  static const fabGap = 52.0;
 
   /// Exact height of the bottom shell (nav pill + safe area).
   static double shellHeight(BuildContext context) {
@@ -127,9 +129,9 @@ class _DashboardBottomBarState extends State<DashboardBottomBar> {
         ),
         child: FrostedGlassPanel(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
           child: SizedBox(
-            height: DashboardBottomBar.barHeight,
+            height: DashboardBottomBar.barHeight - 4,
             child: Stack(
               children: [
                 IgnorePointer(
@@ -137,17 +139,20 @@ class _DashboardBottomBarState extends State<DashboardBottomBar> {
                     children: [
                       Expanded(
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            DashboardNavItem(
-                              icon: Icons.home_rounded,
-                              label: 'navHome'.tr(),
-                              isSelected: widget.currentIndex == 0,
+                            Expanded(
+                              child: DashboardNavItem(
+                                icon: Icons.home_rounded,
+                                label: 'navHome'.tr(),
+                                isSelected: widget.currentIndex == 0,
+                              ),
                             ),
-                            DashboardNavItem(
-                              icon: Icons.route_rounded,
-                              label: 'navTrip'.tr(),
-                              isSelected: widget.currentIndex == 1,
+                            Expanded(
+                              child: DashboardNavItem(
+                                icon: Icons.route_rounded,
+                                label: 'navTrip'.tr(),
+                                isSelected: widget.currentIndex == 1,
+                              ),
                             ),
                           ],
                         ),
@@ -156,17 +161,20 @@ class _DashboardBottomBarState extends State<DashboardBottomBar> {
                         const SizedBox(width: DashboardBottomBar.fabGap),
                       Expanded(
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            DashboardNavItem(
-                              icon: Icons.bar_chart_rounded,
-                              label: 'navStats'.tr(),
-                              isSelected: widget.currentIndex == 2,
+                            Expanded(
+                              child: DashboardNavItem(
+                                icon: Icons.bar_chart_rounded,
+                                label: 'navStats'.tr(),
+                                isSelected: widget.currentIndex == 2,
+                              ),
                             ),
-                            DashboardNavItem(
-                              icon: Icons.settings_rounded,
-                              label: 'navSettings'.tr(),
-                              isSelected: widget.currentIndex == 3,
+                            Expanded(
+                              child: DashboardNavItem(
+                                icon: Icons.settings_rounded,
+                                label: 'navSettings'.tr(),
+                                isSelected: widget.currentIndex == 3,
+                              ),
                             ),
                           ],
                         ),

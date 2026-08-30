@@ -11,6 +11,7 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../reminders/reminders_screen.dart';
+import 'dashboard_bar_metrics.dart';
 
 /// Tab-aware app bar for [DashboardScreen].
 PreferredSizeWidget buildDashboardAppBar({
@@ -71,8 +72,8 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
   final VoidCallback? onVehicleTap;
   final VoidCallback? onFuelStationsTap;
 
-  static const _barHeight = 52.0;
-  static const _outerVPad = 8.0;
+  static const _barHeight = DashboardBarMetrics.barHeight;
+  static const _outerVPad = DashboardBarMetrics.outerVPad;
 
   @override
   Size get preferredSize =>
@@ -98,9 +99,14 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
           padding: const EdgeInsets.fromLTRB(14, _outerVPad, 14, _outerVPad),
           child: CleanGlassPanel(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+            padding: const EdgeInsets.fromLTRB(
+              10,
+              DashboardBarMetrics.glassVerticalPad,
+              4,
+              DashboardBarMetrics.glassVerticalPad,
+            ),
             child: SizedBox(
-              height: _barHeight - 12,
+              height: DashboardBarMetrics.innerContentHeight,
               child: Row(
                 children: [
                   Expanded(

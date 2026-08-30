@@ -227,29 +227,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           index: _currentIndex,
           children: _tabs,
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButtonLocation: const _DockedFabLocation(),
         floatingActionButton: _isTripTab
             ? null
-            : FloatingActionButton(
-                onPressed: () => showDashboardQuickActionsSheet(
-                  context,
-                  onExploreStations: _openGasStations,
-                  onRecordTrip: () {
-                    setState(() => _currentIndex = 1);
-                    // Open manual entry after switching to Trip.
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      showTripManualEntrySheet(context);
-                    });
-                  },
+            : Theme(
+                data: Theme.of(context).copyWith(
+                  floatingActionButtonTheme:
+                      const FloatingActionButtonThemeData(
+                    sizeConstraints: BoxConstraints.tightFor(
+                      width: 48,
+                      height: 48,
+                    ),
+                    iconSize: 24,
+                  ),
                 ),
-                backgroundColor: AppColors.primary,
-                elevation: 6,
-                shape: const CircleBorder(),
-                child: const Icon(
-                  Icons.local_gas_station_rounded,
-                  color: Colors.white,
-                  size: 28,
+                child: FloatingActionButton(
+                  onPressed: () => showDashboardQuickActionsSheet(
+                    context,
+                    onExploreStations: _openGasStations,
+                    onRecordTrip: () {
+                      setState(() => _currentIndex = 1);
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (!mounted) return;
+                        showTripManualEntrySheet(context);
+                      });
+                    },
+                  ),
+                  backgroundColor: AppColors.primary,
+                  elevation: 4,
+                  highlightElevation: 6,
+                  shape: const CircleBorder(),
+                  child: const Icon(
+                    Icons.local_gas_station_rounded,
+                    color: Colors.white,
+                  ),
                 ),
               ),
         bottomNavigationBar: DashboardBottomBar(
@@ -259,5 +270,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       ),
     );
+  }
+}
+
+/// Center-docked FAB, shifted slightly down so it sits in the bar instead of
+/// floating halfway above it.
+class _DockedFabLocation extends FloatingActionButtonLocation {
+  const _DockedFabLocation();
+
+  static const _downShift = 10.0;
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final base =
+        FloatingActionButtonLocation.centerDocked.getOffset(scaffoldGeometry);
+    return Offset(base.dx, base.dy + _downShift);
   }
 }
