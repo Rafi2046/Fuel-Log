@@ -420,6 +420,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
     final lastOdometer = logs.isNotEmpty ? logs.first.odometer : null;
 
     return AppScaffold(
+      leading: const AppBackButton(),
       title: 'refuelingTitle'.tr(),
       padding: appScreenPadding,
       body: activeAsync.when(

@@ -15,6 +15,7 @@ import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../reminders/widgets/add_reminder_sheet.dart';
 import '../reminders/widgets/reminder_card.dart';
+import '../../widgets/app_app_bar.dart';
 import 'widgets/add_cost_service_sheet.dart';
 import 'widgets/service_log_detail_sheet.dart';
 
@@ -338,32 +339,43 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          color: AppColors.textPrimary,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      appBar: AppAppBar(
+        leading: const AppBackButton(),
+        titleWidget: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'servicesHubTitle'.tr(),
               style: GoogleFonts.inter(
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
             if (vehicle != null)
-              Text(
-                vehicle.name,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      vehicle.name,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],
@@ -371,6 +383,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
       ),
       body: Column(
         children: [
+          const SizedBox(height: 8),
           // 1. Top Summary Banner
           _buildTopSummaryBanner(
               remindersState, totalServiceSpend, serviceLogs.length),

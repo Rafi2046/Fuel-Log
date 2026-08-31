@@ -12,6 +12,7 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../services/widgets/add_cost_service_sheet.dart';
+import '../../widgets/app_app_bar.dart';
 import 'widgets/add_reminder_sheet.dart';
 import 'widgets/reminder_card.dart';
 
@@ -212,32 +213,44 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     final serviceLogsAsync = ref.watch(serviceLogsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D12),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0D12),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          color: AppColors.textPrimary,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.background,
+      appBar: AppAppBar(
+        leading: const AppBackButton(),
+        titleWidget: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'Maintenance & Services',
               style: GoogleFonts.inter(
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
             if (vehicle != null)
-              Text(
-                vehicle.name,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      vehicle.name,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],

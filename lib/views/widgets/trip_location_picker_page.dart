@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/services/reverse_geocoding_service.dart';
 import '../../models/mock_gas_station.dart';
+import 'app_app_bar.dart';
 
 class PickedTripLocation {
   const PickedTripLocation({required this.point, required this.label});
@@ -163,10 +164,9 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F12),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF14141B),
-        foregroundColor: AppColors.textPrimary,
-        title: _searching
+      appBar: AppAppBar(
+        leading: const AppBackButton(),
+        titleWidget: _searching
             ? TextField(
                 controller: _searchCtrl,
                 autofocus: true,

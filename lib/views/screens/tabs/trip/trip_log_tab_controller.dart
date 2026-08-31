@@ -1,7 +1,7 @@
 part of '../trip_log_tab.dart';
 
 /// Business logic for [TripLogTabState] (GPS, stations, navigation).
-mixin TripLogTabController on State<TripLogTab> {
+mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLogTab> {
   bool _isLoadingStations = false;
   bool _showStations = false;
   bool _isFetchingLocation = false;
@@ -24,6 +24,7 @@ mixin TripLogTabController on State<TripLogTab> {
 
   late final MapController _mapController;
   late final PageController _carouselController;
+  AnimationController? _mapAnimController;
   double _mapZoom = 15.0;
   LatLng _mapCenter = kDefaultUserLocation;
 
@@ -59,6 +60,9 @@ mixin TripLogTabController on State<TripLogTab> {
     _tripTimer?.cancel();
     _gpsPollingTimer?.cancel();
     _gpsStream?.cancel();
+    _mapAnimController?.stop();
+    _mapAnimController?.dispose();
+    _mapAnimController = null;
     _mapController.dispose();
     _carouselController.dispose();
     super.dispose();
@@ -87,22 +91,53 @@ mixin TripLogTabController on State<TripLogTab> {
       return;
     }
 
-    final impl = _mapController;
-    if (impl is MapControllerImpl) {
-      try {
-        impl.moveAnimatedRaw(
-          destLocation,
-          clampedZoom,
-          duration: duration,
-          curve: curve,
-          hasGesture: false,
-          source: MapEventSource.mapController,
-        );
-        return;
-      } catch (_) {}
-    }
+    final startCenter = _mapController.camera.center;
+    final startZoom = _mapController.camera.zoom;
 
-    applyInstantMove();
+    final latTween = Tween<double>(
+      begin: startCenter.latitude,
+      end: destLocation.latitude,
+    );
+    final lngTween = Tween<double>(
+      begin: startCenter.longitude,
+      end: destLocation.longitude,
+    );
+    final zoomTween = Tween<double>(
+      begin: startZoom,
+      end: clampedZoom,
+    );
+
+    _mapAnimController?.stop();
+    _mapAnimController?.dispose();
+    final controller = AnimationController(duration: duration, vsync: this);
+    _mapAnimController = controller;
+
+    final animation = CurvedAnimation(parent: controller, curve: curve);
+
+    controller.addListener(() {
+      try {
+        final newCenter = LatLng(
+          latTween.evaluate(animation),
+          lngTween.evaluate(animation),
+        );
+        final newZoom = zoomTween.evaluate(animation);
+        _mapController.move(newCenter, newZoom);
+        _mapZoom = newZoom;
+        _mapCenter = newCenter;
+      } catch (_) {}
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        controller.dispose();
+        if (_mapAnimController == controller) {
+          _mapAnimController = null;
+        }
+      }
+    });
+
+    controller.forward();
   }
 
   /// Used on tab focus — non-blocking location warm-up.

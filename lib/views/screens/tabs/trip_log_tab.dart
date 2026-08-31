@@ -47,7 +47,11 @@ class TripLogTab extends StatefulWidget {
 }
 
 class TripLogTabState extends State<TripLogTab>
-    with TripLogTabController, TripLogMapLayersMixin, TripLogMapViewMixin {
+    with
+        TickerProviderStateMixin,
+        TripLogTabController,
+        TripLogMapLayersMixin,
+        TripLogMapViewMixin {
   @override
   Widget build(BuildContext context) {
     if (!widget.isActive) {

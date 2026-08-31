@@ -11,6 +11,7 @@ import '../../../models/vehicle_report_model.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../../widgets/app_app_bar.dart';
 import '../../widgets/clean_glass_panel.dart';
 import 'widgets/report_card_tile.dart';
 import 'widgets/report_preview_sheet.dart';
@@ -67,11 +68,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     final picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime(2020),
-      lastDate: now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 1),
       initialDateRange: _selectedDateRange ??
           DateTimeRange(
-            start: now.subtract(const Duration(days: 365)),
+            start: now.subtract(const Duration(days: 30)),
             end: now,
           ),
       builder: (context, child) => Theme(data: pickerTheme, child: child!),
@@ -96,7 +97,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     if (vehicle == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No active vehicle found')),
+        const SnackBar(content: Text('Please select an active vehicle first.')),
       );
       return;
     }
@@ -119,14 +120,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Create Report',
-          style: AppTextStyles.title.copyWith(fontSize: 17),
-        ),
-        centerTitle: true,
+      appBar: const AppAppBar(
+        leading: AppBackButton(),
+        title: 'Create Report',
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 6, 14, 32),

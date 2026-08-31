@@ -10,6 +10,7 @@ import '../../../core/utils/app_formatters.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../../widgets/app_app_bar.dart';
 import '../reports/reports_screen.dart';
 import 'widgets/metric_overview_card.dart';
 import 'widgets/metric_chart_pane.dart';
@@ -125,8 +126,9 @@ class _AdvancedMetricExplorerScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('metricExplorerTitle'.tr()),
+      appBar: AppAppBar(
+        leading: const AppBackButton(),
+        title: 'metricExplorerTitle'.tr(),
         actions: [
           IconButton(
             tooltip: 'report'.tr(),

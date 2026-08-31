@@ -25,6 +25,7 @@ class MileageLogScreen extends ConsumerWidget {
     final unit = isEV ? 'kWh' : 'L';
 
     return AppScaffold(
+      leading: const AppBackButton(),
       title: 'Mileage Log',
       actions: [
         IconButton(

@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../models/fuel_price_model.dart';
 import '../../../../viewmodels/gas_station_viewmodel.dart';
+import '../../widgets/app_app_bar.dart';
 import 'widgets/fuel_type_badges.dart';
 import 'widgets/station_price_row.dart';
 import 'widgets/update_price_modal_sheet.dart';
@@ -144,12 +145,17 @@ class StationDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 18),
-          onPressed: () => Navigator.of(context).pop(),
+      appBar: AppAppBar(
+        leading: const AppBackButton(),
+        titleWidget: Text(
+          currentStation.name,
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
