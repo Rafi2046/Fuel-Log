@@ -8,4 +8,7 @@ abstract final class AppImages {
   static const String onboardingHero = '$_base/onboarding_hero.png';
   static const String emptyState = '$_base/empty_state.png';
   static const String fuelNozzle = 'assets/images/fuel_log.mp4';
+  static const String appLogo = 'assets/images/app_logo.png';
+
+
 }
