@@ -26,16 +26,36 @@ class StationCarouselThumbnail extends StatelessWidget {
                       station.imageUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const StationImagePlaceholder(),
+                          StationImagePlaceholder(fuelTypes: station.fuelTypes),
                     )
                   : Image.asset(
                       station.imageUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const StationImagePlaceholder(),
+                          StationImagePlaceholder(fuelTypes: station.fuelTypes),
                     )
             else
-              const StationImagePlaceholder(),
+              StationImagePlaceholder(fuelTypes: station.fuelTypes),
+            if (station.usesGooglePhoto)
+              Positioned(
+                right: 3,
+                top: 3,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101014).withValues(alpha: 0.88),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: const Text(
+                    'G',
+                    style: TextStyle(
+                      color: Color(0xFF4285F4),
+                      fontSize: 7,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
               left: 4,
               bottom: 4,

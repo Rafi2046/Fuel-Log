@@ -4,17 +4,25 @@ import 'package:latlong2/latlong.dart';
 
 import '../../models/mock_gas_station.dart';
 import 'bd_fuel_rate_service.dart';
+import 'google_places_service.dart';
+import 'station_image_resolver.dart';
 
 class GasStationService {
   GasStationService._();
   static final GasStationService instance = GasStationService._();
 
   static const _distanceCalc = Distance();
+  static const _userAgent = 'FuelLogApp/1.0';
+  static const _maxResults = 50;
+  static const _overpassEndpoints = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+  ];
 
   /// Fetches real nearby gas stations sorted strictly by ascending distance.
   Future<List<MockGasStation>> getNearbyStations({
     required LatLng center,
-    double radiusMeters = 8000,
+    double radiusMeters = 5000,
   }) async {
     // Refresh fuel rates in background
     // ignore: unawaited_futures
@@ -24,139 +32,341 @@ class GasStationService {
     final cached = _stationCache[cacheKey];
     if (cached != null &&
         DateTime.now().difference(cached.$1) < _stationCacheTtl) {
-      return cached.$2;
+      return _withDistancesFrom(center, cached.$2);
     }
 
-    // 1. Attempt live query from OpenStreetMap (Nodes, Ways & Relations)
-    List<MockGasStation> liveStations = [];
-    try {
-      liveStations = await _fetchFromOverpass(center, radiusMeters)
-          .timeout(const Duration(milliseconds: 3500));
-    } catch (_) {
-      // Overpass timed out or offline — fallback to real geographic dataset
+    // 1. Google Places (real user photos) when API key is configured
+    List<MockGasStation> combined = [];
+    if (GooglePlacesService.instance.isAvailable) {
+      try {
+        final googleStations =
+            await GooglePlacesService.instance.searchNearbyGasStations(
+          center: center,
+          radiusMeters: radiusMeters,
+        );
+        combined.addAll(googleStations);
+      } catch (_) {}
     }
 
-    // 2. Fetch from comprehensive curated real station coordinates database
-    final realDatasetStations = _getCuratedStationsForLocation(center);
+    // 2. Live OSM queries (Overpass + Nominatim) in parallel
+    final liveStations = await _fetchLiveStations(center, radiusMeters);
 
-    // 3. Merge & Deduplicate (prefer live OSM, augment with verified database)
-    final combined = <MockGasStation>[];
-    final seenNames = <String>{};
+    // 3. Curated fallback — only within search radius
+    final curatedStations =
+        _getCuratedStationsForLocation(center, radiusMeters: radiusMeters);
 
-    for (final s in liveStations) {
-      final key = s.name.toLowerCase().trim();
-      if (seenNames.add(key)) {
-        combined.add(s);
+    // 4. Merge & deduplicate (Google/OSM first, then curated fill-ins)
+    for (final station in [...liveStations, ...curatedStations]) {
+      if (!_isDuplicate(station, combined)) {
+        combined.add(station);
       }
     }
 
-    for (final s in realDatasetStations) {
-      final key = s.name.toLowerCase().trim();
-      // Match similar names to prevent duplicate entries
-      final isAlreadyPresent = seenNames.any((seen) =>
-          seen.contains(key) || key.contains(seen));
-      if (!isAlreadyPresent) {
-        seenNames.add(key);
-        combined.add(s);
-      }
+    // 5. Attach Google photos to OSM stations when possible
+    if (GooglePlacesService.instance.isAvailable && combined.isNotEmpty) {
+      try {
+        combined = await GooglePlacesService.instance.enrichWithGooglePhotos(
+          combined,
+          center: center,
+          radiusMeters: radiusMeters,
+        );
+      } catch (_) {}
     }
 
-    // 4. Sort strictly by ascending real distance from user location
+    // 6. Sort by real distance and cap result count
     combined.sort((a, b) {
       final distA = _distanceCalc.as(LengthUnit.Meter, center, a.location);
       final distB = _distanceCalc.as(LengthUnit.Meter, center, b.location);
       return distA.compareTo(distB);
     });
 
-    _stationCache[cacheKey] = (DateTime.now(), combined);
-    return combined;
+    final withinRadius = combined
+        .where(
+          (s) =>
+              _distanceCalc.as(LengthUnit.Meter, center, s.location) <=
+              radiusMeters,
+        )
+        .take(_maxResults)
+        .toList();
+
+    final result = _withDistancesFrom(center, withinRadius);
+    _stationCache[cacheKey] = (DateTime.now(), result);
+    return result;
+  }
+
+  List<MockGasStation> _withDistancesFrom(
+    LatLng center,
+    List<MockGasStation> stations,
+  ) {
+    return stations
+        .map((s) {
+          final distMeters =
+              _distanceCalc.as(LengthUnit.Meter, center, s.location);
+          return MockGasStation(
+            id: s.id,
+            name: s.name,
+            distance: _formatDistanceLabel(s.addressHint, distMeters),
+            fuelTypes: s.fuelTypes,
+            rating: s.rating,
+            location: s.location,
+            imageUrl: s.imageUrl,
+            stationInfo: s.stationInfo,
+            addressHint: s.addressHint,
+            googlePhotoResource: s.googlePhotoResource,
+          );
+        })
+        .toList()
+      ..sort((a, b) {
+        final distA = _distanceCalc.as(LengthUnit.Meter, center, a.location);
+        final distB = _distanceCalc.as(LengthUnit.Meter, center, b.location);
+        return distA.compareTo(distB);
+      });
+  }
+
+  Future<List<MockGasStation>> _fetchLiveStations(
+    LatLng center,
+    double radiusMeters,
+  ) async {
+    final results = await Future.wait([
+      _fetchFromOverpass(center, radiusMeters),
+      _fetchFromNominatim(center, radiusMeters),
+    ]);
+
+    final merged = <MockGasStation>[];
+    for (final batch in results) {
+      for (final station in batch) {
+        if (!_isDuplicate(station, merged)) {
+          merged.add(station);
+        }
+      }
+    }
+    return merged;
   }
 
   String _cacheKey(LatLng c) =>
-      '${c.latitude.toStringAsFixed(2)},${c.longitude.toStringAsFixed(2)}';
+      '${c.latitude.toStringAsFixed(3)},${c.longitude.toStringAsFixed(3)}';
 
   static final Map<String, (DateTime, List<MockGasStation>)> _stationCache = {};
-  static const _stationCacheTtl = Duration(minutes: 5);
+  static const _stationCacheTtl = Duration(minutes: 3);
 
-  /// Queries OpenStreetMap Overpass (nwr: nodes, ways, relations)
+  void clearCache() => _stationCache.clear();
+
+  /// Queries OpenStreetMap Overpass (nodes, ways, relations).
   Future<List<MockGasStation>> _fetchFromOverpass(
     LatLng center,
     double radiusMeters,
   ) async {
     final query = '''
-[out:json][timeout:3];
+[out:json][timeout:10];
 (
   nwr["amenity"="fuel"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
+  nwr["shop"="gas"](around:${radiusMeters.toInt()},${center.latitude},${center.longitude});
 );
-out center body 30;
+out center tags 60;
 ''';
 
-    final url = Uri.parse(
-      'https://overpass-api.de/api/interpreter?data=${Uri.encodeComponent(query)}',
-    );
+    Object? lastError;
+    for (final endpoint in _overpassEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: const {'User-Agent': _userAgent},
+              body: {'data': query},
+            )
+            .timeout(const Duration(seconds: 9));
 
-    final response = await http.get(url).timeout(
-      const Duration(milliseconds: 3200),
-    );
+        if (response.statusCode != 200) continue;
 
-    if (response.statusCode != 200) return [];
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final elements = (data['elements'] as List<dynamic>?) ?? [];
+        if (elements.isEmpty) continue;
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final elements = (data['elements'] as List<dynamic>?) ?? [];
+        final ranked = <({Map<String, dynamic> el, double dist})>[];
+        for (final raw in elements) {
+          final el = raw as Map<String, dynamic>;
+          final lat = (el['lat'] as num?)?.toDouble() ??
+              (el['center']?['lat'] as num?)?.toDouble();
+          final lon = (el['lon'] as num?)?.toDouble() ??
+              (el['center']?['lon'] as num?)?.toDouble();
+          if (lat == null || lon == null) continue;
+          final dist =
+              _distanceCalc.as(LengthUnit.Meter, center, LatLng(lat, lon));
+          ranked.add((el: el, dist: dist));
+        }
 
-    if (elements.isEmpty) return [];
+        ranked.sort((a, b) => a.dist.compareTo(b.dist));
 
-    final stations = <MockGasStation>[];
-
-    for (var i = 0; i < elements.length && i < 30; i++) {
-      final el = elements[i] as Map<String, dynamic>;
-      final lat = (el['lat'] as num?)?.toDouble() ??
-          (el['center']?['lat'] as num?)?.toDouble() ??
-          center.latitude;
-      final lon = (el['lon'] as num?)?.toDouble() ??
-          (el['center']?['lon'] as num?)?.toDouble() ??
-          center.longitude;
-      final tags = (el['tags'] as Map<String, dynamic>?) ?? {};
-
-      final rawName = tags['name'] ?? tags['brand'] ?? tags['operator'];
-      final name = rawName != null && rawName.toString().trim().isNotEmpty
-          ? rawName.toString().trim()
-          : 'Filling Station';
-
-      final stationLoc = LatLng(lat, lon);
-      final distMeters =
-          _distanceCalc.as(LengthUnit.Meter, center, stationLoc);
-
-      final street = tags['addr:street'] ??
-          tags['addr:suburb'] ??
-          tags['operator'] ??
-          'Fuel Point';
-
-      final distStr = distMeters < 1000
-          ? '$street • ${distMeters.round()} m'
-          : '$street • ${(distMeters / 1000).toStringAsFixed(1)} km';
-
-      final fuels = _formatFuels(tags);
-      final imagePath = _resolveBrandImage(name);
-
-      stations.add(
-        MockGasStation(
-          id: el['id']?.toString() ?? 'osm_$i',
-          name: name,
-          distance: distStr,
-          fuelTypes: fuels,
-          rating: (4.3 + (i % 7) * 0.1).clamp(4.0, 5.0),
-          location: stationLoc,
-          imageUrl: imagePath,
-        ),
-      );
+        final stations = <MockGasStation>[];
+        for (var i = 0; i < ranked.length && i < _maxResults; i++) {
+          final station = _stationFromOsmElement(
+            ranked[i].el,
+            center: center,
+            index: i,
+            source: 'osm',
+          );
+          if (station != null) stations.add(station);
+        }
+        if (stations.isNotEmpty) return stations;
+      } catch (e) {
+        lastError = e;
+      }
     }
 
+    if (lastError != null) {
+      // Both Overpass mirrors failed — caller falls back to Nominatim/curated.
+    }
+    return [];
+  }
+
+  /// Nominatim POI search inside a bounding box around [center].
+  Future<List<MockGasStation>> _fetchFromNominatim(
+    LatLng center,
+    double radiusMeters,
+  ) async {
+    final delta = (radiusMeters / 111000).clamp(0.02, 0.08);
+    final viewbox =
+        '${center.longitude - delta},${center.latitude + delta},'
+        '${center.longitude + delta},${center.latitude - delta}';
+
+    final stations = <MockGasStation>[];
+    for (final query in const [
+      'filling station',
+      'CNG station',
+      'petrol pump',
+    ]) {
+      try {
+        final uri = Uri.https(
+          'nominatim.openstreetmap.org',
+          '/search',
+          {
+            'q': query,
+            'format': 'json',
+            'addressdetails': '1',
+            'limit': '15',
+            'countrycodes': 'bd',
+            'viewbox': viewbox,
+            'bounded': '1',
+          },
+        );
+        final response = await http
+            .get(uri, headers: const {'User-Agent': _userAgent})
+            .timeout(const Duration(seconds: 6));
+        if (response.statusCode != 200) continue;
+
+        final list = jsonDecode(response.body) as List<dynamic>;
+        for (var i = 0; i < list.length; i++) {
+          final map = list[i] as Map<String, dynamic>;
+          final station = _stationFromNominatim(map, center: center, index: i);
+          if (station == null) continue;
+          final dist = _distanceCalc.as(
+            LengthUnit.Meter,
+            center,
+            station.location,
+          );
+          if (dist > radiusMeters) continue;
+          if (!_isDuplicate(station, stations)) stations.add(station);
+        }
+      } catch (_) {}
+    }
     return stations;
   }
 
-  /// Curated real-world stations database with verified exact GPS coordinates
-  List<MockGasStation> _getCuratedStationsForLocation(LatLng center) {
+  MockGasStation? _stationFromOsmElement(
+    Map<String, dynamic> el, {
+    required LatLng center,
+    required int index,
+    required String source,
+  }) {
+    final lat = (el['lat'] as num?)?.toDouble() ??
+        (el['center']?['lat'] as num?)?.toDouble();
+    final lon = (el['lon'] as num?)?.toDouble() ??
+        (el['center']?['lon'] as num?)?.toDouble();
+    if (lat == null || lon == null) return null;
+
+    final tags = (el['tags'] as Map<String, dynamic>?) ?? {};
+    final rawName = tags['name'] ??
+        tags['name:en'] ??
+        tags['brand'] ??
+        tags['operator'];
+    final name = rawName != null && rawName.toString().trim().isNotEmpty
+        ? rawName.toString().trim()
+        : 'Filling Station';
+
+    final stationLoc = LatLng(lat, lon);
+    final street = tags['addr:street'] as String? ??
+        tags['addr:suburb'] as String? ??
+        tags['addr:road'] as String? ??
+        tags['operator'] as String? ??
+        'Fuel Point';
+
+    return MockGasStation(
+      id: '${source}_${el['id'] ?? index}',
+      name: name,
+      distance: '',
+      fuelTypes: _formatFuels(tags),
+      rating: _pseudoRating(name),
+      location: stationLoc,
+      imageUrl: StationImageResolver.resolve(
+        name: name,
+        fuelTypes: _formatFuels(tags),
+        osmTags: tags,
+        location: stationLoc,
+      ),
+      addressHint: street,
+    );
+  }
+
+  MockGasStation? _stationFromNominatim(
+    Map<String, dynamic> map, {
+    required LatLng center,
+    required int index,
+  }) {
+    final lat = double.tryParse('${map['lat']}');
+    final lon = double.tryParse('${map['lon']}');
+    if (lat == null || lon == null) return null;
+
+    final display = map['display_name'] as String? ?? 'Filling Station';
+    final osmClass = map['class'] as String?;
+    final osmType = map['type'] as String?;
+    final displayLower = display.toLowerCase();
+    final isFuelPoi = (osmClass == 'amenity' && osmType == 'fuel') ||
+        displayLower.contains('station') ||
+        displayLower.contains('cng') ||
+        displayLower.contains('petrol') ||
+        displayLower.contains('filling');
+    if (!isFuelPoi) return null;
+    final name = (map['name'] as String?)?.trim().isNotEmpty == true
+        ? (map['name'] as String).trim()
+        : display.split(',').first.trim();
+
+    final address = map['address'] as Map<String, dynamic>?;
+    final street = address?['road'] as String? ??
+        address?['suburb'] as String? ??
+        address?['neighbourhood'] as String? ??
+        display.split(',').skip(1).take(2).join(', ');
+
+    return MockGasStation(
+      id: 'nom_${index}_${lat.toStringAsFixed(5)}',
+      name: name,
+      distance: '',
+      fuelTypes: 'Octane • Petrol • Diesel • CNG',
+      rating: _pseudoRating(name),
+      location: LatLng(lat, lon),
+      imageUrl: StationImageResolver.resolve(
+        name: name,
+        fuelTypes: 'Octane • Petrol • Diesel • CNG',
+        location: LatLng(lat, lon),
+      ),
+      addressHint: street,
+    );
+  }
+
+  /// Curated real-world stations — only those within [radiusMeters].
+  List<MockGasStation> _getCuratedStationsForLocation(
+    LatLng center, {
+    required double radiusMeters,
+  }) {
     final list = <MockGasStation>[];
 
     for (var i = 0; i < _bangladeshRealStations.length; i++) {
@@ -164,20 +374,18 @@ out center body 30;
       final stationLoc = LatLng(item.latitude, item.longitude);
       final distMeters =
           _distanceCalc.as(LengthUnit.Meter, center, stationLoc);
-
-      final distStr = distMeters < 1000
-          ? '${item.area} • ${distMeters.round()} m'
-          : '${item.area} • ${(distMeters / 1000).toStringAsFixed(1)} km';
+      if (distMeters > radiusMeters) continue;
 
       list.add(
         MockGasStation(
           id: 'real_st_$i',
           name: item.name,
-          distance: distStr,
+          distance: '',
           fuelTypes: item.fuels,
           rating: item.rating,
           location: stationLoc,
           imageUrl: item.image,
+          addressHint: item.area,
         ),
       );
     }
@@ -185,22 +393,46 @@ out center body 30;
     return list;
   }
 
-  String _resolveBrandImage(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('trust')) {
-      return 'assets/images/station_trust.jpg';
-    } else if (lower.contains('navana')) {
-      return 'assets/images/station_navana.jpg';
-    } else if (lower.contains('meghna') || lower.contains('chittagong')) {
-      return 'assets/images/station_meghna.jpg';
-    } else if (lower.contains('padma')) {
-      return 'assets/images/station_padma.jpg';
-    } else if (lower.contains('clean') ||
-        lower.contains('green') ||
-        lower.contains('ev')) {
-      return 'assets/images/station_clean_fuel.jpg';
+  String _formatDistanceLabel(String area, double distMeters) {
+    final distStr = distMeters < 1000
+        ? '${distMeters.round()} m'
+        : '${(distMeters / 1000).toStringAsFixed(1)} km';
+    final place = area.trim().isEmpty ? 'Fuel Point' : area.trim();
+    return '$place • $distStr';
+  }
+
+  bool _isDuplicate(MockGasStation candidate, List<MockGasStation> existing) {
+    final candidateName = _normalizeName(candidate.name);
+    for (final station in existing) {
+      final dist = _distanceCalc.as(
+        LengthUnit.Meter,
+        candidate.location,
+        station.location,
+      );
+      if (dist < 75) return true;
+
+      final existingName = _normalizeName(station.name);
+      if (candidateName == existingName) return true;
+      if (candidateName.length > 4 &&
+          existingName.length > 4 &&
+          (candidateName.contains(existingName) ||
+              existingName.contains(candidateName))) {
+        return true;
+      }
     }
-    return 'assets/images/station_city_express.jpg';
+    return false;
+  }
+
+  String _normalizeName(String name) {
+    return name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\u0980-\u09FF]+'), ' ')
+        .trim();
+  }
+
+  double _pseudoRating(String name) {
+    final hash = name.codeUnits.fold<int>(0, (a, b) => a + b);
+    return (4.0 + (hash % 9) * 0.1).clamp(4.0, 4.8);
   }
 
   String _formatFuels(Map<String, dynamic> tags) {
@@ -363,7 +595,108 @@ const List<_RealStationData> _bangladeshRealStations = [
     image: 'assets/images/station_city_express.jpg',
   ),
 
-  // ── DHAKA: Dhanmondi / Mirpur / Asad Gate / Airport ──────────────────────
+  // ── DHAKA: Mirpur / Matikata / Mirpur 10 ─────────────────────────────────
+  _RealStationData(
+    latitude: 23.8004,
+    longitude: 90.3558,
+    name: 'SAM Associates Ltd.',
+    area: 'Mirpur Rd, Mirpur',
+    fuels: 'CNG • Octane • Diesel',
+    rating: 4.5,
+    image: 'assets/images/station_city_express.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8004,
+    longitude: 90.3566,
+    name: 'Omera Gas One',
+    area: 'Matikata Rd, Mirpur',
+    fuels: 'CNG • LPG',
+    rating: 4.4,
+    image: 'assets/images/station_clean_fuel.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8051,
+    longitude: 90.3635,
+    name: 'Kingshuk CNG Station',
+    area: 'Mirpur Rd, Mirpur 10',
+    fuels: 'CNG • Octane',
+    rating: 4.5,
+    image: 'assets/images/station_padma.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8048,
+    longitude: 90.3697,
+    name: 'Minerva CNG Filling Station',
+    area: 'Mirpur 10 Roundabout',
+    fuels: 'CNG • Octane • Diesel',
+    rating: 4.6,
+    image: 'assets/images/station_navana.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8037,
+    longitude: 90.3700,
+    name: 'Dhaka CNG Ltd.',
+    area: 'Mirpur 10, Matikata',
+    fuels: 'CNG',
+    rating: 4.3,
+    image: 'assets/images/station_padma.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8062,
+    longitude: 90.3741,
+    name: 'Shatabdi CNG Filling Station',
+    area: 'Mirpur 14, Senpara',
+    fuels: 'CNG • Octane',
+    rating: 4.5,
+    image: 'assets/images/station_clean_fuel.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8067,
+    longitude: 90.3714,
+    name: 'Ariya CNG Filling Station',
+    area: 'Mirpur 14, Senpara',
+    fuels: 'CNG • Octane',
+    rating: 4.4,
+    image: 'assets/images/station_city_express.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8127,
+    longitude: 90.3673,
+    name: 'Skamco CNG Station',
+    area: 'Begum Rokeya Sarani, Mirpur 10',
+    fuels: 'CNG • Octane • Diesel',
+    rating: 4.5,
+    image: 'assets/images/station_trust.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.8200,
+    longitude: 90.3864,
+    name: 'Sumatra Filling & LPG Station',
+    area: '5 Matikata Rd, Mirpur',
+    fuels: 'Octane • Petrol • Diesel • CNG • LPG',
+    rating: 4.6,
+    image: 'assets/images/station_meghna.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.7826,
+    longitude: 90.3504,
+    name: 'Denso Filling Station',
+    area: 'Bir Uttam A.W Chowdhury Rd, Mirpur',
+    fuels: 'Octane • Diesel • CNG',
+    rating: 4.4,
+    image: 'assets/images/station_trust.jpg',
+  ),
+  _RealStationData(
+    latitude: 23.7882,
+    longitude: 90.3770,
+    name: 'M/S Sobahan Filling Station',
+    area: 'Begum Rokeya Sarani, Mirpur',
+    fuels: 'Octane • Diesel • CNG',
+    rating: 4.5,
+    image: 'assets/images/station_city_express.jpg',
+  ),
+
+  // ── DHAKA: Dhanmondi / Asad Gate / Kalyanpur ─────────────────────────────
   _RealStationData(
     latitude: 23.7595,
     longitude: 90.3690,
@@ -383,10 +716,10 @@ const List<_RealStationData> _bangladeshRealStations = [
     image: 'assets/images/station_city_express.jpg',
   ),
   _RealStationData(
-    latitude: 23.7790,
-    longitude: 90.3580,
+    latitude: 23.7988,
+    longitude: 90.3870,
     name: 'Diganta Filling Station',
-    area: 'Mirpur Road, Kalyanpur',
+    area: 'Plot-A, 4 Mirpur Rd, Mirpur',
     fuels: 'Octane • Petrol • CNG',
     rating: 4.5,
     image: 'assets/images/station_padma.jpg',

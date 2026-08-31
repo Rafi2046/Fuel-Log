@@ -217,6 +217,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     if (_isLoadingStations) return;
 
     setState(() => _isLoadingStations = true);
+    GasStationService.instance.clearCache();
 
     final center = await _resolveLocationFast();
     if (!mounted) return;
@@ -262,7 +263,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       if (!mounted) return;
       final live = LatLng(position.latitude, position.longitude);
       final movedM = Distance()(previous, live);
-      if (movedM < 400) {
+      if (movedM < 150) {
         setState(() => _userLocation = live);
         return;
       }

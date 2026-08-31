@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../screens/refueling_form_screen.dart';
 import '../screens/stations/station_detail_screen.dart';
+import '../screens/tabs/trip/widgets/station_image_placeholder.dart';
 import '../../models/mock_gas_station.dart';
 
 /// Luxury frosted glass modal sheet showing all nearby stations in rich detail
@@ -334,15 +335,19 @@ class _StationListRowItem extends StatelessWidget {
                                 station.imageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const _ThumbnailFallback(),
+                                    StationImagePlaceholder(
+                                  fuelTypes: station.fuelTypes,
+                                ),
                               )
                             : Image.asset(
                                 station.imageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const _ThumbnailFallback(),
+                                    StationImagePlaceholder(
+                                  fuelTypes: station.fuelTypes,
+                                ),
                               ))
-                        : const _ThumbnailFallback(),
+                        : StationImagePlaceholder(fuelTypes: station.fuelTypes),
                   ),
                 ),
                 const SizedBox(width: 11),
@@ -487,23 +492,5 @@ class _StationListRowItem extends StatelessWidget {
       return distanceStr.split('•').last.trim();
     }
     return distanceStr;
-  }
-}
-
-class _ThumbnailFallback extends StatelessWidget {
-  const _ThumbnailFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF20202A),
-      child: const Center(
-        child: Icon(
-          LucideIcons.fuel,
-          color: AppColors.textTertiary,
-          size: 20,
-        ),
-      ),
-    );
   }
 }
