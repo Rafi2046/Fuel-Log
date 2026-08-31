@@ -290,5 +290,22 @@
   "refuelOcrError": "OCR স্ক্যান ত্রুটি: {error}",
   "refuelOcrSuccess": "সফলভাবে স্ক্যান: {summary}",
   "literUnit": "লি",
-  "kwhUnit": "kWh"
+  "kwhUnit": "kWh",
+  "servicesHubTitle": "সার্ভিস ও রক্ষণাবেক্ষণ",
+  "servicesHubSubtitle": "রক্ষণাবেক্ষণ শিডিউল, সার্ভিস ইতিহাস ও খরচ",
+  "servicesSchedulesTab": "শিডিউল",
+  "servicesHistoryTab": "হিস্ট্রি",
+  "servicesAnalyticsTab": "অ্যানালিটিক্স",
+  "servicesHealthScore": "গাড়ির স্বাস্থ্য",
+  "servicesAllSystemsGood": "সবকিছু ঠিকঠাক আছে",
+  "servicesDueSoonCount": "{count}টি সার্ভিস আসন্ন",
+  "servicesOverdueCount": "{count}টি সার্ভিসের সময় উত্তীর্ণ",
+  "servicesTotalSpend": "মোট সার্ভিস খরচ",
+  "servicesLogNew": "সার্ভিস যোগ করুন",
+  "servicesAddReminder": "রিমাইন্ডার যোগ",
+  "servicesHubAction": "সার্ভিস হাব",
+  "addFirstRefuelTitle": "প্রথম রিফুয়েলিং যোগ করুন",
+  "addFirstChargeTitle": "প্রথম চার্জিং যোগ করুন",
+  "addFirstRefuelSubtitle": "জ্বালানির পরিমাণ, খরচ ও ওডোমিটার যোগ করতে ট্যাপ করুন",
+  "addFirstChargeSubtitle": "চার্জের পরিমাণ (kWh), খরচ ও ওডোমিটার যোগ করতে ট্যাপ করুন"
 }

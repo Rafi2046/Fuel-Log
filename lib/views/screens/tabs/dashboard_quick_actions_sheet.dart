@@ -11,8 +11,8 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../mileage/mileage_log_screen.dart';
 import '../refueling_form_screen.dart';
-import '../reminders/reminders_screen.dart';
 import '../reports/reports_screen.dart';
+import '../services/services_screen.dart';
 import '../services/widgets/add_cost_service_sheet.dart';
 
 /// Contextual quick actions from the center FAB.
@@ -167,16 +167,12 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
                   ),
                   _sheetDivider(),
                   _ActionTile(
-                    icon: LucideIcons.bell,
-                    title: 'actionAddReminder'.tr(),
-                    subtitle: 'actionAddReminderSubtitle'.tr(),
+                    icon: LucideIcons.shieldCheck,
+                    title: 'servicesHubTitle'.tr(),
+                    subtitle: 'servicesHubSubtitle'.tr(),
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const RemindersScreen(),
-                        ),
-                      );
+                      ServicesScreen.open(context);
                     },
                   ),
                   _sheetDivider(),

@@ -290,5 +290,22 @@
   "refuelOcrError": "OCR Scanning error: {error}",
   "refuelOcrSuccess": "Scanned successfully: {summary}",
   "literUnit": "L",
-  "kwhUnit": "kWh"
+  "kwhUnit": "kWh",
+  "servicesHubTitle": "Services & Maintenance",
+  "servicesHubSubtitle": "Maintenance schedules, service history & costs",
+  "servicesSchedulesTab": "Schedules",
+  "servicesHistoryTab": "History",
+  "servicesAnalyticsTab": "Analytics",
+  "servicesHealthScore": "Vehicle Health",
+  "servicesAllSystemsGood": "All Systems Good",
+  "servicesDueSoonCount": "{count} Services Due Soon",
+  "servicesOverdueCount": "{count} Services Overdue",
+  "servicesTotalSpend": "Total Service Spend",
+  "servicesLogNew": "Log Service",
+  "servicesAddReminder": "Add Reminder",
+  "servicesHubAction": "Services Hub",
+  "addFirstRefuelTitle": "Log First Refueling",
+  "addFirstChargeTitle": "Log First Charge",
+  "addFirstRefuelSubtitle": "Tap to record fuel amount, cost & odometer",
+  "addFirstChargeSubtitle": "Tap to record kWh energy, cost & odometer"
 }

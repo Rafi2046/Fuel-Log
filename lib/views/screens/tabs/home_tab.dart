@@ -8,17 +8,16 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../core/utils/mileage_calculator.dart';
-import '../../../models/reminder_model.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
-import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/efficiency_gauge.dart';
+import '../../widgets/home_services_card.dart';
 import '../../widgets/list_lead_icon.dart';
 import '../../widgets/summary_stat_card.dart';
 import '../../widgets/weather_drive_card.dart';
 import '../mileage/widgets/fuel_log_detail_sheet.dart';
-import '../reminders/reminders_screen.dart';
+import '../refueling_form_screen.dart';
 import 'dashboard_bottom_bar.dart';
 import 'logs_tab.dart';
 
@@ -119,8 +118,8 @@ class _HomeContent extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          const _HomeServiceStatusCard(),
+          const SizedBox(height: AppSpacing.md),
+          const HomeServicesCard(),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
@@ -161,10 +160,70 @@ class _HomeContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           if (recent == null)
             AppCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                'noLogsYet'.tr(),
-                style: AppTextStyles.bodySecondary.copyWith(fontSize: 14),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.listCardPaddingH,
+                vertical: AppSpacing.listCardPaddingV,
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RefuelingFormScreen(),
+                  ),
+                );
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ListLeadIcon(
+                    icon: isEV
+                        ? Icons.battery_charging_full_rounded
+                        : Icons.local_gas_station_rounded,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isEV
+                              ? 'addFirstChargeTitle'.tr()
+                              : 'addFirstRefuelTitle'.tr(),
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isEV
+                              ? 'addFirstChargeSubtitle'.tr()
+                              : 'addFirstRefuelSubtitle'.tr(),
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 11.5,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
             )
           else
@@ -225,111 +284,6 @@ class _HomeContent extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// Compact Service & Maintenance Health Card for Home Dashboard
-class _HomeServiceStatusCard extends ConsumerWidget {
-  const _HomeServiceStatusCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(remindersProvider);
-    final urgent = state.mostUrgentReminder;
-
-    if (urgent == null) return const SizedBox.shrink();
-
-    final status = urgent.status(state.currentOdometer);
-    // Show alert banner on home dashboard ONLY when maintenance is Due Soon or Overdue
-    if (status == ReminderStatus.healthy) return const SizedBox.shrink();
-    final statusMsg = urgent.statusMessage(state.currentOdometer);
-
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const RemindersScreen(),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF161620),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: status.color.withValues(alpha: 0.25),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: status.color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                urgent.serviceType.icon,
-                color: status.color,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        urgent.title,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: status.color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          status.label,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: status.color,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    statusMsg,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: AppColors.textTertiary,
-              size: 13,
-            ),
-          ],
-        ),
       ),
     );
   }

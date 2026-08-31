@@ -15,6 +15,7 @@ import '../../widgets/list_lead_icon.dart';
 
 import '../mileage/mileage_log_screen.dart';
 import '../mileage/widgets/fuel_log_detail_sheet.dart';
+import '../services/services_screen.dart';
 
 /// Logs tab — real Drift fuel/charge entries for the active vehicle.
 class LogsTab extends ConsumerWidget {
@@ -97,6 +98,48 @@ class LogsTab extends ConsumerWidget {
                         ),
                         Text(
                           'View fuel efficiency, km/L stats & breakdown',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.textTertiary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.listGap),
+            AppCard(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.listCardPaddingH,
+                vertical: AppSpacing.listCardPaddingV,
+              ),
+              onTap: () => ServicesScreen.open(context, initialTabIndex: 1),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const ListLeadIcon(icon: Icons.build_circle_rounded),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Services & Maintenance History',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'View repair costs, oil changes & service logs',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.caption.copyWith(fontSize: 11),

@@ -290,5 +290,22 @@
   "refuelOcrError": "OCR स्कैन त्रुटि: {error}",
   "refuelOcrSuccess": "सफलतापूर्वक स्कैन: {summary}",
   "literUnit": "L",
-  "kwhUnit": "kWh"
+  "kwhUnit": "kWh",
+  "servicesHubTitle": "सर्विस और रखरखाव",
+  "servicesHubSubtitle": "रखरखाव शेड्यूल, सर्विस इतिहास और खर्च",
+  "servicesSchedulesTab": "शेड्यूल",
+  "servicesHistoryTab": "इतिहास",
+  "servicesAnalyticsTab": "विश्लेषण",
+  "servicesHealthScore": "वाहन स्वास्थ्य",
+  "servicesAllSystemsGood": "सभी सिस्टम ठीक हैं",
+  "servicesDueSoonCount": "{count} सर्विस जल्द देय",
+  "servicesOverdueCount": "{count} सर्विस समय समाप्त",
+  "servicesTotalSpend": "कुल सर्विस खर्च",
+  "servicesLogNew": "सर्विस जोड़ें",
+  "servicesAddReminder": "रिमाइंडर जोड़ें",
+  "servicesHubAction": "सर्विस हब",
+  "addFirstRefuelTitle": "पहला रिफ्यूलिंग जोड़ें",
+  "addFirstChargeTitle": "पहला चार्जिंग जोड़ें",
+  "addFirstRefuelSubtitle": "ईंधन मात्रा, लागत और ओडोमीटर जोड़ने के लिए टैप करें",
+  "addFirstChargeSubtitle": "ऊर्जा (kWh), लागत और ओडोमीटर जोड़ने के लिए टैप करें"
 }
