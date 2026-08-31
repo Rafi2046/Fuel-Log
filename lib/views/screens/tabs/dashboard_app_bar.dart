@@ -10,6 +10,7 @@ import '../../../core/utils/vehicle_display.dart';
 import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/clean_glass_panel.dart';
+import '../notifications/notifications_screen.dart';
 import '../reminders/reminders_screen.dart';
 import 'dashboard_bar_metrics.dart';
 
@@ -20,6 +21,7 @@ PreferredSizeWidget buildDashboardAppBar({
   required Vehicle? activeVehicle,
   VoidCallback? onVehicleTap,
   VoidCallback? onFuelStationsTap,
+  VoidCallback? onBackToHome,
 }) {
   switch (currentIndex) {
     case 0:
@@ -30,7 +32,7 @@ PreferredSizeWidget buildDashboardAppBar({
       );
     case 1:
       return AppAppBar(
-        automaticallyImplyLeading: false,
+        leading: onBackToHome != null ? AppBackButton(onPressed: onBackToHome) : null,
         title: 'logsTitle'.tr(),
         actions: [
           IconButton(
@@ -43,19 +45,18 @@ PreferredSizeWidget buildDashboardAppBar({
       );
     case 2:
       return AppAppBar(
-        automaticallyImplyLeading: false,
-        titleWidget: Text(
-          'statsTitle'.tr(),
-          style: AppTextStyles.title.copyWith(color: AppColors.primary),
-        ),
+        leading: onBackToHome != null ? AppBackButton(onPressed: onBackToHome) : null,
+        title: 'statsTitle'.tr(),
       );
     case 3:
       return AppAppBar(
-        automaticallyImplyLeading: false,
+        leading: onBackToHome != null ? AppBackButton(onPressed: onBackToHome) : null,
         title: 'settingsTitle'.tr(),
       );
     default:
-      return const AppAppBar(automaticallyImplyLeading: false);
+      return AppAppBar(
+        leading: onBackToHome != null ? AppBackButton(onPressed: onBackToHome) : null,
+      );
   }
 }
 
@@ -199,15 +200,9 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
                     onTap: onFuelStationsTap,
                   ),
                   _GhostIconButton(
-                    tooltip: 'reminders'.tr(),
+                    tooltip: 'notificationsTitle'.tr(),
                     icon: Icons.notifications_outlined,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const RemindersScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => NotificationsScreen.open(context),
                     showDot: hasAlerts,
                   ),
                 ],

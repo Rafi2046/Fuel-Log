@@ -306,6 +306,16 @@
   "servicesHubAction": "সার্ভিস হাব",
   "addFirstRefuelTitle": "প্রথম রিফুয়েলিং যোগ করুন",
   "addFirstChargeTitle": "প্রথম চার্জিং যোগ করুন",
-  "addFirstRefuelSubtitle": "জ্বালানির পরিমাণ, খরচ ও ওডোমিটার যোগ করতে ট্যাপ করুন",
-  "addFirstChargeSubtitle": "চার্জের পরিমাণ (kWh), খরচ ও ওডোমিটার যোগ করতে ট্যাপ করুন"
+  "addFirstRefuelSubtitle": "জ্বালানির পরিমাণ, খরচ ও ওডোমিটার রেকর্ড করতে ট্যাপ করুন",
+  "addFirstChargeSubtitle": "চার্জিং kWh এনার্জি, খরচ ও ওডোমিটার রেকর্ড করতে ট্যাপ করুন",
+  "notificationsTitle": "নোটিফিকেশন ও অ্যালার্ট",
+  "notificationsAll": "সব",
+  "notificationsMaintenance": "রক্ষণাবেক্ষণ",
+  "notificationsWeather": "আবহাওয়া",
+  "notificationsTips": "টিপস ও ফুয়েল",
+  "notificationsEmptyTitle": "কোনো নতুন নোটিফিকেশন নেই",
+  "notificationsEmptySubtitle": "সবকিছু আপ-টু-ডেট আছে! সার্ভিস অ্যালার্ট, রিমাইন্ডার এবং আবহাওয়ার সতর্কতা এখানে দেখা যাবে।",
+  "notificationsClearAll": "সব মুছুন",
+  "notificationsMarkRead": "সব পঠিত করুন",
+  "notificationsViewAction": "বিস্তারিত দেখুন"
 }

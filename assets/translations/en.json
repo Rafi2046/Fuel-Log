@@ -307,5 +307,15 @@
   "addFirstRefuelTitle": "Log First Refueling",
   "addFirstChargeTitle": "Log First Charge",
   "addFirstRefuelSubtitle": "Tap to record fuel amount, cost & odometer",
-  "addFirstChargeSubtitle": "Tap to record kWh energy, cost & odometer"
+  "addFirstChargeSubtitle": "Tap to record kWh energy, cost & odometer",
+  "notificationsTitle": "Notifications & Alerts",
+  "notificationsAll": "All",
+  "notificationsMaintenance": "Maintenance",
+  "notificationsWeather": "Weather",
+  "notificationsTips": "Tips & Fuel",
+  "notificationsEmptyTitle": "No New Notifications",
+  "notificationsEmptySubtitle": "You're all caught up! Service alerts, maintenance reminders and weather warnings will appear here.",
+  "notificationsClearAll": "Clear All",
+  "notificationsMarkRead": "Mark all as read",
+  "notificationsViewAction": "View Details"
 }

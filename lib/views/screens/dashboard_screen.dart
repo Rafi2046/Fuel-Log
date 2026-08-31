@@ -222,6 +222,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 activeVehicle: activeVehicle,
                 onVehicleTap: _openVehicleSwitcher,
                 onFuelStationsTap: _openGasStations,
+                onBackToHome: () => setState(() => _currentIndex = 0),
               ),
         body: IndexedStack(
           index: _currentIndex,
