@@ -16,6 +16,7 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/clean_glass_panel.dart';
 import '../refueling_form_screen.dart';
 import '../services/services_screen.dart';
 
@@ -66,19 +67,6 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   NotificationCategory _selectedCategory = NotificationCategory.all;
   final Set<String> _dismissedIds = {};
-
-  Color _severityAccent(NotificationSeverity severity) {
-    switch (severity) {
-      case NotificationSeverity.urgent:
-        return const Color(0xFFEF4444);
-      case NotificationSeverity.warning:
-        return const Color(0xFFF59E0B);
-      case NotificationSeverity.info:
-        return AppColors.primary;
-      case NotificationSeverity.success:
-        return const Color(0xFF10B981);
-    }
-  }
 
   String _categoryLabel(NotificationCategory category) {
     switch (category) {
@@ -285,7 +273,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       ),
       body: Column(
         children: [
-          // Sleek Segmented TabBar with 10px rounded corners
+          // Sleek Segmented TabBar with unified blackish dark styling
           _buildSegmentedFilterBar(allNotifications),
 
           const SizedBox(height: AppSpacing.xs),
@@ -315,7 +303,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  /// Refined segmented category bar with subtle 10px borders and no bubbly checkmarks
+  /// Segmented category bar with blackish card surface and 10px borders
   Widget _buildSegmentedFilterBar(List<AppNotificationItem> all) {
     final maintenanceCount = all
         .where((n) => n.category == NotificationCategory.maintenance)
@@ -360,14 +348,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF1E1E2C)
-                        : const Color(0xFF14141E),
+                    color: isSelected ? AppColors.card : AppColors.surface,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected
-                          ? const Color(0xFF3E3E56)
-                          : const Color(0xFF222232),
+                          ? Colors.white.withValues(alpha: 0.16)
+                          : Colors.white.withValues(alpha: 0.06),
                       width: 1,
                     ),
                   ),
@@ -393,8 +379,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFF2A2A3E)
-                              : const Color(0xFF1A1A26),
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -419,7 +405,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  /// Minimalist luxury notification card with quiet elegance and high readability
+  /// Blackish luxury notification card matching Settings & Home cards
   Widget _buildNotificationCard(AppNotificationItem item) {
     final isUrgent = item.severity == NotificationSeverity.urgent;
 
@@ -427,15 +413,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       color: Colors.transparent,
       child: InkWell(
         onTap: item.onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF161622),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(
               color: isUrgent
                   ? const Color(0xFFEF4444).withValues(alpha: 0.35)
-                  : const Color(0xFF262638),
+                  : Colors.white.withValues(alpha: 0.08),
               width: 1,
             ),
           ),
@@ -443,22 +429,24 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Unified tactile dark icon container
+              // Unified dark tactile icon container
               Container(
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E2C),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: const Color(0xFF2A2A3E),
+                    color: Colors.white.withValues(alpha: 0.08),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   item.icon,
                   size: 17,
-                  color: isUrgent ? const Color(0xFFEF4444) : AppColors.textPrimary,
+                  color: isUrgent
+                      ? const Color(0xFFEF4444)
+                      : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -585,9 +573,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1E2C),
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF2A2A3E)),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
               ),
               child: const Icon(
                 LucideIcons.bellOff,
