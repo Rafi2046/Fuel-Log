@@ -48,41 +48,50 @@ class ActiveNavigationBottomBar extends StatelessWidget {
         children: [
           // Top Row: Big Duration, Distance, and ETA
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        route?.formattedDuration ?? '...',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF00E5FF),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          route?.formattedDuration ?? '...',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF00E5FF),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '(${route?.formattedDistance ?? station.distance})',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            '(${route?.formattedDistance ?? _cleanDistance(station.distance)})',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Estimated Arrival: ${route?.formattedEta ?? '...'}',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textTertiary,
-                      fontSize: 11.5,
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'Estimated Arrival: ${route?.formattedEta ?? '...'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 10),
 
               // End Navigation Red Button
               Material(
@@ -168,6 +177,14 @@ class ActiveNavigationBottomBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _cleanDistance(String raw) {
+    if (raw.contains('•')) {
+      final parts = raw.split('•');
+      return parts.last.trim();
+    }
+    return raw;
   }
 }
 
