@@ -29,6 +29,11 @@ Future<void> main() async {
     await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
   }
 
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
   runApp(
