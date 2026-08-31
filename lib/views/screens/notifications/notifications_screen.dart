@@ -67,29 +67,29 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   NotificationCategory _selectedCategory = NotificationCategory.all;
   final Set<String> _dismissedIds = {};
 
-  Color _severityColor(NotificationSeverity severity) {
+  Color _severityAccent(NotificationSeverity severity) {
     switch (severity) {
       case NotificationSeverity.urgent:
-        return AppColors.error;
+        return const Color(0xFFEF4444);
       case NotificationSeverity.warning:
-        return const Color(0xFFFBBF24); // Amber
+        return const Color(0xFFF59E0B);
       case NotificationSeverity.info:
-        return const Color(0xFF60A5FA); // Blue
+        return AppColors.primary;
       case NotificationSeverity.success:
-        return AppColors.success;
+        return const Color(0xFF10B981);
     }
   }
 
-  String _categoryBadgeText(NotificationCategory category) {
+  String _categoryLabel(NotificationCategory category) {
     switch (category) {
       case NotificationCategory.maintenance:
-        return 'MAINTENANCE';
+        return 'Maintenance';
       case NotificationCategory.weather:
-        return 'WEATHER ADVISORY';
+        return 'Weather Advisory';
       case NotificationCategory.tips:
-        return 'SMART TIP';
+        return 'Efficiency Tip';
       case NotificationCategory.all:
-        return 'NOTIFICATION';
+        return 'Notification';
     }
   }
 
@@ -110,14 +110,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       list.add(
         AppNotificationItem(
           id: id,
-          title: '${r.title} is Overdue!',
+          title: '${r.title} is Overdue',
           message:
-              'Scheduled maintenance limit exceeded (${r.statusMessage(currentOdometer)}). Service your vehicle now to prevent wear.',
+              '${r.statusMessage(currentOdometer)}. Schedule service to prevent vehicle wear.',
           category: NotificationCategory.maintenance,
           severity: NotificationSeverity.urgent,
           icon: LucideIcons.triangleAlert,
           timeAgo: 'Action Required',
-          actionLabel: 'View in Services',
+          actionLabel: 'Open Services Hub',
           onTap: () => ServicesScreen.open(context),
         ),
       );
@@ -130,20 +130,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       list.add(
         AppNotificationItem(
           id: id,
-          title: 'Upcoming Service: ${r.title}',
+          title: 'Upcoming: ${r.title}',
           message:
-              'Maintenance due soon (${r.statusMessage(currentOdometer)}). Prepare for scheduled inspection.',
+              '${r.statusMessage(currentOdometer)}. Inspection due shortly.',
           category: NotificationCategory.maintenance,
           severity: NotificationSeverity.warning,
           icon: LucideIcons.bellRing,
           timeAgo: 'Due Soon',
-          actionLabel: 'View in Services',
+          actionLabel: 'Open Services Hub',
           onTap: () => ServicesScreen.open(context),
         ),
       );
     }
 
-    // 3. Weather Safety Alert (if rainy or hazardous driving)
+    // 3. Weather Safety Alert
     if (weatherAdvice != null) {
       final isCautionOrAvoid = weatherAdvice.level == DriveAdviceLevel.caution ||
           weatherAdvice.level == DriveAdviceLevel.avoid;
@@ -155,7 +155,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             id: weatherId,
             title: weatherAdvice.titleKey.tr(),
             message:
-                '${weatherAdvice.bodyKey.tr()} • Temperature ${weatherAdvice.snapshot.temperatureC.round()}°C',
+                '${weatherAdvice.bodyKey.tr()} • ${weatherAdvice.snapshot.temperatureC.round()}°C',
             category: NotificationCategory.weather,
             severity: isCautionOrAvoid
                 ? (weatherAdvice.level == DriveAdviceLevel.avoid
@@ -169,21 +169,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       }
     }
 
-    // 4. Vehicle Optimal Health Notification (if no overdue or due-soon)
+    // 4. Vehicle Optimal Health Notification
     if (vehicle != null && overdueReminders.isEmpty && dueSoonReminders.isEmpty) {
       final id = 'vehicle_optimal_${vehicle.id}';
       if (!_dismissedIds.contains(id)) {
         list.add(
           AppNotificationItem(
             id: id,
-            title: 'Vehicle Status: All Systems Optimal',
+            title: 'Vehicle Systems Optimal',
             message:
-                'All service schedules and maintenance checks for ${vehicle.name} are currently in good health.',
+                'All maintenance schedules for ${vehicle.name} are currently in good health.',
             category: NotificationCategory.maintenance,
             severity: NotificationSeverity.success,
             icon: LucideIcons.shieldCheck,
             timeAgo: 'Active',
-            actionLabel: 'Open Services Hub',
+            actionLabel: 'View Services',
             onTap: () => ServicesScreen.open(context),
           ),
         );
@@ -198,12 +198,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           id: fuelTipId,
           title: 'Fuel Economy & Mileage Logging',
           message:
-              'Record your exact odometer and fuel volume at each fill-up to monitor fuel consumption and detect leaks early.',
+              'Record odometer and fuel volume at each fill-up to monitor consumption and detect issues.',
           category: NotificationCategory.tips,
           severity: NotificationSeverity.info,
           icon: LucideIcons.fuel,
-          timeAgo: 'Smart Tip',
-          actionLabel: 'Log Fueling',
+          timeAgo: 'Tip',
+          actionLabel: 'Log Refuel',
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -257,24 +257,27 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         title: 'notificationsTitle'.tr(),
         actions: [
           if (allNotifications.isNotEmpty)
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _dismissedIds.addAll(allNotifications.map((n) => n.id));
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('notificationsMarkRead'.tr()),
-                    behavior: SnackBarBehavior.floating,
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _dismissedIds.addAll(allNotifications.map((n) => n.id));
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('notificationsMarkRead'.tr()),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                child: Text(
+                  'notificationsClearAll'.tr(),
+                  style: GoogleFonts.inter(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
-                );
-              },
-              child: Text(
-                'notificationsClearAll'.tr(),
-                style: GoogleFonts.inter(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
                 ),
               ),
             ),
@@ -282,8 +285,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       ),
       body: Column(
         children: [
-          // Category Filter Tabs
-          _buildFilterTabs(allNotifications),
+          // Sleek Segmented TabBar with 10px rounded corners
+          _buildSegmentedFilterBar(allNotifications),
+
+          const SizedBox(height: AppSpacing.xs),
 
           // Notifications Feed or Empty State
           Expanded(
@@ -292,7 +297,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.screenPadding,
-                      AppSpacing.sm,
+                      AppSpacing.xs,
                       AppSpacing.screenPadding,
                       AppSpacing.xl,
                     ),
@@ -310,7 +315,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  Widget _buildFilterTabs(List<AppNotificationItem> all) {
+  /// Refined segmented category bar with subtle 10px borders and no bubbly checkmarks
+  Widget _buildSegmentedFilterBar(List<AppNotificationItem> all) {
     final maintenanceCount = all
         .where((n) => n.category == NotificationCategory.maintenance)
         .length;
@@ -330,138 +336,201 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       (NotificationCategory.tips, 'notificationsTips'.tr(), tipsCount),
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPadding,
-        vertical: AppSpacing.sm,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.sm,
+        AppSpacing.screenPadding,
+        AppSpacing.xs,
       ),
-      child: Row(
-        children: tabs.map((tab) {
-          final isSelected = _selectedCategory == tab.$1;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text('${tab.$2} (${tab.$3})'),
-              selected: isSelected,
-              onSelected: (_) => setState(() => _selectedCategory = tab.$1),
-              selectedColor: AppColors.primary.withValues(alpha: 0.16),
-              backgroundColor: const Color(0xFF1E1E2C),
-              side: BorderSide(
-                color: isSelected
-                    ? AppColors.primary
-                    : const Color(0xFF2A2A3E),
-                width: 1,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: tabs.map((tab) {
+            final isSelected = _selectedCategory == tab.$1;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: InkWell(
+                onTap: () => setState(() => _selectedCategory = tab.$1),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF1E1E2C)
+                        : const Color(0xFF14141E),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF3E3E56)
+                          : const Color(0xFF222232),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        tab.$2,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF2A2A3E)
+                              : const Color(0xFF1A1A26),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${tab.$3}',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? AppColors.textPrimary
+                                : AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              labelStyle: GoogleFonts.inter(
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
+  /// Minimalist luxury notification card with quiet elegance and high readability
   Widget _buildNotificationCard(AppNotificationItem item) {
-    final sevColor = _severityColor(item.severity);
+    final isUrgent = item.severity == NotificationSeverity.urgent;
 
-    return AppCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top metadata row
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: sevColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: sevColor.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(item.icon, size: 12, color: sevColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      _categoryBadgeText(item.category),
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: sevColor,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Text(
-                item.timeAgo,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textTertiary,
-                ),
-              ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: () {
-                  setState(() => _dismissedIds.add(item.id));
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: const Padding(
-                  padding: EdgeInsets.all(2),
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 16,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ),
-            ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: item.onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF161622),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isUrgent
+                  ? const Color(0xFFEF4444).withValues(alpha: 0.35)
+                  : const Color(0xFF262638),
+              width: 1,
+            ),
           ),
-          const SizedBox(height: 10),
-
-          // Title & Body
-          Row(
+          padding: const EdgeInsets.all(14),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Unified tactile dark icon container
               Container(
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: sevColor.withValues(alpha: 0.1),
+                  color: const Color(0xFF1E1E2C),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: sevColor.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: const Color(0xFF2A2A3E),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(item.icon, size: 18, color: sevColor),
+                child: Icon(
+                  item.icon,
+                  size: 17,
+                  color: isUrgent ? const Color(0xFFEF4444) : AppColors.textPrimary,
+                ),
               ),
               const SizedBox(width: 12),
+
+              // Main notification content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header metadata: category tag • time • dismiss
+                    Row(
+                      children: [
+                        Text(
+                          _categoryLabel(item.category),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isUrgent
+                                ? const Color(0xFFEF4444)
+                                : AppColors.textTertiary,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: AppColors.textTertiary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          item.timeAgo,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () =>
+                              setState(() => _dismissedIds.add(item.id)),
+                          borderRadius: BorderRadius.circular(10),
+                          child: const Padding(
+                            padding: EdgeInsets.all(2),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 15,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+
+                    // Title
                     Text(
                       item.title,
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                         height: 1.25,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
+
+                    // Body
                     Text(
                       item.message,
                       style: GoogleFonts.inter(
@@ -471,56 +540,36 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         height: 1.35,
                       ),
                     ),
+
+                    // Inline quiet action link if available
+                    if (item.actionLabel != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            item.actionLabel!,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 10,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-
-          // Action Button (if any)
-          if (item.actionLabel != null && item.onTap != null) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: InkWell(
-                onTap: item.onTap,
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        item.actionLabel!,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 11,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -533,33 +582,35 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 68,
-              height: 68,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E2C),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: const Color(0xFF2A2A3E)),
               ),
               child: const Icon(
                 LucideIcons.bellOff,
-                size: 28,
+                size: 24,
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'notificationsEmptyTitle'.tr(),
-              style: AppTextStyles.title.copyWith(
+              style: GoogleFonts.inter(
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: 4),
             Text(
               'notificationsEmptySubtitle'.tr(),
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodySecondary.copyWith(
-                fontSize: 13,
+              style: GoogleFonts.inter(
+                fontSize: 12.5,
+                color: AppColors.textTertiary,
                 height: 1.4,
               ),
             ),
