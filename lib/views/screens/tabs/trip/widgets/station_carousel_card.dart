@@ -70,7 +70,7 @@ class StationCarouselCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Top row: Title & Star Rating & Price
+                      // Top row: Station Name & Price
                       Row(
                         children: [
                           Expanded(
@@ -87,71 +87,89 @@ class StationCarouselCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '৳${station.primaryPrice.toStringAsFixed(0)}',
+                            '৳${station.primaryPrice.toStringAsFixed(0)}/L',
                             style: AppTextStyles.caption.copyWith(
                               fontWeight: FontWeight.w800,
-                              fontSize: 12,
+                              fontSize: 12.5,
                               color: AppColors.primary,
                             ),
                           ),
                         ],
                       ),
 
-                      // Fuel types
-                      Text(
-                        station.fuelTypes,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textTertiary,
-                          fontSize: 10.5,
-                        ),
+                      // Middle row: Distance First • Area + Rating
+                      Row(
+                        children: [
+                          Text(
+                            _getDist(station.distance),
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                          if (_getArea(station.distance).isNotEmpty &&
+                              _getArea(station.distance) !=
+                                  _getDist(station.distance)) ...[
+                            Text(
+                              ' • ',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 10.5,
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                _getArea(station.distance),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(width: 6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                LucideIcons.star,
+                                size: 10.5,
+                                color: Color(0xFFFFB74D),
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                station.rating.toString(),
+                                style: AppTextStyles.caption.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10.5,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
 
-                      // Bottom row: Distance & Action Buttons (Rates + Navigate)
+                      // Bottom row: Fuel types + Navigate button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
                             child: Text(
-                              station.distance,
+                              station.fuelTypes,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
+                                color: AppColors.textTertiary,
+                                fontSize: 10.5,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          // View Rates button
-                          InkWell(
-                            onTap: onViewRates,
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 3.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryMuted,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: AppColors.primary.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: const Text(
-                                'Rates',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Material(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(7),
@@ -160,7 +178,7 @@ class StationCarouselCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(7),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                  horizontal: 9,
                                   vertical: 4,
                                 ),
                                 child: Row(
@@ -168,10 +186,10 @@ class StationCarouselCard extends StatelessWidget {
                                   children: [
                                     const Icon(
                                       LucideIcons.navigation,
-                                      size: 10.5,
+                                      size: 11,
                                       color: Colors.white,
                                     ),
-                                    const SizedBox(width: 3),
+                                    const SizedBox(width: 3.5),
                                     Text(
                                       'navigate'.tr(),
                                       style: AppTextStyles.caption.copyWith(
@@ -196,5 +214,19 @@ class StationCarouselCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String _getArea(String distanceStr) {
+    if (distanceStr.contains('•')) {
+      return distanceStr.split('•').first.trim();
+    }
+    return distanceStr;
+  }
+
+  static String _getDist(String distanceStr) {
+    if (distanceStr.contains('•')) {
+      return distanceStr.split('•').last.trim();
+    }
+    return distanceStr;
   }
 }

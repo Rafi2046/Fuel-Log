@@ -298,154 +298,111 @@ class _StationListRowItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dist = _getDist(station.distance);
+    final area = _getArea(station.distance);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: isSelected
-            ? const Color(0xFF22222E)
-            : const Color(0xFF181822),
-        borderRadius: BorderRadius.circular(14),
+        color: isSelected ? const Color(0xFF1E1E2A) : const Color(0xFF161620),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected
-              ? AppColors.primary
-              : const Color(0xFF2A2A38),
+          color: isSelected ? AppColors.primary : const Color(0xFF262634),
           width: isSelected ? 1.4 : 1.0,
         ),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
               children: [
-                // 1. Squircle Station Thumbnail
+                // 1. Station Thumbnail
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(9),
                   child: Container(
-                    width: 58,
-                    height: 58,
-                    color: const Color(0xFF22222C),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (station.imageUrl != null)
-                          station.imageUrl!.startsWith('http')
-                              ? Image.network(
-                                  station.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const _ThumbnailFallback(),
-                                )
-                              : Image.asset(
-                                  station.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const _ThumbnailFallback(),
-                                )
-                        else
-                          const _ThumbnailFallback(),
-                        Positioned(
-                          left: 3,
-                          bottom: 3,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 3.5,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF101014)
-                                  .withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                            child: const Text(
-                              'OPEN',
-                              style: TextStyle(
-                                color: Color(0xFF81C784),
-                                fontSize: 7.5,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    width: 52,
+                    height: 52,
+                    color: const Color(0xFF20202A),
+                    child: station.imageUrl != null
+                        ? (station.imageUrl!.startsWith('http')
+                            ? Image.network(
+                                station.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const _ThumbnailFallback(),
+                              )
+                            : Image.asset(
+                                station.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const _ThumbnailFallback(),
+                              ))
+                        : const _ThumbnailFallback(),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 11),
 
-                // 2. Center Details (No Truncation)
+                // 2. Center Info Column
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Name + Rating
+                      // Line 1: Station Name
+                      Text(
+                        station.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+
+                      // Line 2: Distance First • Street Name (Never truncated!)
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              station.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                color: AppColors.textPrimary,
-                              ),
+                          Text(
+                            dist,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                LucideIcons.star,
-                                size: 12,
-                                color: Color(0xFFFFB74D),
+                          if (area.isNotEmpty && area != dist) ...[
+                            Text(
+                              ' • ',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 11,
                               ),
-                              const SizedBox(width: 3),
-                              Text(
-                                station.rating.toString(),
+                            ),
+                            Flexible(
+                              child: Text(
+                                area,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: AppTextStyles.caption.copyWith(
-                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textSecondary,
                                   fontSize: 11.5,
-                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-
-                      // Full address & Distance
-                      Row(
-                        children: [
-                          const Icon(
-                            LucideIcons.mapPin,
-                            size: 12,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              station.distance,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w500,
-                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 3),
 
-                      // Fuels
+                      // Line 3: Available Fuel Types
                       Text(
                         station.fuelTypes,
                         maxLines: 1,
@@ -458,61 +415,57 @@ class _StationListRowItem extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(width: 8),
 
-                // 3. Price & Details View Button
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '৳${station.primaryPrice.toStringAsFixed(2)}',
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13.5,
+                // 3. Right Column: Clean Price & Star Rating
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => StationDetailScreen(
+                          station: station.toStationInfo(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => StationDetailScreen(
-                              station: station.toStationInfo(),
-                            ),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryMuted,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '৳${station.primaryPrice.toStringAsFixed(0)}/L',
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
                           ),
                         ),
-                        child: Row(
+                        const SizedBox(height: 3),
+                        Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(LucideIcons.info, size: 10, color: AppColors.primary),
-                            SizedBox(width: 3),
+                          children: [
+                            const Icon(
+                              LucideIcons.star,
+                              size: 11,
+                              color: Color(0xFFFFB74D),
+                            ),
+                            const SizedBox(width: 2.5),
                             Text(
-                              'Rates',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                              station.rating.toString(),
+                              style: AppTextStyles.caption.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -520,6 +473,20 @@ class _StationListRowItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String _getArea(String distanceStr) {
+    if (distanceStr.contains('•')) {
+      return distanceStr.split('•').first.trim();
+    }
+    return distanceStr;
+  }
+
+  static String _getDist(String distanceStr) {
+    if (distanceStr.contains('•')) {
+      return distanceStr.split('•').last.trim();
+    }
+    return distanceStr;
   }
 }
 
