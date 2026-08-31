@@ -84,7 +84,7 @@ class FuelLogApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Fuel Log',
+      title: 'FuelSync',
       debugShowCheckedModeBanner: false,
       theme: AppThemes.dark,
       themeMode: ThemeMode.dark,

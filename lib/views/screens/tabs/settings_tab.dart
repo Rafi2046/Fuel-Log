@@ -380,7 +380,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Fuel Log · v1.0.0',
+                'FuelSync · v1.0.0',
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
