@@ -74,7 +74,10 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
 
   double _estimateBottomOverlayHeight() {
     if (_isNavigating && _navigatingStation != null) return 136;
-    if (_showStations && _stations.isNotEmpty) return 128;
+    if (_showStations && _stations.isNotEmpty) {
+      // Header chips (~34) + gap (6) + carousel (132) + breathing room (8)
+      return 180;
+    }
 
     var height = 48.0; // Start Trip row
     final showWeather = !_isNavigating &&

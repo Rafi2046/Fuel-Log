@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -48,10 +49,44 @@ class TripLogTab extends StatefulWidget {
 
 class TripLogTabState extends State<TripLogTab>
     with
+        WidgetsBindingObserver,
         TickerProviderStateMixin,
         TripLogTabController,
         TripLogMapLayersMixin,
         TripLogMapViewMixin {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _mapController = MapController();
+    _carouselController = PageController(viewportFraction: 0.86);
+
+    if (widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fetchLiveLocation();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _tripTimer?.cancel();
+    _gpsPollingTimer?.cancel();
+    _gpsStream?.cancel();
+    _mapAnimController?.stop();
+    _mapAnimController?.dispose();
+    _mapAnimController = null;
+    _mapController.dispose();
+    _carouselController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    onTripAppLifecycle(state);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.isActive) {

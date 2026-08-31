@@ -20,6 +20,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   LatLng? _tripStartLocation;
   DateTime? _tripStartedAt;
   bool _isGeneralTripTracking = false;
+  bool _gpsForegroundFailed = false;
   final List<LatLng> _tripTrackPoints = [];
 
   late final MapController _mapController;
@@ -27,19 +28,6 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   AnimationController? _mapAnimController;
   double _mapZoom = 15.0;
   LatLng _mapCenter = kDefaultUserLocation;
-
-  @override
-  void initState() {
-    super.initState();
-    _mapController = MapController();
-    _carouselController = PageController(viewportFraction: 0.86);
-
-    if (widget.isActive) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _fetchLiveLocation();
-      });
-    }
-  }
 
   @override
   void didUpdateWidget(covariant TripLogTab oldWidget) {
@@ -53,19 +41,6 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
         } catch (_) {}
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _tripTimer?.cancel();
-    _gpsPollingTimer?.cancel();
-    _gpsStream?.cancel();
-    _mapAnimController?.stop();
-    _mapAnimController?.dispose();
-    _mapAnimController = null;
-    _mapController.dispose();
-    _carouselController.dispose();
-    super.dispose();
   }
 
   void _animatedMapMove(
@@ -239,7 +214,8 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     });
 
     if (newStations.isNotEmpty) {
-      _animatedMapMove(newStations.first.location, 15.0);
+      // Keep the map on the user's location — do not jump to the first station.
+      _animatedMapMove(center, 14.6);
       if (_carouselController.hasClients) {
         _carouselController.jumpToPage(0);
       }
@@ -277,9 +253,6 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
         _stations = stations;
         _selectedStationIndex = 0;
       });
-      if (stations.isNotEmpty) {
-        _animatedMapMove(stations.first.location, 15.0);
-      }
     } catch (_) {}
   }
 
@@ -364,6 +337,126 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _startNavigation(station);
   }
 
+  void onTripAppLifecycle(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (!_isGeneralTripTracking && !_isNavigating) return;
+    if (_tripStartedAt == null) return;
+    setState(() {
+      _tripDuration = DateTime.now().difference(_tripStartedAt!);
+    });
+  }
+
+  void _syncTripElapsedFromClock() {
+    if (_tripStartedAt == null) return;
+    _tripDuration = DateTime.now().difference(_tripStartedAt!);
+  }
+
+  void _startTripClock() {
+    _tripTimer?.cancel();
+    _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || _tripStartedAt == null) return;
+      setState(_syncTripElapsedFromClock);
+    });
+  }
+
+  LocationSettings _tripLocationSettings({bool useForegroundService = true}) {
+    if (Platform.isAndroid) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 3,
+        intervalDuration: const Duration(seconds: 2),
+        foregroundNotificationConfig: useForegroundService
+            ? const ForegroundNotificationConfig(
+                notificationTitle: 'Fuel Log',
+                notificationText: 'Trip tracking in progress',
+                enableWakeLock: true,
+              )
+            : null,
+      );
+    }
+    if (Platform.isIOS) {
+      return AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 3,
+        activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+      );
+    }
+    return const LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 3,
+    );
+  }
+
+  void _handleTripGpsPosition(Position position) {
+    if (!mounted) return;
+    if (!_isGeneralTripTracking && !_isNavigating) return;
+    if (position.accuracy > 65) return;
+
+    final currentLatLng = LatLng(position.latitude, position.longitude);
+
+    if (_lastGpsPoint != null) {
+      final deltaM = _distanceCalc.as(
+        LengthUnit.Meter,
+        _lastGpsPoint!,
+        currentLatLng,
+      );
+      if (deltaM >= 2.5 && deltaM < 500.0) {
+        _tripDistanceCoveredKm += deltaM / 1000.0;
+        _lastGpsPoint = currentLatLng;
+        _tripTrackPoints.add(currentLatLng);
+      } else if (deltaM >= 12.0) {
+        // GPS jump — move anchor without adding bogus distance.
+        _lastGpsPoint = currentLatLng;
+      }
+    } else {
+      _lastGpsPoint = currentLatLng;
+      if (_tripTrackPoints.isEmpty) {
+        _tripTrackPoints.add(currentLatLng);
+      }
+    }
+
+    if (_isNavigating && _navigatingStation != null) {
+      final remainingMeters = _distanceCalc.as(
+        LengthUnit.Meter,
+        currentLatLng,
+        _navigatingStation!.location,
+      );
+      final speedMs = position.speed > 1.0 ? position.speed : 6.9;
+      final remainingSeconds = (remainingMeters / speedMs).round();
+
+      setState(() {
+        _userLocation = currentLatLng;
+        if (_activeRoute != null) {
+          _activeRoute = NavigationRouteResult(
+            points: _activeRoute!.points,
+            distanceMeters: remainingMeters,
+            durationSeconds: remainingSeconds,
+            nextInstruction: _activeRoute!.nextInstruction,
+          );
+        }
+      });
+
+      if (remainingMeters < 30) {
+        _onArrivedAtStation(_navigatingStation!);
+      }
+    } else {
+      setState(() => _userLocation = currentLatLng);
+    }
+
+    if (_isGeneralTripTracking || _isNavigating) {
+      _animatedMapMove(
+        currentLatLng,
+        _mapController.camera.zoom,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.linear,
+      );
+    }
+  }
+
+  static const _distanceCalc = Distance();
+
   void _beginTripTracking() {
     _tripStartedAt = DateTime.now();
     _tripStartLocation = _userLocation;
@@ -431,16 +524,10 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   }
 
   Future<void> _startNavigation(MockGasStation station) async {
-    // Start live trip stopwatch
-    _tripTimer?.cancel();
+    if (!await _ensureGpsReady(forTripTracking: true)) return;
+
     _beginTripTracking();
-    _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {
-          _tripDuration += const Duration(seconds: 1);
-        });
-      }
-    });
+    _startTripClock();
 
     setState(() {
       _isNavigating = true;
@@ -465,7 +552,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       _activeRoute = routeResult;
     });
 
-    _startLiveGpsTracking(station);
+    _startLiveGpsStream();
     _chipSnack('Navigation started to ${station.name}');
   }
 
@@ -476,7 +563,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _gpsStream = null;
   }
 
-  Future<bool> _ensureGpsReady() async {
+  Future<bool> _ensureGpsReady({bool forTripTracking = false}) async {
     final enabled = await Geolocator.isLocationServiceEnabled();
     if (!enabled) {
       _chipSnack('liveTripNeedGps'.tr());
@@ -491,134 +578,39 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       _chipSnack('liveTripNeedPermission'.tr());
       return false;
     }
+    if (forTripTracking &&
+        Platform.isAndroid &&
+        permission == LocationPermission.whileInUse) {
+      final upgraded = await Geolocator.requestPermission();
+      if (upgraded == LocationPermission.denied ||
+          upgraded == LocationPermission.deniedForever) {
+        _chipSnack('liveTripNeedPermission'.tr());
+        return false;
+      }
+    }
     return true;
   }
 
   void _startLiveGpsStream() {
     _cancelGpsTracking();
-    const distanceCalc = Distance();
-    _gpsStream = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 8,
+    _subscribeGpsStream(
+      useForegroundService: Platform.isAndroid && !_gpsForegroundFailed,
+    );
+  }
+
+  void _subscribeGpsStream({required bool useForegroundService}) {
+    final stream = Geolocator.getPositionStream(
+      locationSettings: _tripLocationSettings(
+        useForegroundService: useForegroundService,
       ),
-    ).listen(
-      (position) {
-        if (!mounted) return;
-        if (!_isGeneralTripTracking && !_isNavigating) return;
-        if (position.accuracy > 45) return;
-
-        final currentLatLng = LatLng(position.latitude, position.longitude);
-        if (_lastGpsPoint != null) {
-          final deltaM = distanceCalc.as(
-            LengthUnit.Meter,
-            _lastGpsPoint!,
-            currentLatLng,
-          );
-          if (deltaM >= 5.0 && deltaM < 400.0) {
-            _tripDistanceCoveredKm += (deltaM / 1000.0);
-            _lastGpsPoint = currentLatLng;
-            _tripTrackPoints.add(currentLatLng);
-          }
-        } else {
-          _lastGpsPoint = currentLatLng;
-          _tripTrackPoints.add(currentLatLng);
-        }
-
-        setState(() => _userLocation = currentLatLng);
-        _animatedMapMove(
-          currentLatLng,
-          _mapController.camera.zoom,
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.linear,
-        );
-      },
-      onError: (_) {},
-    );
-  }
-
-  void _startLiveGpsTracking(MockGasStation station) {
-    _cancelGpsTracking();
-    const distanceCalc = Distance();
-
-    // Immediate first check
-    _updateNavLocation(station, distanceCalc);
-
-    // Periodic live check every 2.5 seconds (rock solid, no MissingPluginException)
-    _gpsPollingTimer = Timer.periodic(
-      const Duration(milliseconds: 2500),
-      (_) {
-        if (!mounted || !_isNavigating) return;
-        _updateNavLocation(station, distanceCalc);
-      },
-    );
-  }
-
-  Future<void> _updateNavLocation(
-    MockGasStation station,
-    Distance distanceCalc,
-  ) async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 4),
-        ),
-      );
-
-      if (!mounted || !_isNavigating) return;
-
-      final currentLatLng = LatLng(position.latitude, position.longitude);
-      final remainingMeters = distanceCalc.as(
-        LengthUnit.Meter,
-        currentLatLng,
-        station.location,
-      );
-
-      // Accumulate live distance covered
-      if (_lastGpsPoint != null) {
-        final deltaM = distanceCalc.as(
-          LengthUnit.Meter,
-          _lastGpsPoint!,
-          currentLatLng,
-        );
-        if (deltaM >= 2.0 && deltaM < 500.0) {
-          _tripDistanceCoveredKm += (deltaM / 1000.0);
-          _lastGpsPoint = currentLatLng;
-        }
-      } else {
-        _lastGpsPoint = currentLatLng;
+    ).handleError((Object error) {
+      if (useForegroundService && Platform.isAndroid && !_gpsForegroundFailed) {
+        _gpsForegroundFailed = true;
+        _subscribeGpsStream(useForegroundService: false);
       }
+    });
 
-      // Speed in m/s, fallback to ~25 km/h (6.9 m/s) if moving slow
-      final speedMs = position.speed > 1.0 ? position.speed : 6.9;
-      final remainingSeconds = (remainingMeters / speedMs).round();
-
-      setState(() {
-        _userLocation = currentLatLng;
-        if (_activeRoute != null) {
-          _activeRoute = NavigationRouteResult(
-            points: _activeRoute!.points,
-            distanceMeters: remainingMeters,
-            durationSeconds: remainingSeconds,
-            nextInstruction: _activeRoute!.nextInstruction,
-          );
-        }
-      });
-
-      // Light camera follow while driving — short pan, no zoom animation.
-      _animatedMapMove(
-        currentLatLng,
-        _mapController.camera.zoom,
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.linear,
-      );
-
-      // Arrival detection within 30 meters
-      if (remainingMeters < 30) {
-        _onArrivedAtStation(station);
-      }
-    } catch (_) {}
+    _gpsStream = stream.listen(_handleTripGpsPosition);
   }
 
   Future<void> _onArrivedAtStation(MockGasStation station) async {
@@ -671,22 +663,14 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       return;
     }
 
-    if (!await _ensureGpsReady()) return;
+    if (!await _ensureGpsReady(forTripTracking: true)) return;
     await _fetchLiveLocation();
     if (!mounted) return;
 
-    _tripTimer?.cancel();
     _beginTripTracking();
     setState(() => _isGeneralTripTracking = true);
 
-    _tripTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {
-          _tripDuration += const Duration(seconds: 1);
-        });
-      }
-    });
-
+    _startTripClock();
     _startLiveGpsStream();
     _chipSnack('liveTripStarted'.tr());
   }
