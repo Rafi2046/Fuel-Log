@@ -236,6 +236,69 @@ class NotificationService {
     }
   }
 
+  static const activeTripNotificationId = 91003;
+
+  NotificationDetails get _activeTripDetails {
+    const androidDetails = AndroidNotificationDetails(
+      'active_trip_tracking',
+      'Active Trip Tracking',
+      channelDescription:
+          'Live distance and time updates during active trips and navigation',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      autoCancel: false,
+      onlyAlertOnce: true,
+      showWhen: false,
+      visibility: NotificationVisibility.public,
+    );
+    const iosDetails = DarwinNotificationDetails();
+    return const NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+  }
+
+  /// Updates or shows an ongoing notification for live trip tracking (visible on lock screen).
+  Future<void> updateActiveTripNotification({
+    required double distanceKm,
+    required Duration duration,
+    String? destination,
+  }) async {
+    await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
+
+    final m = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final h = duration.inHours;
+    final timeStr = h > 0 ? '${h.toString().padLeft(2, '0')}:$m:$s' : '$m:$s';
+    final distStr = '${distanceKm.toStringAsFixed(2)} km';
+
+    final title = (destination != null && destination.isNotEmpty)
+        ? 'Navigating to $destination'
+        : '🚗 Active Trip in Progress';
+    final body = '$distStr • $timeStr elapsed';
+
+    try {
+      await _flutterLocalNotificationsPlugin.show(
+        activeTripNotificationId,
+        title,
+        body,
+        _activeTripDetails,
+      );
+    } catch (_) {}
+  }
+
+  /// Cancels the live trip ongoing notification.
+  Future<void> cancelActiveTripNotification() async {
+    await init();
+    try {
+      await _flutterLocalNotificationsPlugin.cancel(activeTripNotificationId);
+    } catch (_) {}
+  }
+
   Future<void> cancelWeatherNotifications() async {
     await init();
     await _flutterLocalNotificationsPlugin.cancel(weatherMorningId);

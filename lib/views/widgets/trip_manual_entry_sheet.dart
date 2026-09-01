@@ -12,6 +12,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/services/navigation_routing_service.dart';
+import '../../core/services/reverse_geocoding_service.dart';
 import '../../core/services/trip_category_prefs.dart';
 import '../../viewmodels/trip_log_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
@@ -26,6 +27,8 @@ class TripManualEntryPrefill {
     this.initialDurationSec,
     this.initialOrigin,
     this.initialDestination,
+    this.startPoint,
+    this.endPoint,
     this.startedAt,
     this.endedAt,
     this.source = 'gps',
@@ -36,6 +39,8 @@ class TripManualEntryPrefill {
   final int? initialDurationSec;
   final String? initialOrigin;
   final String? initialDestination;
+  final LatLng? startPoint;
+  final LatLng? endPoint;
   final DateTime? startedAt;
   final DateTime? endedAt;
   final String source;
@@ -134,19 +139,45 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
   void _applyPrefill(TripManualEntryPrefill? prefill) {
     if (prefill == null) return;
 
+    _originPoint = prefill.startPoint;
+    _destPoint = prefill.endPoint;
+
     if (prefill.initialOrigin != null && prefill.initialOrigin!.isNotEmpty) {
       _originCtrl.text = prefill.initialOrigin!;
+    } else if (prefill.startPoint != null) {
+      ReverseGeocodingService.resolveLabel(prefill.startPoint!).then((label) {
+        if (mounted &&
+            label != null &&
+            label.isNotEmpty &&
+            _originCtrl.text.isEmpty) {
+          setState(() {
+            _originCtrl.text = label;
+          });
+        }
+      });
     }
+
     if (prefill.initialDestination != null &&
         prefill.initialDestination!.isNotEmpty) {
       _destinationCtrl.text = prefill.initialDestination!;
+    } else if (prefill.endPoint != null) {
+      ReverseGeocodingService.resolveLabel(prefill.endPoint!).then((label) {
+        if (mounted &&
+            label != null &&
+            label.isNotEmpty &&
+            _destinationCtrl.text.isEmpty) {
+          setState(() {
+            _destinationCtrl.text = label;
+          });
+        }
+      });
     }
 
     if (prefill.initialDistanceKm != null) {
       final km = prefill.initialDistanceKm!;
       _distanceCtrl.text = km.truncateToDouble() == km
           ? km.toStringAsFixed(0)
-          : km.toStringAsFixed(1);
+          : (km < 10 ? km.toStringAsFixed(2) : km.toStringAsFixed(1));
     }
 
     final endedAt = prefill.endedAt ?? DateTime.now();

@@ -20,7 +20,6 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   LatLng? _tripStartLocation;
   DateTime? _tripStartedAt;
   bool _isGeneralTripTracking = false;
-  bool _gpsForegroundFailed = false;
   final List<LatLng> _tripTrackPoints = [];
 
   late final MapController _mapController;
@@ -349,6 +348,11 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   void _syncTripElapsedFromClock() {
     if (_tripStartedAt == null) return;
     _tripDuration = DateTime.now().difference(_tripStartedAt!);
+    NotificationService().updateActiveTripNotification(
+      distanceKm: _tripDistanceCoveredKm,
+      duration: _tripDuration,
+      destination: _navigatingStation?.name,
+    );
   }
 
   void _startTripClock() {
@@ -359,25 +363,18 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     });
   }
 
-  LocationSettings _tripLocationSettings({bool useForegroundService = true}) {
+  LocationSettings _tripLocationSettings() {
     if (Platform.isAndroid) {
       return AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 3,
-        intervalDuration: const Duration(seconds: 2),
-        foregroundNotificationConfig: useForegroundService
-            ? const ForegroundNotificationConfig(
-                notificationTitle: 'Fuel Log',
-                notificationText: 'Trip tracking in progress',
-                enableWakeLock: true,
-              )
-            : null,
+        distanceFilter: 2,
+        intervalDuration: const Duration(seconds: 1),
       );
     }
     if (Platform.isIOS) {
       return AppleSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 3,
+        distanceFilter: 2,
         activityType: ActivityType.automotiveNavigation,
         pauseLocationUpdatesAutomatically: false,
         showBackgroundLocationIndicator: true,
@@ -385,7 +382,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     }
     return const LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 3,
+      distanceFilter: 2,
     );
   }
 
@@ -402,7 +399,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
         _lastGpsPoint!,
         currentLatLng,
       );
-      if (deltaM >= 2.5 && deltaM < 500.0) {
+      if (deltaM >= 2.0 && deltaM < 500.0) {
         _tripDistanceCoveredKm += deltaM / 1000.0;
         _lastGpsPoint = currentLatLng;
         _tripTrackPoints.add(currentLatLng);
@@ -416,6 +413,12 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
         _tripTrackPoints.add(currentLatLng);
       }
     }
+
+    NotificationService().updateActiveTripNotification(
+      distanceKm: _tripDistanceCoveredKm,
+      duration: _tripDuration,
+      destination: _navigatingStation?.name,
+    );
 
     if (_isNavigating && _navigatingStation != null) {
       final remainingMeters = _distanceCalc.as(
@@ -466,12 +469,18 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _tripTrackPoints
       ..clear()
       ..add(_userLocation);
+    NotificationService().updateActiveTripNotification(
+      distanceKm: 0.0,
+      duration: Duration.zero,
+      destination: _navigatingStation?.name,
+    );
   }
 
   void _resetTripTrackingState() {
     _tripTimer?.cancel();
     _tripTimer = null;
     _cancelGpsTracking();
+    NotificationService().cancelActiveTripNotification();
     _tripDuration = Duration.zero;
     _tripDistanceCoveredKm = 0.0;
     _lastGpsPoint = null;
@@ -491,15 +500,6 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     final startPoint = _tripStartLocation;
     final endPoint = _lastGpsPoint ?? _userLocation;
 
-    String? origin;
-    String? destination = destinationHint;
-    if (startPoint != null) {
-      origin = await ReverseGeocodingService.resolveLabel(startPoint);
-    }
-    if (destination == null || destination.isEmpty) {
-      destination = await ReverseGeocodingService.resolveLabel(endPoint);
-    }
-
     if (!mounted) return;
 
     await showTripManualEntrySheet(
@@ -507,8 +507,9 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       prefill: TripManualEntryPrefill(
         initialDistanceKm: distanceKm > 0 ? distanceKm : null,
         initialDurationSec: durationSec > 0 ? durationSec : null,
-        initialOrigin: origin,
-        initialDestination: destination,
+        initialDestination: destinationHint,
+        startPoint: startPoint,
+        endPoint: endPoint,
         startedAt: startedAt,
         endedAt: endedAt,
         source: 'gps',
@@ -593,23 +594,9 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
 
   void _startLiveGpsStream() {
     _cancelGpsTracking();
-    _subscribeGpsStream(
-      useForegroundService: Platform.isAndroid && !_gpsForegroundFailed,
-    );
-  }
-
-  void _subscribeGpsStream({required bool useForegroundService}) {
     final stream = Geolocator.getPositionStream(
-      locationSettings: _tripLocationSettings(
-        useForegroundService: useForegroundService,
-      ),
-    ).handleError((Object error) {
-      if (useForegroundService && Platform.isAndroid && !_gpsForegroundFailed) {
-        _gpsForegroundFailed = true;
-        _subscribeGpsStream(useForegroundService: false);
-      }
-    });
-
+      locationSettings: _tripLocationSettings(),
+    );
     _gpsStream = stream.listen(_handleTripGpsPosition);
   }
 
@@ -652,7 +639,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       _chipSnack(
         'liveTripFinished'.tr(
           namedArgs: {
-            'km': distanceKm.toStringAsFixed(1),
+            'km': distanceKm.toStringAsFixed(2),
             'min': '$durationMin',
           },
         ),

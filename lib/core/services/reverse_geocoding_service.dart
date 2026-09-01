@@ -6,8 +6,15 @@ import 'package:latlong2/latlong.dart';
 /// Resolves GPS coordinates to a short human-readable place label (OSM Nominatim).
 abstract final class ReverseGeocodingService {
   static const _userAgent = 'FuelLogApp/1.0';
+  static final Map<String, String> _labelCache = {};
 
   static Future<String?> resolveLabel(LatLng point) async {
+    final key =
+        '${point.latitude.toStringAsFixed(4)},${point.longitude.toStringAsFixed(4)}';
+    if (_labelCache.containsKey(key)) {
+      return _labelCache[key];
+    }
+
     try {
       final uri = Uri.https(
         'nominatim.openstreetmap.org',
@@ -26,20 +33,29 @@ abstract final class ReverseGeocodingService {
             uri,
             headers: const {'User-Agent': _userAgent},
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(milliseconds: 2500));
 
       if (response.statusCode != 200) return null;
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final address = data['address'] as Map<String, dynamic>?;
+      String? result;
       if (address != null) {
         final short = _shortAddress(address);
-        if (short != null && short.isNotEmpty) return short;
+        if (short != null && short.isNotEmpty) result = short;
       }
 
-      final display = data['display_name'] as String?;
-      if (display == null || display.isEmpty) return null;
-      return _truncateDisplayName(display);
+      if (result == null) {
+        final display = data['display_name'] as String?;
+        if (display != null && display.isNotEmpty) {
+          result = _truncateDisplayName(display);
+        }
+      }
+
+      if (result != null && result.isNotEmpty) {
+        _labelCache[key] = result;
+      }
+      return result;
     } catch (_) {
       return null;
     }

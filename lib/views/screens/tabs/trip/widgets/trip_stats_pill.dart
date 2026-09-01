@@ -8,6 +8,7 @@ import '../../../../../core/constants/app_shadows.dart';
 
 class TripStatsPill extends StatelessWidget {
   const TripStatsPill({
+    super.key,
     required this.distanceKm,
     required this.elapsed,
   });
@@ -48,7 +49,7 @@ class TripStatsPill extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            '${distanceKm.toStringAsFixed(1)} ${'km'.tr()}',
+            '${distanceKm.toStringAsFixed(2)} ${'km'.tr()}',
             style: AppTextStyles.label.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,

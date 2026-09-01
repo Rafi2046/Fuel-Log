@@ -57,7 +57,8 @@ class TripSummaryCard extends ConsumerWidget {
             : 'tripDestination'.tr();
 
     final formattedDate = _dateFormat.format(trip.startedAt);
-    final distanceText = '${trip.distanceKm.toStringAsFixed(1)} ${'km'.tr()}';
+    final distanceText =
+        '${trip.distanceKm < 10 ? trip.distanceKm.toStringAsFixed(2) : trip.distanceKm.toStringAsFixed(1)} ${'km'.tr()}';
     final durationSec = _durationSec;
     final durationText = _formatDuration(durationSec);
 
