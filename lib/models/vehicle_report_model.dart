@@ -100,8 +100,15 @@ class VehicleReportData {
     required this.avgCostPerKm,
     required this.fuelLogCount,
     required this.serviceLogCount,
+    required this.totalLitres,
+    required this.avgFuelPrice,
+    required this.bestEfficiency,
+    required this.worstEfficiency,
+    required this.serviceCategoryCosts,
     required this.rawCsvData,
     required this.formattedTextReport,
+    this.fuelLogs = const [],
+    this.serviceLogs = const [],
   });
 
   final VehicleReportType type;
@@ -117,8 +124,15 @@ class VehicleReportData {
   final double avgCostPerKm;
   final int fuelLogCount;
   final int serviceLogCount;
+  final double totalLitres;
+  final double avgFuelPrice;
+  final double bestEfficiency;
+  final double worstEfficiency;
+  final Map<String, double> serviceCategoryCosts;
   final String rawCsvData;
   final String formattedTextReport;
+  final List<dynamic> fuelLogs;
+  final List<dynamic> serviceLogs;
 
   double get grandTotalSpend => totalFuelSpend + totalServiceSpend;
 }

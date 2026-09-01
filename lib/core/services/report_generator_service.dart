@@ -43,18 +43,48 @@ class ReportGeneratorService {
     if (filteredFuel.length >= 2) {
       final sorted = List<FuelLog>.from(filteredFuel)
         ..sort((a, b) => a.date.compareTo(b.date));
-      totalDistanceKm = sorted.last.odometer - sorted.first.odometer;
+      final diff = sorted.last.odometer - sorted.first.odometer;
+      totalDistanceKm = diff > 0 ? diff : diff.abs();
     } else if (filteredFuel.isNotEmpty) {
-      totalDistanceKm = filteredFuel.first.odometer;
+      totalDistanceKm = filteredFuel.first.odometer.clamp(0.0, double.infinity);
     }
 
     final avgCostPerKm =
         totalDistanceKm > 0 ? (grandTotal / totalDistanceKm) : 0.0;
 
-    // Average efficiency
-    double totalLitres = filteredFuel.fold(0.0, (s, l) => s + l.amount);
+    // Average efficiency & Fuel stats
+    final double totalLitres = filteredFuel.fold(0.0, (s, l) => s + l.amount);
     final avgEfficiency =
-        totalLitres > 0 ? (totalDistanceKm / totalLitres) : 0.0;
+        (totalLitres > 0 && totalDistanceKm > 0)
+            ? (totalDistanceKm / totalLitres)
+            : 0.0;
+
+    final avgFuelPrice =
+        totalLitres > 0 ? (totalFuelSpend / totalLitres) : 0.0;
+
+    final sortedFuel = List<FuelLog>.from(filteredFuel)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final List<double> efficiencies = [];
+    for (int i = 1; i < sortedFuel.length; i++) {
+      final prev = sortedFuel[i - 1];
+      final curr = sortedFuel[i];
+      final dist = curr.odometer - prev.odometer;
+      if (curr.amount > 0 && dist > 0) {
+        efficiencies.add(dist / curr.amount);
+      }
+    }
+
+    final double bestEfficiency =
+        efficiencies.isNotEmpty ? efficiencies.reduce((a, b) => a > b ? a : b) : avgEfficiency;
+    final double worstEfficiency =
+        efficiencies.isNotEmpty ? efficiencies.reduce((a, b) => a < b ? a : b) : avgEfficiency;
+
+    final Map<String, double> serviceCategoryCosts = {};
+    for (final s in filteredService) {
+      serviceCategoryCosts[s.category] =
+          (serviceCategoryCosts[s.category] ?? 0.0) + s.cost;
+    }
 
     final vehicleModelText =
         activeVehicle.model != null && activeVehicle.model!.isNotEmpty
@@ -77,6 +107,9 @@ class ReportGeneratorService {
     csv.writeln('Total Distance,${totalDistanceKm.toStringAsFixed(1)} km');
     csv.writeln('Cost Per KM,${AppCurrency.format(avgCostPerKm)} / km');
     csv.writeln('Average Efficiency,${avgEfficiency.toStringAsFixed(2)} km/L');
+    if (bestEfficiency > 0) {
+      csv.writeln('Best Efficiency,${bestEfficiency.toStringAsFixed(2)} km/L');
+    }
     csv.writeln('');
     csv.writeln('--- REFUELING LOGS ---');
     csv.writeln(
@@ -106,13 +139,17 @@ class ReportGeneratorService {
     textReport.writeln('──────────────────────────────');
     textReport.writeln('💰 Total Spend: ${AppCurrency.format(grandTotal)}');
     textReport.writeln(
-        '⛽ Fuel Cost: ${AppCurrency.format(totalFuelSpend)} (${filteredFuel.length} fill-ups)');
+        '⛽ Fuel Cost: ${AppCurrency.format(totalFuelSpend)} (${filteredFuel.length} fill-ups, ${totalLitres.toStringAsFixed(1)} L)');
     textReport.writeln(
         '🛠️ Service Cost: ${AppCurrency.format(totalServiceSpend)} (${filteredService.length} services)');
     textReport.writeln('📏 Distance: ${totalDistanceKm.toStringAsFixed(0)} km');
     textReport.writeln('📊 Cost/km: ${AppCurrency.format(avgCostPerKm)} / km');
     textReport.writeln(
         '🚀 Avg Mileage: ${avgEfficiency.toStringAsFixed(1)} km/L');
+    if (bestEfficiency > 0 && bestEfficiency != avgEfficiency) {
+      textReport.writeln(
+          '⭐ Best Mileage: ${bestEfficiency.toStringAsFixed(1)} km/L');
+    }
     textReport.writeln('──────────────────────────────');
     textReport.writeln('Generated via Fuel-Log App on ${_dateFormat.format(now)}');
 
@@ -130,8 +167,15 @@ class ReportGeneratorService {
       avgCostPerKm: avgCostPerKm,
       fuelLogCount: filteredFuel.length,
       serviceLogCount: filteredService.length,
+      totalLitres: totalLitres,
+      avgFuelPrice: avgFuelPrice,
+      bestEfficiency: bestEfficiency,
+      worstEfficiency: worstEfficiency,
+      serviceCategoryCosts: serviceCategoryCosts,
       rawCsvData: csv.toString(),
       formattedTextReport: textReport.toString(),
+      fuelLogs: filteredFuel,
+      serviceLogs: filteredService,
     );
   }
 }
