@@ -8,23 +8,65 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/services/vault_security_service.dart';
 import '../../../viewmodels/e_document_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/app_card.dart';
 import 'widgets/add_e_document_sheet.dart';
 import 'widgets/e_document_viewer_screen.dart';
+import 'widgets/vault_pin_screen.dart';
 
 /// E-Document Vault Screen for managing mandatory driving & vehicle documents.
 class EDocumentVaultScreen extends ConsumerWidget {
   const EDocumentVaultScreen({super.key});
 
-  static Future<void> open(BuildContext context) {
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => const EDocumentVaultScreen(),
-      ),
-    );
+  /// Opens the E-Document Vault with mandatory Biometric (Face / Fingerprint) & PIN security authentication.
+  static Future<void> open(BuildContext context) async {
+    const security = VaultSecurityService();
+    final canBiometrics = await security.canAuthenticateWithBiometrics();
+    final isBiometricsEnabled = await security.isBiometricsEnabled();
+    final isPinSet = await security.isPinSet();
+
+    // 1. Try Biometrics (Fingerprint / Face ID / Face Unlock) first
+    if (canBiometrics && isBiometricsEnabled) {
+      final authenticated = await security.authenticateWithBiometrics(
+        reason: 'Scan fingerprint or Face to unlock E-Document Vault',
+      );
+      if (authenticated && context.mounted) {
+        Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => const EDocumentVaultScreen(),
+          ),
+        );
+        return;
+      }
+    }
+
+    // 2. If PIN is configured, show PIN screen (with biometric retry option)
+    if (isPinSet && context.mounted) {
+      final unlocked = await VaultPinScreen.open(
+        context,
+        mode: VaultPinMode.unlock,
+      );
+      if (unlocked == true && context.mounted) {
+        Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => const EDocumentVaultScreen(),
+          ),
+        );
+      }
+      return;
+    }
+
+    // 3. If device biometrics was canceled or not available and no PIN is set, open directly
+    if (context.mounted) {
+      Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => const EDocumentVaultScreen(),
+        ),
+      );
+    }
   }
 
   IconData _getDocumentIcon(String docType) {
@@ -254,6 +296,69 @@ class EDocumentVaultScreen extends ConsumerWidget {
         leading: const AppBackButton(),
         title: 'E-Document Vault',
         actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(
+              LucideIcons.shieldCheck,
+              color: Color(0xFF10B981),
+              size: 20,
+            ),
+            tooltip: 'Vault Security',
+            color: const Color(0xFF1E1E2C),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: Color(0xFF2E2E42)),
+            ),
+            onSelected: (val) async {
+              const security = VaultSecurityService();
+              final isPinSet = await security.isPinSet();
+              if (!context.mounted) return;
+
+              if (val == 'pin') {
+                await VaultPinScreen.open(
+                  context,
+                  mode: isPinSet ? VaultPinMode.change : VaultPinMode.setup,
+                );
+              } else if (val == 'lock') {
+                Navigator.of(context).pop();
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'pin',
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.keyRound, size: 16, color: Color(0xFFFF7A50)),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Security PIN Settings',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'lock',
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.lock, size: 16, color: Color(0xFFEF4444)),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Lock Vault Now',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFF87171),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(
               LucideIcons.plus,

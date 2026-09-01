@@ -14,7 +14,7 @@ enum VaultPinMode {
   change,
 }
 
-/// Dedicated PIN Screen for Document Vault (Unlock, Setup, Change PIN)
+/// Dedicated PIN & Biometric Screen for E-Document Vault (Unlock, Setup, Change PIN)
 class VaultPinScreen extends ConsumerStatefulWidget {
   const VaultPinScreen({
     super.key,
@@ -55,11 +55,54 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
   bool _isConfirmStep = false;
   bool _isVerifyingOldPin = false;
 
+  bool _isBiometricsAvailable = false;
+  bool _isAuthenticatingBiometrics = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.mode == VaultPinMode.change) {
       _isVerifyingOldPin = true;
+    }
+    _checkAndPromptBiometrics();
+  }
+
+  Future<void> _checkAndPromptBiometrics() async {
+    if (widget.mode != VaultPinMode.unlock) return;
+
+    final security = ref.read(vaultSecurityServiceProvider);
+    final isAvailable = await security.canAuthenticateWithBiometrics();
+    final isEnabled = await security.isBiometricsEnabled();
+
+    if (mounted) {
+      setState(() {
+        _isBiometricsAvailable = isAvailable && isEnabled;
+      });
+    }
+
+    if (isAvailable && isEnabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerBiometricAuth();
+      });
+    }
+  }
+
+  Future<void> _triggerBiometricAuth() async {
+    if (_isAuthenticatingBiometrics || !mounted) return;
+
+    setState(() => _isAuthenticatingBiometrics = true);
+    final security = ref.read(vaultSecurityServiceProvider);
+
+    final success = await security.authenticateWithBiometrics(
+      reason: 'Scan fingerprint or Face to unlock E-Document Vault',
+    );
+
+    if (mounted) {
+      setState(() => _isAuthenticatingBiometrics = false);
+      if (success) {
+        ref.read(isVaultUnlockedProvider.notifier).state = true;
+        widget.onSuccess();
+      }
     }
   }
 
@@ -201,7 +244,9 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
 
   String _getHeaderSubtitle() {
     if (widget.mode == VaultPinMode.unlock) {
-      return 'documentVaultEnterPin'.tr();
+      return _isBiometricsAvailable
+          ? 'Use Face, Fingerprint or enter 4-digit PIN to unlock'
+          : 'documentVaultEnterPin'.tr();
     }
     if (widget.mode == VaultPinMode.setup) {
       return _isConfirmStep
@@ -238,7 +283,7 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
           children: [
             const Spacer(flex: 1),
 
-            // Lock Icon
+            // Lock Icon with subtle glow
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -248,6 +293,13 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
                   color: const Color(0xFF2E2E42),
                   width: 1.5,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
               child: const Icon(
                 LucideIcons.shieldCheck,
@@ -326,7 +378,7 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
 
             const Spacer(flex: 2),
 
-            // Numeric Keypad
+            // Numeric Keypad with Biometric Action
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
               child: Column(
@@ -340,7 +392,11 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const SizedBox(width: 72, height: 72),
+                      // Biometric Action Button (Fingerprint / Face)
+                      if (_isBiometricsAvailable && widget.mode == VaultPinMode.unlock)
+                        _buildBiometricButton()
+                      else
+                        const SizedBox(width: 72, height: 72),
                       _buildKeyButton('0'),
                       _buildActionButton(
                         icon: LucideIcons.delete,
@@ -388,6 +444,35 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBiometricButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _triggerBiometricAuth,
+        borderRadius: BorderRadius.circular(36),
+        child: Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+            border: Border.all(
+              color: const Color(0xFF10B981).withValues(alpha: 0.35),
+              width: 1.2,
+            ),
+          ),
+          child: const Center(
+            child: Icon(
+              LucideIcons.fingerprint,
+              size: 28,
+              color: Color(0xFF34D399),
             ),
           ),
         ),
