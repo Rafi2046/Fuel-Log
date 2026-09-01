@@ -86,15 +86,14 @@ class WeatherDriveCard extends ConsumerWidget {
     final wind = snap.windSpeedKmh.round();
 
     return _Shell(
-      accent: accent,
       child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                DriveAdviceEngine.weatherIconForCode(snap.weatherCode),
-                color: accent,
-                size: 16,
-              ),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            DriveAdviceEngine.weatherIconForCode(snap.weatherCode),
+            color: const Color(0xFFA1A1AA),
+            size: 16,
+          ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -233,23 +232,21 @@ class WeatherDriveTripBanner extends ConsumerWidget {
 }
 
 class _Shell extends StatelessWidget {
-  const _Shell({required this.child, this.accent});
+  const _Shell({required this.child});
 
   final Widget child;
-  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
-          color: (accent ?? AppColors.border).withValues(
-            alpha: accent == null ? 1 : 0.35,
-          ),
+          color: const Color(0xFF262636),
+          width: 1,
         ),
       ),
       child: child,

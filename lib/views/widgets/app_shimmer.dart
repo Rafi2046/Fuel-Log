@@ -248,7 +248,7 @@ class HomeTabSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // 2x Metric Cards Row
+          // 4-KPI Grid Skeleton
           Row(
             children: const [
               Expanded(
@@ -256,22 +256,52 @@ class HomeTabSkeleton extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ShimmerBox(width: 70, height: 12, borderRadius: 4),
-                      SizedBox(height: 10),
-                      ShimmerBox(width: 90, height: 20, borderRadius: 6),
+                      ShimmerBox(width: 60, height: 11, borderRadius: 4),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 80, height: 16, borderRadius: 4),
                     ],
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: ShimmerCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ShimmerBox(width: 70, height: 12, borderRadius: 4),
-                      SizedBox(height: 10),
-                      ShimmerBox(width: 90, height: 20, borderRadius: 6),
+                      ShimmerBox(width: 60, height: 11, borderRadius: 4),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 80, height: 16, borderRadius: 4),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: const [
+              Expanded(
+                child: ShimmerCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShimmerBox(width: 60, height: 11, borderRadius: 4),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 80, height: 16, borderRadius: 4),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: ShimmerCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShimmerBox(width: 60, height: 11, borderRadius: 4),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 80, height: 16, borderRadius: 4),
                     ],
                   ),
                 ),
@@ -280,14 +310,34 @@ class HomeTabSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Recent Activity Card Skeleton
+          // Vehicle Vitals Skeleton
+          ShimmerCard(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                ShimmerBox(width: 140, height: 13, borderRadius: 4),
+                SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(child: ShimmerBox(width: 100, height: 28, borderRadius: 4)),
+                    SizedBox(width: 16),
+                    Expanded(child: ShimmerBox(width: 100, height: 28, borderRadius: 4)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Services & Recent Activity Card Skeleton
           ShimmerCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 ShimmerBox(width: 130, height: 14, borderRadius: 4),
                 SizedBox(height: 12),
-                ShimmerBox(width: double.infinity, height: 50, borderRadius: 8),
+                ShimmerBox(width: double.infinity, height: 44, borderRadius: 8),
               ],
             ),
           ),
