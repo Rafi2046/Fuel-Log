@@ -18,24 +18,23 @@ final allEDocumentsStreamProvider =
   return repo.watchAllDocuments();
 });
 
-/// Filter options for E-Document list (All, Vehicle, Personal, Expiring).
+/// Filter options for E-Document list (All, Valid, Expiring Soon, Expired).
 enum EDocumentFilterTab {
   all,
-  vehicle,
-  personal,
+  valid,
   expiring,
+  expired,
 }
 
 final selectedEDocumentTabProvider =
     StateProvider<EDocumentFilterTab>((ref) => EDocumentFilterTab.all);
 
-/// Filtered E-Documents list provider based on selected tab and active vehicle.
+/// Filtered E-Documents list provider based on selected status KPI tab.
 final filteredEDocumentsProvider =
     Provider.autoDispose<List<EDocument>>((ref) {
   final docsAsync = ref.watch(allEDocumentsStreamProvider);
   final docs = docsAsync.valueOrNull ?? [];
   final activeTab = ref.watch(selectedEDocumentTabProvider);
-  final activeVehicle = ref.watch(activeVehicleProvider).valueOrNull;
 
   final now = DateTime.now();
 
@@ -43,17 +42,16 @@ final filteredEDocumentsProvider =
     switch (activeTab) {
       case EDocumentFilterTab.all:
         return true;
-      case EDocumentFilterTab.vehicle:
-        if (activeVehicle != null) {
-          return doc.vehicleId == activeVehicle.id;
-        }
-        return doc.vehicleId != null;
-      case EDocumentFilterTab.personal:
-        return doc.vehicleId == null;
+      case EDocumentFilterTab.valid:
+        if (doc.expiryDate == null) return true; // Lifetime
+        return !doc.expiryDate!.isBefore(now);
       case EDocumentFilterTab.expiring:
         if (doc.expiryDate == null) return false;
         final daysLeft = doc.expiryDate!.difference(now).inDays;
-        return daysLeft <= 30; // Expired or expiring within 30 days
+        return !doc.expiryDate!.isBefore(now) && daysLeft <= 30;
+      case EDocumentFilterTab.expired:
+        if (doc.expiryDate == null) return false;
+        return doc.expiryDate!.isBefore(now);
     }
   }).toList();
 });
