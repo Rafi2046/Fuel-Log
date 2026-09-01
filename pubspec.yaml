@@ -59,10 +59,10 @@ dependencies:
   image_picker: ^1.1.2
   google_mlkit_text_recognition: ^0.14.0
   file_picker: ^12.1.1
+  screen_brightness: ^2.0.0+1
   flutter_svg: ^2.0.17
   flutter_native_splash: ^2.4.7
-
-
+  syncfusion_flutter_pdfviewer: ^34.2.5
 dev_dependencies:
   flutter_test:
     sdk: flutter

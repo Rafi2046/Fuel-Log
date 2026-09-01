@@ -18,7 +18,7 @@ import '../../widgets/app_shimmer.dart';
 import '../../widgets/cost_per_km_detail_sheet.dart';
 import '../../widgets/efficiency_gauge.dart';
 import '../../widgets/home_metrics_cards.dart';
-import '../../widgets/home_services_card.dart';
+import '../../widgets/home_quick_action_cards.dart';
 import '../../widgets/list_lead_icon.dart';
 import '../../widgets/vehicle_vitals_detail_sheet.dart';
 import '../../widgets/weather_drive_card.dart';
@@ -26,6 +26,7 @@ import '../mileage/mileage_log_screen.dart';
 import '../mileage/widgets/fuel_log_detail_sheet.dart';
 import '../refueling_form_screen.dart';
 import '../services/services_screen.dart';
+import '../services/widgets/add_cost_service_sheet.dart';
 import 'dashboard_bottom_bar.dart';
 import 'logs_tab.dart';
 
@@ -210,7 +211,28 @@ class _HomeContent extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.md),
-          const HomeServicesCard(),
+          HomeQuickActionCards(
+            isEV: isEV,
+            onTapAddFuel: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const RefuelingFormScreen(),
+                ),
+              );
+            },
+            onTapAddService: () {
+              if (vehicle != null) {
+                final currentOdo = recent?.odometer ?? vehicle!.startOdo;
+                AddCostServiceSheet.show(
+                  context,
+                  vehicleId: vehicle!.id,
+                  currentOdometer: currentOdo,
+                );
+              } else {
+                ServicesScreen.open(context);
+              }
+            },
+          ),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [

@@ -328,9 +328,57 @@ class HomeTabSkeleton extends StatelessWidget {
               ],
             ),
           ),
+          // Dual Quick Action Cards Skeleton
+          Row(
+            children: const [
+              Expanded(
+                child: ShimmerCard(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(
+                    children: [
+                      ShimmerBox(width: 28, height: 28, borderRadius: 6),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShimmerBox(width: 60, height: 12, borderRadius: 4),
+                            SizedBox(height: 4),
+                            ShimmerBox(width: 80, height: 9, borderRadius: 3),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: ShimmerCard(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(
+                    children: [
+                      ShimmerBox(width: 28, height: 28, borderRadius: 6),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShimmerBox(width: 60, height: 12, borderRadius: 4),
+                            SizedBox(height: 4),
+                            ShimmerBox(width: 80, height: 9, borderRadius: 3),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.md),
 
-          // Services & Recent Activity Card Skeleton
+          // Recent Activity Card Skeleton
           ShimmerCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

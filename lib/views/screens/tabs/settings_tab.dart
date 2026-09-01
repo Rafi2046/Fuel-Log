@@ -16,6 +16,7 @@ import '../../../viewmodels/trip_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/clean_glass_panel.dart';
+import '../documents/e_document_vault_screen.dart';
 import '../reports/reports_screen.dart';
 import 'dashboard_bottom_bar.dart';
 
@@ -298,6 +299,18 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         DashboardBottomBar.contentBottomInset(context),
       ),
       children: [
+        _SettingsGroup(
+          title: 'documentVaultTitle'.tr(),
+          children: [
+            _SettingsTile(
+              icon: LucideIcons.shieldCheck,
+              title: 'documentVaultTitle'.tr(),
+              subtitle: 'documentVaultSubtitle'.tr(),
+              onTap: () => EDocumentVaultScreen.open(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
         _SettingsGroup(
           title: 'dataStorage'.tr(),
           children: [
