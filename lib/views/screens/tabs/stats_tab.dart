@@ -28,27 +28,34 @@ class StatsTab extends ConsumerWidget {
     final mileageUnit = isEV ? 'km/kWh' : 'km/L';
     final serviceLogs = serviceLogsAsync.valueOrNull ?? [];
 
-    return logsAsync.when(
-      loading: () => const StatsTabSkeleton(),
-      error: (e, _) => Center(
+    if (logsAsync.isLoading && !logsAsync.hasValue) {
+      return const StatsTabSkeleton();
+    }
+    if (logsAsync.hasError && !logsAsync.hasValue) {
+      return Center(
         child: Text(
-          'errorPrefix'.tr(namedArgs: {'error': '$e'}),
+          'errorPrefix'.tr(namedArgs: {'error': '${logsAsync.error}'}),
           style: const TextStyle(color: AppColors.textSecondary),
         ),
-      ),
-      data: (logs) => AppRefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(vehicleLogsProvider);
-          ref.invalidate(serviceLogsProvider);
-        },
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.sm,
-            AppSpacing.screenPadding,
-            DashboardBottomBar.contentBottomInset(context),
-          ),
+      );
+    }
+
+    final logs = logsAsync.valueOrNull ?? [];
+
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(vehicleLogsProvider);
+        ref.invalidate(serviceLogsProvider);
+        await Future.delayed(const Duration(milliseconds: 400));
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.sm,
+          AppSpacing.screenPadding,
+          DashboardBottomBar.contentBottomInset(context),
+        ),
         children: [
           AnalyticsCarousel(
             logs: logs,
@@ -56,17 +63,29 @@ class StatsTab extends ConsumerWidget {
             mileageUnit: mileageUnit,
             isElectric: isEV,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           _StatsActionTile(
-            icon: Icons.analytics_rounded,
+            icon: Icons.auto_graph_rounded,
             label: 'exploreMetrics'.tr(),
-            onTap: () => AdvancedMetricExplorerScreen.open(context),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AdvancedMetricExplorerScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.sm),
           _StatsActionTile(
-            icon: Icons.description_rounded,
+            icon: Icons.picture_as_pdf_rounded,
             label: 'report'.tr(),
-            onTap: () => ReportsScreen.open(context),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ReportsScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
@@ -82,7 +101,6 @@ class StatsTab extends ConsumerWidget {
             serviceLogs: serviceLogs,
           ),
         ],
-      ),
       ),
     );
   }

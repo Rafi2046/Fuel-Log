@@ -376,12 +376,14 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
   }
 
   Widget _buildRemindersList(RemindersState state, Vehicle? vehicle) {
-    if (state.isLoading) {
+    if (state.isLoading && state.reminders.isEmpty) {
       return const RemindersSkeleton();
     }
 
     return AppRefreshIndicator(
-      onRefresh: () => ref.read(remindersProvider.notifier).loadReminders(),
+      onRefresh: () async {
+        await ref.read(remindersProvider.notifier).loadReminders();
+      },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 4, bottom: 40),
@@ -516,79 +518,85 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
   Widget _buildServiceHistoryList(AsyncValue<List<ServiceLog>> logsAsync) {
     final dateFormat = DateFormat('MMM dd, yyyy');
 
-    return logsAsync.when(
-      loading: () => const ServicesSkeleton(),
-      error: (e, _) => Center(
-        child: Text('Error: $e',
+    if (logsAsync.isLoading && !logsAsync.hasValue) {
+      return const ServicesSkeleton();
+    }
+    if (logsAsync.hasError && !logsAsync.hasValue) {
+      return Center(
+        child: Text('Error: ${logsAsync.error}',
             style: const TextStyle(color: AppColors.textSecondary)),
-      ),
-      data: (logs) {
-        if (logs.isEmpty) {
-          return AppRefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(serviceLogsProvider);
-            },
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.25,
-                ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2ECC71).withValues(alpha: 0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.receipt_long_rounded,
-                            color: Color(0xFF2ECC71),
-                            size: 36,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          'No Cost & Service Records Yet',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Tap + at the top or quick actions to record parking fees, tolls, car wash, or service bills.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
+      );
+    }
 
-        return AppRefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(serviceLogsProvider);
-          },
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenPadding,
-              vertical: 8,
+    final logs = logsAsync.valueOrNull ?? [];
+    if (logs.isEmpty) {
+      return AppRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(serviceLogsProvider);
+          await Future.delayed(const Duration(milliseconds: 400));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.25,
             ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2ECC71).withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.receipt_long_rounded,
+                        color: Color(0xFF2ECC71),
+                        size: 36,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'No Cost & Service Records Yet',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Tap + at the top or quick actions to record parking fees, tolls, car wash, or service bills.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(serviceLogsProvider);
+        await Future.delayed(const Duration(milliseconds: 400));
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding,
+          vertical: 8,
+        ),
             itemCount: logs.length,
             itemBuilder: (context, index) {
               final item = logs[index];
@@ -712,7 +720,5 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
             },
           ),
         );
-      },
-    );
   }
 }

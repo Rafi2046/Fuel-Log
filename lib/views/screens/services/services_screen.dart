@@ -637,7 +637,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 
   // --- SUB TAB 1: SCHEDULES & REMINDERS ---
   Widget _buildSchedulesView(RemindersState state) {
-    if (state.isLoading) {
+    if (state.isLoading && state.reminders.isEmpty) {
       return const ServicesSkeleton();
     }
 

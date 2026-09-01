@@ -27,123 +27,127 @@ class TripListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tripsAsync = ref.watch(vehicleTripsProvider);
 
-    return tripsAsync.when(
-      loading: () => const TripHistorySkeleton(),
-      error: (e, _) => Center(
+    if (tripsAsync.isLoading && !tripsAsync.hasValue) {
+      return const TripHistorySkeleton();
+    }
+    if (tripsAsync.hasError && !tripsAsync.hasValue) {
+      return Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Text(
-            'errorPrefix'.tr(namedArgs: {'error': '$e'}),
+            'errorPrefix'.tr(namedArgs: {'error': '${tripsAsync.error}'}),
             textAlign: TextAlign.center,
             style: AppTextStyles.bodySecondary.copyWith(
               color: AppColors.error,
             ),
           ),
         ),
-      ),
-      data: (trips) {
-        if (trips.isEmpty) {
-          return AppRefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(vehicleTripsProvider);
-            },
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.2,
+      );
+    }
+
+    final trips = tripsAsync.valueOrNull ?? [];
+    if (trips.isEmpty) {
+      return AppRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(vehicleTripsProvider);
+          await Future.delayed(const Duration(milliseconds: 400));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.2,
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.xxl,
+                  horizontal: AppSpacing.lg,
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.xxl,
-                      horizontal: AppSpacing.lg,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF18181F),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFF2E2E38),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Icon(
-                            LucideIcons.route,
-                            size: 32,
-                            color: AppColors.textTertiary,
-                          ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF18181F),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF2E2E38),
+                          width: 1,
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'No trips recorded yet. Start exploring.',
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.bodySecondary.copyWith(
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      ],
+                      ),
+                      child: const Icon(
+                        LucideIcons.route,
+                        size: 32,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'No trips recorded yet. Start exploring.',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodySecondary.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(vehicleTripsProvider);
+        await Future.delayed(const Duration(milliseconds: 400));
+      },
+      child: ListView.builder(
+        physics: physics ?? const AlwaysScrollableScrollPhysics(),
+        shrinkWrap: shrinkWrap,
+        padding: padding,
+        itemCount: trips.length,
+        itemBuilder: (context, index) {
+          final trip = trips[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Dismissible(
+              key: ValueKey(trip.id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              onDismissed: (_) async {
+                await ref.read(tripLogProvider.notifier).deleteTrip(trip.id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Trip deleted'),
+                    backgroundColor: Color(0xFF1E1E2C),
+                    behavior: SnackBarBehavior.floating,
                   ),
-                ),
-              ],
+                );
+              },
+              child: TripSummaryCard(trip: trip),
             ),
           );
-        }
-
-        return AppRefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(vehicleTripsProvider);
-          },
-          child: ListView.builder(
-            physics: physics ?? const AlwaysScrollableScrollPhysics(),
-            shrinkWrap: shrinkWrap,
-            padding: padding,
-          itemCount: trips.length,
-          itemBuilder: (context, index) {
-            final trip = trips[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: Dismissible(
-                key: ValueKey(trip.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.error,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                onDismissed: (_) async {
-                  await ref.read(tripLogProvider.notifier).deleteTrip(trip.id);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Trip deleted'),
-                      backgroundColor: Color(0xFF1E1E2C),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                child: TripSummaryCard(trip: trip),
-              ),
-            );
-          },
-        ),
-        );
-      },
+        },
+      ),
     );
   }
 }

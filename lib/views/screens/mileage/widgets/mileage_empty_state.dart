@@ -189,12 +189,16 @@ class _StepItem extends StatelessWidget {
               children: [
                 Icon(icon, size: 14, color: AppColors.primary),
                 const SizedBox(width: 4),
-                Text(
-                  title,
-                  style: AppTextStyles.caption.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontSize: 12,
+                Flexible(
+                  child: Text(
+                    title,
+                    style: AppTextStyles.caption.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

@@ -70,96 +70,98 @@ class GarageTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
+    if (vehiclesAsync.isLoading && !vehiclesAsync.hasValue) {
+      return const GarageTabSkeleton();
+    }
+    if (vehiclesAsync.hasError && !vehiclesAsync.hasValue) {
+      return Center(
+        child: Text('errorPrefix'.tr(namedArgs: {'error': '${vehiclesAsync.error}'})),
+      );
+    }
 
-    return vehiclesAsync.when(
-      loading: () => const GarageTabSkeleton(),
-      error: (e, _) => Center(
-        child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
-      ),
-      data: (vehicles) {
-        final isEmpty = vehicles.isEmpty;
+    final vehicles = vehiclesAsync.valueOrNull ?? [];
+    final isEmpty = vehicles.isEmpty;
 
-        return AppRefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(vehiclesProvider);
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(AppSpacing.screenPadding),
-            children: [
-            if (!isEmpty) ...[
-              GarageSlotsHeader(used: vehicles.length, max: kMaxVehicles),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-            if (isEmpty)
-              GarageEmptyState(
-                onAddPressed: () => _onAddPressed(context, 0),
-              )
-            else ...[
-              CleanGlassPanel(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  children: [
-                    for (var i = 0; i < vehicles.length; i++)
-                      Dismissible(
-                        key: ValueKey('vehicle_${vehicles[i].id}'),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (_) async {
-                          await _confirmDelete(context, ref, vehicles[i]);
-                          return false;
-                        },
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: AppSpacing.md),
-                          color: AppColors.error.withValues(alpha: 0.12),
-                          child: const Icon(
-                            Icons.delete_outline_rounded,
-                            color: AppColors.error,
-                            size: 20,
-                          ),
-                        ),
-                        child: GarageVehicleCard(
-                          name: vehicles[i].name,
-                          subtitle: _subtitle(vehicles[i]),
-                          fuelType: vehicles[i].fuelType,
-                          icon: _iconFor(vehicles[i]),
-                          embedded: true,
-                          showDivider: i < vehicles.length - 1,
-                          onDelete: () =>
-                              _confirmDelete(context, ref, vehicles[i]),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-            if (!isEmpty) ...[
-              const SizedBox(height: 10),
-              _GarageAddButton(
-                label: 'addNewVehicle'.tr(),
-                onPressed: vehicles.length >= kMaxVehicles
-                    ? null
-                    : () => _onAddPressed(context, vehicles.length),
-              ),
-            ],
-            if (vehicles.length >= kMaxVehicles) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'vehicleLimitHint'.tr(
-                  namedArgs: {'count': '$kMaxVehicles'},
-                ),
-                textAlign: TextAlign.center,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(vehiclesProvider);
+        await Future.delayed(const Duration(milliseconds: 400));
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        children: [
+          if (!isEmpty) ...[
+            GarageSlotsHeader(used: vehicles.length, max: kMaxVehicles),
             const SizedBox(height: AppSpacing.lg),
           ],
-        ),
-        );
-      },
+          if (isEmpty)
+            GarageEmptyState(
+              onAddPressed: () => _onAddPressed(context, 0),
+            )
+          else ...[
+            CleanGlassPanel(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                children: [
+                  for (var i = 0; i < vehicles.length; i++)
+                    Dismissible(
+                      key: ValueKey('vehicle_${vehicles[i].id}'),
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (_) async {
+                        await _confirmDelete(context, ref, vehicles[i]);
+                        return false;
+                      },
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: AppSpacing.md),
+                        color: AppColors.error.withValues(alpha: 0.12),
+                        child: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                      ),
+                      child: GarageVehicleCard(
+                        name: vehicles[i].name,
+                        subtitle: _subtitle(vehicles[i]),
+                        fuelType: vehicles[i].fuelType,
+                        icon: _iconFor(vehicles[i]),
+                        embedded: true,
+                        showDivider: i < vehicles.length - 1,
+                        onDelete: () =>
+                            _confirmDelete(context, ref, vehicles[i]),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          if (!isEmpty) ...[
+            const SizedBox(height: 10),
+            _GarageAddButton(
+              label: 'addNewVehicle'.tr(),
+              onPressed: vehicles.length >= kMaxVehicles
+                  ? null
+                  : () => _onAddPressed(context, vehicles.length),
+            ),
+          ],
+          if (vehicles.length >= kMaxVehicles) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'vehicleLimitHint'.tr(
+                namedArgs: {'count': '$kMaxVehicles'},
+              ),
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
     );
   }
 }

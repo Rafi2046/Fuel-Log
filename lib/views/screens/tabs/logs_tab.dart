@@ -39,51 +39,56 @@ class LogsTab extends ConsumerWidget {
     final vehicleAsync = ref.watch(activeVehicleProvider);
     final isEV = vehicleAsync.valueOrNull?.isElectric ?? false;
     final unit = isEV ? 'kWh' : 'L';
+    if (logsAsync.isLoading && !logsAsync.hasValue) {
+      return const LogsTabSkeleton();
+    }
+    if (logsAsync.hasError && !logsAsync.hasValue) {
+      return Center(
+        child: Text('errorPrefix'.tr(namedArgs: {'error': '${logsAsync.error}'})),
+      );
+    }
 
-    return logsAsync.when(
-      loading: () => const LogsTabSkeleton(),
-      error: (e, _) => Center(
-        child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
-      ),
-      data: (logs) {
-        if (logs.isEmpty) {
-          return AppRefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(vehicleLogsProvider);
-            },
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.4,
-                ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Text(
-                      'noFuelLogsFound'.tr(),
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodySecondary,
-                    ),
-                  ),
-                ),
-              ],
+    final logs = logsAsync.valueOrNull ?? [];
+    if (logs.isEmpty) {
+      return AppRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(vehicleLogsProvider);
+          await Future.delayed(const Duration(milliseconds: 400));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.4,
             ),
-          );
-        }
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  'noFuelLogsFound'.tr(),
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodySecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
-        return AppRefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(vehicleLogsProvider);
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.sm,
-              AppSpacing.screenPadding,
-              AppSpacing.sm,
-            ),
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(vehicleLogsProvider);
+        await Future.delayed(const Duration(milliseconds: 400));
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.sm,
+          AppSpacing.screenPadding,
+          AppSpacing.sm,
+        ),
           children: [
             AppCard(
               padding: const EdgeInsets.symmetric(
@@ -220,9 +225,7 @@ class LogsTab extends ConsumerWidget {
             }),
           ],
         ),
-        );
-      },
-    );
+      );
   }
 }
 

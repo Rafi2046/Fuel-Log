@@ -20,8 +20,8 @@ class WeatherDriveCard extends ConsumerWidget {
 
     final adviceAsync = ref.watch(weatherAdviceProvider);
 
-    return adviceAsync.when(
-      loading: () => _Shell(
+    if (adviceAsync.isLoading && !adviceAsync.hasValue) {
+      return _Shell(
         child: Row(
           children: [
             SizedBox(
@@ -41,8 +41,11 @@ class WeatherDriveCard extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-      error: (_, _) => _Shell(
+      );
+    }
+
+    if (adviceAsync.hasError && !adviceAsync.hasValue) {
+      return _Shell(
         child: Row(
           children: [
             const Icon(LucideIcons.cloudOff, size: 18, color: AppColors.textTertiary),
@@ -69,18 +72,22 @@ class WeatherDriveCard extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-      data: (advice) {
-        final accent = advice.accentColor(AppColors.primary);
-        final snap = advice.snapshot;
-        final temp = snap.temperatureC.round();
-        final condition = snap.conditionKey.tr();
-        final humidity = snap.relativeHumidity;
-        final wind = snap.windSpeedKmh.round();
+      );
+    }
 
-        return _Shell(
-          accent: accent,
-          child: Row(
+    final advice = adviceAsync.valueOrNull;
+    if (advice == null) return const SizedBox.shrink();
+
+    final accent = advice.accentColor(AppColors.primary);
+    final snap = advice.snapshot;
+    final temp = snap.temperatureC.round();
+    final condition = snap.conditionKey.tr();
+    final humidity = snap.relativeHumidity;
+    final wind = snap.windSpeedKmh.round();
+
+    return _Shell(
+      accent: accent,
+      child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
@@ -155,8 +162,6 @@ class WeatherDriveCard extends ConsumerWidget {
             ],
           ),
         );
-      },
-    );
   }
 }
 

@@ -34,25 +34,29 @@ class HomeTab extends ConsumerWidget {
     final isEV = vehicleAsync.valueOrNull?.isElectric ?? false;
     final unit = isEV ? 'kWh' : 'L';
     final mileageUnit = isEV ? 'km/kWh' : 'km/L';
+    if (logsAsync.isLoading && !logsAsync.hasValue) {
+      return const HomeTabSkeleton();
+    }
+    if (logsAsync.hasError && !logsAsync.hasValue) {
+      return Center(
+        child: Text('errorPrefix'.tr(namedArgs: {'error': '${logsAsync.error}'})),
+      );
+    }
 
-    return logsAsync.when(
-      loading: () => const HomeTabSkeleton(),
-      error: (e, _) => Center(
-        child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
-      ),
-      data: (logs) => AppRefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(vehicleLogsProvider);
-          ref.invalidate(weatherAdviceProvider);
-          ref.invalidate(vehiclesProvider);
-        },
-        child: _HomeContent(
-          logs: logs,
-          isEV: isEV,
-          unit: unit,
-          mileageUnit: mileageUnit,
-          vehicleName: vehicleAsync.valueOrNull?.name,
-        ),
+    final logs = logsAsync.valueOrNull ?? [];
+
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(vehicleLogsProvider);
+        await ref.read(weatherAdviceProvider.notifier).refresh();
+        await Future.delayed(const Duration(milliseconds: 300));
+      },
+      child: _HomeContent(
+        logs: logs,
+        isEV: isEV,
+        unit: unit,
+        mileageUnit: mileageUnit,
+        vehicleName: vehicleAsync.valueOrNull?.name,
       ),
     );
   }

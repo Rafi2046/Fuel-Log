@@ -141,12 +141,16 @@ class EfficiencyGauge extends StatelessWidget {
                       children: [
                         Icon(_statusIcon, size: 12, color: _statusColor),
                         const SizedBox(width: 3),
-                        Text(
-                          _statusKey.tr(),
-                          style: AppTextStyles.caption.copyWith(
-                            color: _statusColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10,
+                        Flexible(
+                          child: Text(
+                            _statusKey.tr(),
+                            style: AppTextStyles.caption.copyWith(
+                              color: _statusColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

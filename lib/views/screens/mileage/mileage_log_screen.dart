@@ -41,14 +41,23 @@ class MileageLogScreen extends ConsumerWidget {
           },
         ),
       ],
-      body: logsAsync.when(
-        loading: () => const MileageLogSkeleton(),
-        error: (e, _) => Center(child: Text('Error loading mileage logs: $e')),
-        data: (logs) {
+      body: Builder(
+        builder: (context) {
+          if (logsAsync.isLoading && !logsAsync.hasValue) {
+            return const MileageLogSkeleton();
+          }
+          if (logsAsync.hasError && !logsAsync.hasValue) {
+            return Center(
+              child: Text('Error loading mileage logs: ${logsAsync.error}'),
+            );
+          }
+
+          final logs = logsAsync.valueOrNull ?? [];
           if (logs.isEmpty || processedEntries.isEmpty) {
             return AppRefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(vehicleLogsProvider);
+                await Future.delayed(const Duration(milliseconds: 400));
               },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -65,47 +74,49 @@ class MileageLogScreen extends ConsumerWidget {
           return AppRefreshIndicator(
             onRefresh: () async {
               ref.invalidate(vehicleLogsProvider);
+              await Future.delayed(const Duration(milliseconds: 400));
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.screenPadding,
-                    AppSpacing.sm,
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.screenPadding,
+                      AppSpacing.sm,
+                      AppSpacing.screenPadding,
+                      AppSpacing.listGap,
+                    ),
+                    child: MileageSummaryCard(),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
                     AppSpacing.screenPadding,
                     AppSpacing.listGap,
+                    AppSpacing.screenPadding,
+                    AppSpacing.sm,
                   ),
-                  child: MileageSummaryCard(),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPadding,
-                  AppSpacing.listGap,
-                  AppSpacing.screenPadding,
-                  AppSpacing.sm,
-                ),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final entry = processedEntries[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.listGap),
-                        child: MileageLogTile(
-                          entry: entry,
-                          unit: unit,
-                          isEV: isEV,
-                        ),
-                      );
-                    },
-                    childCount: processedEntries.length,
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final entry = processedEntries[index];
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: AppSpacing.listGap),
+                          child: MileageLogTile(
+                            entry: entry,
+                            unit: unit,
+                            isEV: isEV,
+                          ),
+                        );
+                      },
+                      childCount: processedEntries.length,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           );
         },
       ),
