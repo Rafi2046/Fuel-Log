@@ -29,16 +29,34 @@ enum EDocumentFilterTab {
 final selectedEDocumentTabProvider =
     StateProvider<EDocumentFilterTab>((ref) => EDocumentFilterTab.all);
 
-/// Filtered E-Documents list provider based on selected status KPI tab.
+/// Selected vehicle filter for E-Document list:
+/// null = All vehicles & personal
+/// -1 = Personal documents only (vehicleId == null)
+/// int = Specific vehicleId
+final selectedEDocumentVehicleFilterProvider =
+    StateProvider<int?>((ref) => null);
+
+/// Filtered E-Documents list provider based on selected status KPI tab & vehicle filter.
 final filteredEDocumentsProvider =
     Provider.autoDispose<List<EDocument>>((ref) {
   final docsAsync = ref.watch(allEDocumentsStreamProvider);
   final docs = docsAsync.valueOrNull ?? [];
   final activeTab = ref.watch(selectedEDocumentTabProvider);
+  final vehicleFilter = ref.watch(selectedEDocumentVehicleFilterProvider);
 
   final now = DateTime.now();
 
   return docs.where((doc) {
+    // 1. Vehicle filter
+    if (vehicleFilter != null) {
+      if (vehicleFilter == -1) {
+        if (doc.vehicleId != null) return false;
+      } else {
+        if (doc.vehicleId != vehicleFilter) return false;
+      }
+    }
+
+    // 2. Status tab filter
     switch (activeTab) {
       case EDocumentFilterTab.all:
         return true;
@@ -59,6 +77,7 @@ final filteredEDocumentsProvider =
 /// Document type presets and metadata helpers.
 enum EDocumentType {
   drivingLicense('driving_license', 'Driving License'),
+  nationalId('nid', 'NID Card (National ID)'),
   taxToken('tax_token', 'Tax Token'),
   registration('registration', 'Registration / Smart Card'),
   fitness('fitness', 'Fitness Certificate'),

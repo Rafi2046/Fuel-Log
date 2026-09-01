@@ -69,24 +69,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
     }
   }
 
-  IconData _getDocumentIcon(String docType) {
-    switch (docType) {
-      case 'driving_license':
-        return LucideIcons.idCard;
-      case 'tax_token':
-        return LucideIcons.receipt;
-      case 'registration':
-        return LucideIcons.fileText;
-      case 'fitness':
-        return LucideIcons.shieldCheck;
-      case 'insurance':
-        return LucideIcons.shieldAlert;
-      case 'route_permit':
-        return LucideIcons.mapPin;
-      default:
-        return LucideIcons.fileText;
-    }
-  }
+
 
   Future<void> _confirmDelete(
     BuildContext context,
@@ -267,15 +250,33 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
     final activeVehicle = ref.watch(activeVehicleProvider).valueOrNull;
 
-    // Build vehicle ID to Name lookup map
-    final vehicleMap = {for (final v in vehicles) v.id: v.name};
+    final selectedVehicleFilter =
+        ref.watch(selectedEDocumentVehicleFilterProvider);
 
-    // Calculate Summary Stats
+    // Build vehicle ID to Vehicle object lookup map
+    final vehicleObjectMap = {for (final v in vehicles) v.id: v};
+    final selectedVehicle = selectedVehicleFilter != null && selectedVehicleFilter != -1
+        ? vehicleObjectMap[selectedVehicleFilter]
+        : null;
+
+    // Filter documents by selected vehicle to calculate dynamic KPI status counts
+    final vehicleDocs = allDocs.where((doc) {
+      if (selectedVehicleFilter != null) {
+        if (selectedVehicleFilter == -1) {
+          return doc.vehicleId == null;
+        } else {
+          return doc.vehicleId == selectedVehicleFilter;
+        }
+      }
+      return true;
+    }).toList();
+
+    // Calculate Summary Stats based on the currently filtered vehicle scope
     final now = DateTime.now();
     var validCount = 0;
     var expiringSoonCount = 0;
     var expiredCount = 0;
-    for (final d in allDocs) {
+    for (final d in vehicleDocs) {
       if (d.expiryDate == null) {
         validCount++;
       } else if (d.expiryDate!.isBefore(now)) {
@@ -397,22 +398,37 @@ class EDocumentVaultScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Interactive KPI Filter Row
+            // 1. Interactive KPI Status Filter Row
             _buildInteractiveKpiRow(
               ref: ref,
               activeTab: activeTab,
-              total: allDocs.length,
+              total: vehicleDocs.length,
               valid: validCount,
               expiring: expiringSoonCount,
               expired: expiredCount,
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 12),
 
-            // 2. Document Content (Empty State or List)
+            // 2. Multi-Vehicle Horizontal Filter Selector
+            _buildVehicleFilterPills(
+              ref: ref,
+              vehicles: vehicles,
+              allDocs: allDocs,
+              selectedVehicleFilter: selectedVehicleFilter,
+            ),
+            const SizedBox(height: 14),
+
+            // 3. Document Content (Empty State or List)
             if (allDocs.isEmpty)
               _buildEmptyState(context, activeVehicle?.id)
             else if (docs.isEmpty)
-              _buildFilterEmptyState(ref, activeTab)
+              _buildFilterEmptyState(
+                context: context,
+                ref: ref,
+                activeTab: activeTab,
+                selectedVehicleFilter: selectedVehicleFilter,
+                selectedVehicle: selectedVehicle,
+              )
             else
               ListView.separated(
                 shrinkWrap: true,
@@ -423,16 +439,16 @@ class EDocumentVaultScreen extends ConsumerWidget {
                 itemBuilder: (ctx, index) {
                   final doc = docs[index];
                   final type = EDocumentType.fromCode(doc.docType);
-                  final vehicleName = doc.vehicleId != null
-                      ? vehicleMap[doc.vehicleId] ?? 'Vehicle #${doc.vehicleId}'
-                      : 'Personal Document';
+                  final vehicle = doc.vehicleId != null
+                      ? vehicleObjectMap[doc.vehicleId]
+                      : null;
 
                   return _buildDocumentCard(
                     context: context,
                     ref: ref,
                     document: doc,
                     type: type,
-                    vehicleName: vehicleName,
+                    vehicle: vehicle,
                   );
                 },
               ),
@@ -569,34 +585,187 @@ class EDocumentVaultScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFilterEmptyState(WidgetRef ref, EDocumentFilterTab activeTab) {
+  IconData _getVehicleTypeIcon(String? type) {
+    if (type == null) return LucideIcons.car;
+    final lower = type.toLowerCase();
+    if (lower.contains('bike') || lower.contains('motorcycle') || lower.contains('scooter')) {
+      return LucideIcons.bike;
+    }
+    if (lower.contains('truck') || lower.contains('lorry') || lower.contains('pickup')) {
+      return LucideIcons.truck;
+    }
+    return LucideIcons.car;
+  }
+
+  /// Multi-vehicle filter pill row allowing the user to filter documents by individual vehicle or personal papers
+  Widget _buildVehicleFilterPills({
+    required WidgetRef ref,
+    required List<Vehicle> vehicles,
+    required List<EDocument> allDocs,
+    required int? selectedVehicleFilter,
+  }) {
+    if (vehicles.isEmpty && allDocs.isEmpty) return const SizedBox.shrink();
+
+    // Calculate document counts per vehicle
+    final Map<int, int> countPerVehicle = {};
+    var personalCount = 0;
+    for (final doc in allDocs) {
+      if (doc.vehicleId != null) {
+        countPerVehicle[doc.vehicleId!] =
+            (countPerVehicle[doc.vehicleId!] ?? 0) + 1;
+      } else {
+        personalCount++;
+      }
+    }
+
+    final pills = <({int? id, String title, IconData icon, int count})>[
+      (id: null, title: 'All Docs', icon: LucideIcons.layers, count: allDocs.length),
+      ...vehicles.map((v) => (
+            id: v.id as int?,
+            title: v.name,
+            icon: _getVehicleTypeIcon(v.type),
+            count: countPerVehicle[v.id] ?? 0,
+          )),
+      if (personalCount > 0 || vehicles.isNotEmpty)
+        (id: -1, title: 'Personal / DL', icon: LucideIcons.user, count: personalCount),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: pills.map((item) {
+          final isSelected = selectedVehicleFilter == item.id;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () {
+                ref.read(selectedEDocumentVehicleFilterProvider.notifier).state =
+                    item.id;
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7.5,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF222234)
+                      : const Color(0xFF14141E),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFFFF7A50)
+                        : Colors.white.withValues(alpha: 0.08),
+                    width: isSelected ? 1.2 : 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFFFF7A50).withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.icon,
+                      size: 13.5,
+                      color: isSelected
+                          ? const Color(0xFFFF7A50)
+                          : const Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      item.title,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFFF7A50).withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${item.count}',
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected
+                              ? const Color(0xFFFF7A50)
+                              : const Color(0xFF71717A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildFilterEmptyState({
+    required BuildContext context,
+    required WidgetRef ref,
+    required EDocumentFilterTab activeTab,
+    required int? selectedVehicleFilter,
+    required Vehicle? selectedVehicle,
+  }) {
     String message;
-    switch (activeTab) {
-      case EDocumentFilterTab.valid:
-        message = 'No valid documents found.';
-        break;
-      case EDocumentFilterTab.expiring:
-        message = 'No documents expiring soon (within 30 days).';
-        break;
-      case EDocumentFilterTab.expired:
-        message = 'No expired documents. All your papers are up to date!';
-        break;
-      case EDocumentFilterTab.all:
-        message = 'No documents in vault.';
-        break;
+    if (selectedVehicleFilter != null) {
+      if (selectedVehicleFilter == -1) {
+        message = 'No personal documents (License/NID) found.';
+      } else {
+        final vName = selectedVehicle?.name ?? 'this vehicle';
+        message = 'No documents added for $vName yet.';
+      }
+    } else {
+      switch (activeTab) {
+        case EDocumentFilterTab.valid:
+          message = 'No valid documents found.';
+          break;
+        case EDocumentFilterTab.expiring:
+          message = 'No documents expiring soon (within 30 days).';
+          break;
+        case EDocumentFilterTab.expired:
+          message = 'No expired documents. All your papers are up to date!';
+          break;
+        case EDocumentFilterTab.all:
+          message = 'No documents in vault.';
+          break;
+      }
     }
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 40),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 38),
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
-          width: 1,
-        ),
+        color: const Color(0xFF1B1B24),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: const Color(0xFF262638), width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -604,49 +773,100 @@ class EDocumentVaultScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF34D399).withValues(alpha: 0.1),
+              color: const Color(0xFFFF7A50).withValues(alpha: 0.12),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFFFF7A50).withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
             child: const Icon(
-              LucideIcons.checkCircle2,
+              LucideIcons.fileSearch,
               size: 32,
-              color: Color(0xFF34D399),
+              color: Color(0xFFFF7A50),
             ),
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: GoogleFonts.inter(
-              fontSize: 13.5,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF94A3B8),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
+
+          // Primary Action: Add document for this specific vehicle or personal
+          if (selectedVehicleFilter != null && selectedVehicleFilter != -1) ...[
+            ElevatedButton.icon(
+              onPressed: () => AddEDocumentSheet.show(
+                context,
+                initialVehicleId: selectedVehicleFilter,
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF7A50),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+              icon: const Icon(LucideIcons.plus, size: 16),
+              label: Text(
+                'Add Document for ${selectedVehicle?.name ?? 'Vehicle'}',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ] else if (selectedVehicleFilter == -1) ...[
+            ElevatedButton.icon(
+              onPressed: () => AddEDocumentSheet.show(
+                context,
+                initialVehicleId: null,
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF7A50),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+              icon: const Icon(LucideIcons.plus, size: 16),
+              label: Text(
+                'Add Personal Document',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Secondary Action: Reset Filters
           InkWell(
             onTap: () {
               ref.read(selectedEDocumentTabProvider.notifier).state =
                   EDocumentFilterTab.all;
+              ref.read(selectedEDocumentVehicleFilterProvider.notifier).state =
+                  null;
             },
             borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF7A50).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: const Color(0xFFFF7A50).withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: Text(
                 'Show All Documents',
                 style: GoogleFonts.inter(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFFFF7A50),
                 ),
@@ -663,7 +883,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
     required WidgetRef ref,
     required EDocument document,
     required EDocumentType type,
-    required String vehicleName,
+    required Vehicle? vehicle,
   }) {
     final now = DateTime.now();
     final expiry = document.expiryDate;
@@ -671,26 +891,23 @@ class EDocumentVaultScreen extends ConsumerWidget {
     final daysLeft = expiry?.difference(now).inDays;
     final isExpiringSoon = expiry != null && !isExpired && daysLeft! <= 30;
     final isPdf = document.filePath.toLowerCase().endsWith('.pdf');
+    final vehicleName = vehicle?.name ??
+        (document.vehicleId != null
+            ? 'Vehicle #${document.vehicleId}'
+            : 'Personal Document');
 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1B1B28),
-            Color(0xFF13131D),
-          ],
-        ),
+        color: const Color(0xFF161622),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Colors.white.withValues(alpha: 0.07),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.32),
-            blurRadius: 14,
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -705,44 +922,15 @@ class EDocumentVaultScreen extends ConsumerWidget {
           ),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row: Icon + Title/Vehicle + Delete Button
+                // Top Header Row: Document Name & Vehicle Tag (Left) + Trash (Right)
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Sleek Compact Document Icon Box
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF2A2A3E),
-                            Color(0xFF1E1E2C),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(9),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          _getDocumentIcon(document.docType),
-                          size: 16,
-                          color: const Color(0xFFF1F5F9),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 11),
-
-                    // Title & Vehicle Association
+                    // Document Title & Vehicle Association
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -750,28 +938,30 @@ class EDocumentVaultScreen extends ConsumerWidget {
                           Text(
                             type.displayName,
                             style: GoogleFonts.inter(
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
                               color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
                               Icon(
                                 document.vehicleId != null
-                                    ? LucideIcons.car
+                                    ? _getVehicleTypeIcon(vehicle?.type)
                                     : LucideIcons.user,
-                                size: 12,
+                                size: 12.5,
                                 color: const Color(0xFF94A3B8),
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 5.5),
                               Flexible(
                                 child: Text(
-                                  vehicleName,
+                                  document.vehicleId != null
+                                      ? (vehicle?.name ?? vehicleName)
+                                      : 'Personal / Driver Paper',
                                   style: GoogleFonts.inter(
-                                    fontSize: 12,
+                                    fontSize: 12.5,
                                     fontWeight: FontWeight.w500,
                                     color: const Color(0xFF94A3B8),
                                   ),
@@ -779,13 +969,22 @@ class EDocumentVaultScreen extends ConsumerWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              if (vehicle?.brand != null && vehicle!.brand!.isNotEmpty) ...[
+                                Text(
+                                  ' · ${vehicle.brand}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11.5,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ],
                       ),
                     ),
 
-                    // Delete Icon Button
+                    // Delete button
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -794,17 +993,13 @@ class EDocumentVaultScreen extends ConsumerWidget {
                         child: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF222232),
+                            color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.06),
-                              width: 1,
-                            ),
                           ),
                           child: const Icon(
                             LucideIcons.trash2,
                             size: 15,
-                            color: Color(0xFF94A3B8),
+                            color: Color(0xFF71717A),
                           ),
                         ),
                       ),
@@ -812,47 +1007,64 @@ class EDocumentVaultScreen extends ConsumerWidget {
                   ],
                 ),
 
-                const SizedBox(height: 14),
-
-                // Hairline Separator
-                Container(
-                  height: 1,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-
                 const SizedBox(height: 12),
 
-                // Bottom Row: Status Badge & Tap to Inspect Button
+                // Subtle hairline
+                Container(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Bottom Metadata & Action Row: Validity + "Open PDF / View" Action
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Status Pill
-                    _buildExpiryBadge(
-                      isExpired,
-                      isExpiringSoon,
-                      daysLeft,
-                      expiry,
+                    // Validity Status
+                    _buildValidityInfo(
+                      isExpired: isExpired,
+                      isExpiringSoon: isExpiringSoon,
+                      daysLeft: daysLeft,
+                      expiry: expiry,
                     ),
 
-                    // Right "View Document" Indicator
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isPdf ? 'PDF' : 'View',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                    // Open / View Pill Button
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF7A50).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFFF7A50).withValues(alpha: 0.28),
+                          width: 0.9,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isPdf ? LucideIcons.fileText : LucideIcons.eye,
+                            size: 13,
                             color: const Color(0xFFFF7A50),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          LucideIcons.arrowUpRight,
-                          size: 14,
-                          color: Color(0xFFFF7A50),
-                        ),
-                      ],
+                          const SizedBox(width: 5),
+                          Text(
+                            isPdf ? 'Open PDF' : 'View Doc',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFFF7A50),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          const Icon(
+                            LucideIcons.arrowUpRight,
+                            size: 12,
+                            color: Color(0xFFFF7A50),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -864,80 +1076,128 @@ class EDocumentVaultScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildExpiryBadge(
-    bool isExpired,
-    bool isExpiringSoon,
-    int? daysLeft,
-    DateTime? expiry,
-  ) {
-    Color bg;
-    Color fg;
-    Color dotColor;
-    String label;
-
+  Widget _buildValidityInfo({
+    required bool isExpired,
+    required bool isExpiringSoon,
+    required int? daysLeft,
+    required DateTime? expiry,
+  }) {
     if (expiry == null) {
-      bg = const Color(0xFF10B981).withValues(alpha: 0.12);
-      fg = const Color(0xFF34D399);
-      dotColor = const Color(0xFF10B981);
-      label = 'Lifetime Document';
-    } else if (isExpired) {
-      bg = const Color(0xFFEF4444).withValues(alpha: 0.12);
-      fg = const Color(0xFFF87171);
-      dotColor = const Color(0xFFEF4444);
-      final abs = daysLeft != null ? daysLeft.abs() : 0;
-      label = 'Expired ($abs days ago)';
-    } else if (isExpiringSoon) {
-      bg = const Color(0xFFF59E0B).withValues(alpha: 0.12);
-      fg = const Color(0xFFFBBF24);
-      dotColor = const Color(0xFFF59E0B);
-      label = 'Expires in $daysLeft days';
-    } else {
-      bg = const Color(0xFF10B981).withValues(alpha: 0.12);
-      fg = const Color(0xFF34D399);
-      dotColor = const Color(0xFF10B981);
-      final dateStr = DateFormat('dd MMM yyyy').format(expiry);
-      label = 'Valid until $dateStr';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: dotColor.withValues(alpha: 0.25),
-          width: 1,
-        ),
-      ),
-      child: Row(
+      // Clean, elegant Permanent/No Expiry indicator without bulky box
+      return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: dotColor,
+              color: const Color(0xFF10B981).withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: dotColor.withValues(alpha: 0.6),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ],
+            ),
+            child: const Icon(
+              LucideIcons.check,
+              size: 10,
+              color: Color(0xFF34D399),
             ),
           ),
           const SizedBox(width: 6),
           Text(
-            label,
+            'Permanent Document',
             style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: fg,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF94A3B8),
             ),
           ),
         ],
-      ),
+      );
+    }
+
+    if (isExpired) {
+      final abs = daysLeft != null ? daysLeft.abs() : 0;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              LucideIcons.alertTriangle,
+              size: 10,
+              color: Color(0xFFF87171),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Expired ($abs days ago)',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFF87171),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (isExpiringSoon) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              LucideIcons.clock,
+              size: 10,
+              color: Color(0xFFFBBF24),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Expires in $daysLeft days',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFFBBF24),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Valid with expiry date
+    final dateStr = DateFormat('dd MMM yyyy').format(expiry);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: const Color(0xFF10B981).withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            LucideIcons.calendarCheck,
+            size: 10,
+            color: Color(0xFF34D399),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Valid till $dateStr',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFFCBD5E1),
+          ),
+        ),
+      ],
     );
   }
 
