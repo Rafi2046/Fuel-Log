@@ -7,6 +7,7 @@ import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/mileage_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/app_shimmer.dart';
 import '../refueling_form_screen.dart';
 import 'widgets/mileage_empty_state.dart';
 import 'widgets/mileage_log_tile.dart';
@@ -41,16 +42,33 @@ class MileageLogScreen extends ConsumerWidget {
         ),
       ],
       body: logsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MileageLogSkeleton(),
         error: (e, _) => Center(child: Text('Error loading mileage logs: $e')),
         data: (logs) {
           if (logs.isEmpty || processedEntries.isEmpty) {
-            return const MileageEmptyState();
+            return AppRefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(vehicleLogsProvider);
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.25,
+                  ),
+                  const MileageEmptyState(),
+                ],
+              ),
+            );
           }
 
-          return CustomScrollView(
-            physics: const ClampingScrollPhysics(),
-            slivers: [
+          return AppRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(vehicleLogsProvider);
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -87,6 +105,7 @@ class MileageLogScreen extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
           );
         },
       ),

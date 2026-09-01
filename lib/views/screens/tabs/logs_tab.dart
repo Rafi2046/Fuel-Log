@@ -11,6 +11,7 @@ import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/app_shimmer.dart';
 import '../../widgets/list_lead_icon.dart';
 
 import '../mileage/mileage_log_screen.dart';
@@ -40,31 +41,49 @@ class LogsTab extends ConsumerWidget {
     final unit = isEV ? 'kWh' : 'L';
 
     return logsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const LogsTabSkeleton(),
       error: (e, _) => Center(
         child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
       ),
       data: (logs) {
         if (logs.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Text(
-                'noFuelLogsFound'.tr(),
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodySecondary,
-              ),
+          return AppRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(vehicleLogsProvider);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.4,
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Text(
+                      'noFuelLogsFound'.tr(),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodySecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         }
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.sm,
-            AppSpacing.screenPadding,
-            AppSpacing.sm,
-          ),
+        return AppRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(vehicleLogsProvider);
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenPadding,
+              AppSpacing.sm,
+              AppSpacing.screenPadding,
+              AppSpacing.sm,
+            ),
           children: [
             AppCard(
               padding: const EdgeInsets.symmetric(
@@ -200,6 +219,7 @@ class LogsTab extends ConsumerWidget {
               );
             }),
           ],
+        ),
         );
       },
     );

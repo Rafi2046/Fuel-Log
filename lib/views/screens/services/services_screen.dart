@@ -16,6 +16,7 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../reminders/widgets/add_reminder_sheet.dart';
 import '../reminders/widgets/reminder_card.dart';
 import '../../widgets/app_app_bar.dart';
+import '../../widgets/app_shimmer.dart';
 import 'widgets/add_cost_service_sheet.dart';
 import 'widgets/service_log_detail_sheet.dart';
 
@@ -637,101 +638,118 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
   // --- SUB TAB 1: SCHEDULES & REMINDERS ---
   Widget _buildSchedulesView(RemindersState state) {
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+      return const ServicesSkeleton();
     }
 
     final activeList = state.activeReminders;
 
     if (activeList.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.alarm_on_rounded,
-                  size: 40,
-                  color: AppColors.primary,
+      return AppRefreshIndicator(
+        onRefresh: () async {
+          await ref.read(remindersProvider.notifier).loadReminders();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.2,
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.alarm_on_rounded,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Maintenance Schedules Set',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Set service reminders for engine oil, filters, brake pads, and tire rotation.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _openAddReminderSheet,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                      ),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: Text('servicesAddReminder'.tr()),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'No Maintenance Schedules Set',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Set service reminders for engine oil, filters, brake pads, and tire rotation.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _openAddReminderSheet,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text('servicesAddReminder'.tr()),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 80),
-      itemCount: activeList.length,
-      itemBuilder: (ctx, idx) {
-        final reminder = activeList[idx];
-        return ReminderCard(
-          reminder: reminder,
-          currentOdometer: state.currentOdometer,
-          onMarkDone: () => _confirmMarkDone(reminder),
-          onEdit: () async {
-            final vehicle = ref.read(activeVehicleProvider).valueOrNull;
-            if (vehicle == null) return;
-            final numId = int.tryParse(reminder.id);
-            if (numId == null) return;
-            final db = ref.read(databaseProvider);
-            final driftReminder = await db.getReminderById(numId);
-            if (driftReminder == null || !mounted) return;
-            AddReminderSheet.show(
-              context,
-              vehicleId: vehicle.id,
-              currentOdometer: state.currentOdometer,
-              existingReminder: driftReminder,
-              onSave: () =>
-                  ref.read(remindersProvider.notifier).loadReminders(),
-            );
-          },
-          onDelete: () =>
-              ref.read(remindersProvider.notifier).deleteReminder(reminder.id),
-        );
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        await ref.read(remindersProvider.notifier).loadReminders();
       },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 80),
+        itemCount: activeList.length,
+        itemBuilder: (ctx, idx) {
+          final reminder = activeList[idx];
+          return ReminderCard(
+            reminder: reminder,
+            currentOdometer: state.currentOdometer,
+            onMarkDone: () => _confirmMarkDone(reminder),
+            onEdit: () async {
+              final vehicle = ref.read(activeVehicleProvider).valueOrNull;
+              if (vehicle == null) return;
+              final numId = int.tryParse(reminder.id);
+              if (numId == null) return;
+              final db = ref.read(databaseProvider);
+              final driftReminder = await db.getReminderById(numId);
+              if (driftReminder == null || !mounted) return;
+              AddReminderSheet.show(
+                context,
+                vehicleId: vehicle.id,
+                currentOdometer: state.currentOdometer,
+                existingReminder: driftReminder,
+                onSave: () =>
+                    ref.read(remindersProvider.notifier).loadReminders(),
+              );
+            },
+            onDelete: () =>
+                ref.read(remindersProvider.notifier).deleteReminder(reminder.id),
+          );
+        },
+      ),
     );
   }
 
@@ -832,46 +850,59 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 
         // List
         Expanded(
-          child: filteredLogs.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.receipt_long_rounded,
-                          size: 38,
-                          color: AppColors.textTertiary,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No Service Logs Found',
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+          child: AppRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(serviceLogsProvider);
+            },
+            child: filteredLogs.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.sizeOf(context).height * 0.18,
+                      ),
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.receipt_long_rounded,
+                                size: 38,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No Service Logs Found',
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Tap + to log your maintenance or repair expense.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Tap + to log your maintenance or repair expense.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.screenPadding,
+                      6,
+                      AppSpacing.screenPadding,
+                      80,
                     ),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.screenPadding,
-                    6,
-                    AppSpacing.screenPadding,
-                    80,
-                  ),
                   itemCount: filteredLogs.length,
                   itemBuilder: (ctx, idx) {
                     final log = filteredLogs[idx];
@@ -994,6 +1025,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                     );
                   },
                 ),
+          ),
         ),
       ],
     );

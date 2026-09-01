@@ -11,7 +11,6 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../notifications/notifications_screen.dart';
-import '../reminders/reminders_screen.dart';
 import 'dashboard_bar_metrics.dart';
 
 /// Tab-aware app bar for [DashboardScreen].

@@ -12,6 +12,7 @@ import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
+import '../../widgets/app_shimmer.dart';
 import '../../widgets/clean_glass_panel.dart';
 import 'widgets/report_card_tile.dart';
 import 'widgets/report_preview_sheet.dart';
@@ -124,8 +125,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         leading: AppBackButton(),
         title: 'Create Report',
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(14, 6, 14, 32),
+      body: AppRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(vehicleLogsProvider);
+          ref.invalidate(serviceLogsProvider);
+          ref.invalidate(vehiclesProvider);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 32),
         children: [
           CleanGlassPanel(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -219,6 +227,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }

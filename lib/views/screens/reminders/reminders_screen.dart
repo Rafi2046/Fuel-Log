@@ -13,6 +13,7 @@ import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../services/widgets/add_cost_service_sheet.dart';
 import '../../widgets/app_app_bar.dart';
+import '../../widgets/app_shimmer.dart';
 import 'widgets/add_reminder_sheet.dart';
 import 'widgets/reminder_card.dart';
 
@@ -376,16 +377,13 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
 
   Widget _buildRemindersList(RemindersState state, Vehicle? vehicle) {
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+      return const RemindersSkeleton();
     }
 
-    return RefreshIndicator(
-      color: AppColors.primary,
-      backgroundColor: AppColors.cardElevated,
+    return AppRefreshIndicator(
       onRefresh: () => ref.read(remindersProvider.notifier).loadReminders(),
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 4, bottom: 40),
         children: [
           // Section Header
@@ -398,105 +396,116 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'ACTIVE REMINDERS',
+                  'UPCOMING MAINTENANCE',
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: AppColors.textTertiary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 Text(
-                  '${state.activeReminders.length} items',
+                  '${state.reminders.length} Active',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.textTertiary,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
 
-          if (state.activeReminders.isEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(
+          if (state.reminders.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.screenPadding,
-                vertical: 20,
+                vertical: 24,
               ),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF161622),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF262638)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161622),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF262638)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: AppColors.primary,
+                        size: 32,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: AppColors.primary,
-                      size: 32,
+                    const SizedBox(height: 12),
+                    Text(
+                      'All Scheduled Maintenance Up-to-Date',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No Active Reminders',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Tap the + icon at top right to add a custom maintenance interval for engine oil, coolant, battery, etc.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Add maintenance reminders to track oil life and receive alerts.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           else
-            ...state.activeReminders.map((reminder) {
-              return ReminderCard(
-                reminder: reminder,
-                currentOdometer: state.currentOdometer,
-                onMarkDone: () => _showMarkDoneDialog(
-                  context,
-                  ref,
-                  reminder,
-                  state.currentOdometer,
+            ...state.reminders.map((reminder) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenPadding,
+                  vertical: 6,
                 ),
-                onEdit: () async {
-                  if (vehicle == null) return;
-                  final numId = int.tryParse(reminder.id);
-                  if (numId == null) return;
-                  final db = ref.read(databaseProvider);
-                  final driftReminder = await db.getReminderById(numId);
-                  if (driftReminder == null || !context.mounted) return;
-                  AddReminderSheet.show(
-                    context,
-                    vehicleId: vehicle.id,
-                    currentOdometer: state.currentOdometer,
-                    existingReminder: driftReminder,
-                    onSave: () {
-                      ref.read(remindersProvider.notifier).loadReminders();
-                    },
-                  );
-                },
-                onDelete: () {
-                  ref
-                      .read(remindersProvider.notifier)
-                      .deleteReminder(reminder.id);
-                },
+                child: ReminderCard(
+                  reminder: reminder,
+                  currentOdometer: state.currentOdometer,
+                  onEdit: () async {
+                    if (vehicle == null) return;
+                    final numId = int.tryParse(reminder.id);
+                    if (numId == null) return;
+                    final db = ref.read(databaseProvider);
+                    final driftReminder = await db.getReminderById(numId);
+                    if (driftReminder == null || !context.mounted) return;
+                    AddReminderSheet.show(
+                      context,
+                      vehicleId: vehicle.id,
+                      currentOdometer: state.currentOdometer,
+                      existingReminder: driftReminder,
+                      onSave: () {
+                        ref.read(remindersProvider.notifier).loadReminders();
+                      },
+                    );
+                  },
+                  onDelete: () {
+                    ref
+                        .read(remindersProvider.notifier)
+                        .deleteReminder(reminder.id);
+                  },
+                  onMarkDone: () {
+                    _showMarkDoneDialog(
+                      context,
+                      ref,
+                      reminder,
+                      state.currentOdometer,
+                    );
+                  },
+                ),
               );
             }),
         ],
@@ -508,183 +517,200 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return logsAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF2ECC71)),
-      ),
+      loading: () => const ServicesSkeleton(),
       error: (e, _) => Center(
         child: Text('Error: $e',
             style: const TextStyle(color: AppColors.textSecondary)),
       ),
       data: (logs) {
         if (logs.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2ECC71).withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.receipt_long_rounded,
-                      color: Color(0xFF2ECC71),
-                      size: 36,
+          return AppRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(serviceLogsProvider);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.25,
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2ECC71).withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.receipt_long_rounded,
+                            color: Color(0xFF2ECC71),
+                            size: 36,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'No Cost & Service Records Yet',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Tap + at the top or quick actions to record parking fees, tolls, car wash, or service bills.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'No Cost & Service Records Yet',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Tap + at the top or quick actions to record parking fees, tolls, car wash, or service bills.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.screenPadding,
-            vertical: 8,
-          ),
-          itemCount: logs.length,
-          itemBuilder: (context, index) {
-            final item = logs[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF161620),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF242434)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF202030),
-                      borderRadius: BorderRadius.circular(10),
+        return AppRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(serviceLogsProvider);
+          },
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.screenPadding,
+              vertical: 8,
+            ),
+            itemCount: logs.length,
+            itemBuilder: (context, index) {
+              final item = logs[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161620),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF242434)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF202030),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        _getCategoryIcon(item.category),
+                        color: const Color(0xFF2ECC71),
+                        size: 19,
+                      ),
                     ),
-                    child: Icon(
-                      _getCategoryIcon(item.category),
-                      color: const Color(0xFF2ECC71),
-                      size: 19,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${dateFormat.format(item.date)} ${item.odometer != null ? '• ${item.odometer!.toStringAsFixed(0)} km' : ''}',
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.textTertiary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (item.note != null && item.note!.isNotEmpty) ...[
-                          const SizedBox(height: 2),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            item.note!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
-                              fontStyle: FontStyle.italic,
+                            item.title,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${dateFormat.format(item.date)} ${item.odometer != null ? '• ${item.odometer!.toStringAsFixed(0)} km' : ''}',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: AppColors.textTertiary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (item.note != null && item.note!.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              item.note!,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '৳${item.cost.toStringAsFixed(0)}',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF2ECC71),
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(
+                            Icons.more_vert_rounded,
+                            color: AppColors.textTertiary,
+                            size: 16,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          color: AppColors.cardElevated,
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: AppColors.border),
+                          ),
+                          onSelected: (val) {
+                            if (val == 'delete') {
+                              ref
+                                  .read(serviceLogServiceProvider)
+                                  .deleteServiceLog(item.id);
+                            }
+                          },
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline_rounded,
+                                      size: 15, color: Color(0xFFEF4444)),
+                                  SizedBox(width: 8),
+                                  Text('Delete',
+                                      style: TextStyle(color: Color(0xFFEF4444))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '৳${item.cost.toStringAsFixed(0)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF2ECC71),
-                        ),
-                      ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(
-                          Icons.more_vert_rounded,
-                          color: AppColors.textTertiary,
-                          size: 16,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        color: AppColors.cardElevated,
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: AppColors.border),
-                        ),
-                        onSelected: (val) {
-                          if (val == 'delete') {
-                            ref
-                                .read(serviceLogServiceProvider)
-                                .deleteServiceLog(item.id);
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete_outline_rounded,
-                                    size: 15, color: Color(0xFFEF4444)),
-                                SizedBox(width: 8),
-                                Text('Delete',
-                                    style: TextStyle(color: Color(0xFFEF4444))),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );

@@ -8,6 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/vehicle_display.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../../widgets/app_shimmer.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../vehicle_setup_screen.dart';
 import 'garage/confirm_delete_vehicle.dart';
@@ -71,16 +72,21 @@ class GarageTab extends ConsumerWidget {
     final vehiclesAsync = ref.watch(vehiclesProvider);
 
     return vehiclesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const GarageTabSkeleton(),
       error: (e, _) => Center(
         child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
       ),
       data: (vehicles) {
         final isEmpty = vehicles.isEmpty;
 
-        return ListView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          children: [
+        return AppRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(vehiclesProvider);
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppSpacing.screenPadding),
+            children: [
             if (!isEmpty) ...[
               GarageSlotsHeader(used: vehicles.length, max: kMaxVehicles),
               const SizedBox(height: AppSpacing.lg),
@@ -151,6 +157,7 @@ class GarageTab extends ConsumerWidget {
             ],
             const SizedBox(height: AppSpacing.lg),
           ],
+        ),
         );
       },
     );

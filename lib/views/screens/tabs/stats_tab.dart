@@ -11,6 +11,7 @@ import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../reports/reports_screen.dart';
 import '../stats/advanced_metric_explorer_screen.dart';
 import '../../widgets/analytics_carousel.dart';
+import '../../widgets/app_shimmer.dart';
 import '../../widgets/monthly_cost_breakdown.dart';
 import 'dashboard_bottom_bar.dart';
 
@@ -28,22 +29,26 @@ class StatsTab extends ConsumerWidget {
     final serviceLogs = serviceLogsAsync.valueOrNull ?? [];
 
     return logsAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      ),
+      loading: () => const StatsTabSkeleton(),
       error: (e, _) => Center(
         child: Text(
           'errorPrefix'.tr(namedArgs: {'error': '$e'}),
           style: const TextStyle(color: AppColors.textSecondary),
         ),
       ),
-      data: (logs) => ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding,
-          AppSpacing.sm,
-          AppSpacing.screenPadding,
-          DashboardBottomBar.contentBottomInset(context),
-        ),
+      data: (logs) => AppRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(vehicleLogsProvider);
+          ref.invalidate(serviceLogsProvider);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            AppSpacing.sm,
+            AppSpacing.screenPadding,
+            DashboardBottomBar.contentBottomInset(context),
+          ),
         children: [
           AnalyticsCarousel(
             logs: logs,
@@ -77,6 +82,7 @@ class StatsTab extends ConsumerWidget {
             serviceLogs: serviceLogs,
           ),
         ],
+      ),
       ),
     );
   }

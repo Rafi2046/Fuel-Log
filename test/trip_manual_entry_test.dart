@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fuel_log/core/constants/app_locales.dart';
 import 'package:fuel_log/core/database/app_database.dart';
-import 'package:fuel_log/viewmodels/trip_log_viewmodel.dart';
 import 'package:fuel_log/viewmodels/vehicle_viewmodel.dart';
 import 'package:fuel_log/views/widgets/app_primary_button.dart';
 import 'package:fuel_log/views/widgets/trip_manual_entry_sheet.dart';

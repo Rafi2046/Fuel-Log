@@ -6,7 +6,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../../models/reminder_model.dart';
 import '../../../models/weather_models.dart';
@@ -15,8 +14,7 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
-import '../../widgets/app_card.dart';
-import '../../widgets/clean_glass_panel.dart';
+import '../../widgets/app_shimmer.dart';
 import '../refueling_form_screen.dart';
 import '../services/services_screen.dart';
 
@@ -280,23 +278,39 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
           // Notifications Feed or Empty State
           Expanded(
-            child: filtered.isEmpty
-                ? _buildEmptyState()
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.screenPadding,
-                      AppSpacing.xs,
-                      AppSpacing.screenPadding,
-                      AppSpacing.xl,
+            child: AppRefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(vehicleLogsProvider);
+                ref.invalidate(remindersProvider);
+                ref.invalidate(weatherAdviceProvider);
+              },
+              child: filtered.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.sizeOf(context).height * 0.25,
+                        ),
+                        _buildEmptyState(),
+                      ],
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.screenPadding,
+                        AppSpacing.xs,
+                        AppSpacing.screenPadding,
+                        AppSpacing.xl,
+                      ),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final item = filtered[index];
+                        return _buildNotificationCard(item);
+                      },
                     ),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) {
-                      final item = filtered[index];
-                      return _buildNotificationCard(item);
-                    },
-                  ),
+            ),
           ),
         ],
       ),

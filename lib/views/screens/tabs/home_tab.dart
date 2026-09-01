@@ -10,7 +10,9 @@ import '../../../core/utils/app_formatters.dart';
 import '../../../core/utils/mileage_calculator.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/app_shimmer.dart';
 import '../../widgets/efficiency_gauge.dart';
 import '../../widgets/home_services_card.dart';
 import '../../widgets/list_lead_icon.dart';
@@ -34,16 +36,23 @@ class HomeTab extends ConsumerWidget {
     final mileageUnit = isEV ? 'km/kWh' : 'km/L';
 
     return logsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const HomeTabSkeleton(),
       error: (e, _) => Center(
         child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'})),
       ),
-      data: (logs) => _HomeContent(
-        logs: logs,
-        isEV: isEV,
-        unit: unit,
-        mileageUnit: mileageUnit,
-        vehicleName: vehicleAsync.valueOrNull?.name,
+      data: (logs) => AppRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(vehicleLogsProvider);
+          ref.invalidate(weatherAdviceProvider);
+          ref.invalidate(vehiclesProvider);
+        },
+        child: _HomeContent(
+          logs: logs,
+          isEV: isEV,
+          unit: unit,
+          mileageUnit: mileageUnit,
+          vehicleName: vehicleAsync.valueOrNull?.name,
+        ),
       ),
     );
   }
@@ -77,6 +86,7 @@ class _HomeContent extends StatelessWidget {
     final avgMileage = calculateAverageMileage(logs);
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
         AppSpacing.sm,

@@ -7,6 +7,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 import '../../../../../viewmodels/trip_log_viewmodel.dart';
+import '../../../../widgets/app_shimmer.dart';
 import 'trip_summary_card.dart';
 
 /// Stream-driven list view displaying trips for the active vehicle with swipe-to-delete.
@@ -27,15 +28,7 @@ class TripListView extends ConsumerWidget {
     final tripsAsync = ref.watch(vehicleTripsProvider);
 
     return tripsAsync.when(
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            color: AppColors.primary,
-          ),
-        ),
-      ),
+      loading: () => const TripHistorySkeleton(),
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -50,49 +43,66 @@ class TripListView extends ConsumerWidget {
       ),
       data: (trips) {
         if (trips.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.xxl,
-                horizontal: AppSpacing.lg,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF18181F),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF2E2E38),
-                        width: 1,
-                      ),
+          return AppRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(vehicleTripsProvider);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.2,
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xxl,
+                      horizontal: AppSpacing.lg,
                     ),
-                    child: const Icon(
-                      LucideIcons.route,
-                      size: 32,
-                      color: AppColors.textTertiary,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF18181F),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF2E2E38),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Icon(
+                            LucideIcons.route,
+                            size: 32,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'No trips recorded yet. Start exploring.',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodySecondary.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'No trips recorded yet. Start exploring.',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodySecondary.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
 
-        return ListView.builder(
-          physics: physics,
-          shrinkWrap: shrinkWrap,
-          padding: padding,
+        return AppRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(vehicleTripsProvider);
+          },
+          child: ListView.builder(
+            physics: physics ?? const AlwaysScrollableScrollPhysics(),
+            shrinkWrap: shrinkWrap,
+            padding: padding,
           itemCount: trips.length,
           itemBuilder: (context, index) {
             final trip = trips[index];
@@ -131,6 +141,7 @@ class TripListView extends ConsumerWidget {
               ),
             );
           },
+        ),
         );
       },
     );
