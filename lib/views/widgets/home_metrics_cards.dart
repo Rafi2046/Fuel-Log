@@ -236,6 +236,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
                       value: totalFuelConsumed > 0
                           ? '${totalFuelConsumed.toStringAsFixed(1)} $unit'
                           : '0 $unit',
+                      alignRight: true,
                     ),
                   ),
                 ),
@@ -277,6 +278,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
                       value: lastMileage > 0
                           ? '${lastMileage.toStringAsFixed(1)} $mileageUnit'
                           : '—',
+                      alignRight: true,
                     ),
                   ),
                 ),
@@ -293,15 +295,18 @@ class _VitalItem extends StatelessWidget {
   const _VitalItem({
     required this.label,
     required this.value,
+    this.alignRight = false,
   });
 
   final String label;
   final String value;
+  final bool alignRight;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -312,6 +317,7 @@ class _VitalItem extends StatelessWidget {
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          textAlign: alignRight ? TextAlign.end : TextAlign.start,
         ),
         const SizedBox(height: 4),
         Text(
@@ -324,6 +330,7 @@ class _VitalItem extends StatelessWidget {
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          textAlign: alignRight ? TextAlign.end : TextAlign.start,
         ),
       ],
     );
