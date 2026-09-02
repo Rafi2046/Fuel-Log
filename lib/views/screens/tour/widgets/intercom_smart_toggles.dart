@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -28,18 +30,22 @@ class IntercomSmartToggles extends StatelessWidget {
   final ValueChanged<bool> onMeshBridgeChanged;
   final ValueChanged<bool> onFecRecoveryChanged;
 
+  static const _dividerIndent = 46.0;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 2, bottom: AppSpacing.sm),
+          padding: const EdgeInsets.only(left: 4, bottom: AppSpacing.sm),
           child: Text(
             'Audio',
-            style: AppTextStyles.label.copyWith(
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textTertiary,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              fontSize: 11,
+              letterSpacing: 0.4,
             ),
           ),
         ),
@@ -51,31 +57,31 @@ class IntercomSmartToggles extends StatelessWidget {
               _SettingRow(
                 icon: Icons.air_rounded,
                 title: 'Wind noise filter',
-                subtitle: 'Cuts wind rumble and background hiss',
+                subtitle: 'Reduces wind at highway speeds',
                 value: windNoiseEnabled,
                 onChanged: onWindNoiseChanged,
               ),
-              const Divider(height: 1, color: AppColors.divider),
+              _InsetDivider(indent: _dividerIndent),
               _SettingRow(
                 icon: Icons.headset_mic_rounded,
                 title: 'Helmet audio',
-                subtitle: 'Routes through Bluetooth / Sena intercom',
+                subtitle: 'Route through Bluetooth / Sena',
                 value: helmetAudioEnabled,
                 onChanged: onHelmetAudioChanged,
               ),
-              const Divider(height: 1, color: AppColors.divider),
+              _InsetDivider(indent: _dividerIndent),
               _SettingRow(
                 icon: Icons.wifi_tethering_rounded,
                 title: 'Mesh bridge',
-                subtitle: 'Host relays audio between riders',
+                subtitle: 'Extend range without mobile data',
                 value: meshBridgeEnabled,
                 onChanged: onMeshBridgeChanged,
               ),
-              const Divider(height: 1, color: AppColors.divider),
+              _InsetDivider(indent: _dividerIndent),
               _SettingRow(
                 icon: Icons.auto_graph_rounded,
                 title: 'Auto FEC recovery',
-                subtitle: 'Smooths playback when packets drop',
+                subtitle: 'Keeps audio stable on packet loss',
                 value: fecRecoveryEnabled,
                 onChanged: onFecRecoveryChanged,
               ),
@@ -83,6 +89,22 @@ class IntercomSmartToggles extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _InsetDivider extends StatelessWidget {
+  const _InsetDivider({required this.indent});
+
+  final double indent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: indent,
+      color: AppColors.border.withValues(alpha: 0.55),
     );
   }
 }
@@ -102,74 +124,84 @@ class _SettingRow extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
+  void _handleTap() {
+    HapticFeedback.selectionClick();
+    onChanged(!value);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          _IconTile(icon: icon, active: value),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.label.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _handleTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: value ? AppColors.primary : AppColors.textTertiary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.body.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      subtitle,
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 11,
+                        color: AppColors.textTertiary,
+                        height: 1.25,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                Text(subtitle, style: AppTextStyles.caption),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              _CompactSwitch(value: value, onChanged: onChanged),
+            ],
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
-            activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
-            inactiveThumbColor: AppColors.textTertiary,
-            inactiveTrackColor: AppColors.cardElevated,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _IconTile extends StatelessWidget {
-  const _IconTile({required this.icon, required this.active});
+class _CompactSwitch extends StatelessWidget {
+  const _CompactSwitch({
+    required this.value,
+    required this.onChanged,
+  });
 
-  final IconData icon;
-  final bool active;
+  final bool value;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 36,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: active
-            ? AppColors.primary.withValues(alpha: 0.1)
-            : AppColors.cardElevated,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        border: Border.all(
-          color: active
-              ? AppColors.primary.withValues(alpha: 0.25)
-              : AppColors.border,
-        ),
-      ),
-      child: Icon(
-        icon,
-        size: 17,
-        color: active ? AppColors.primary : AppColors.textSecondary,
+    return Transform.scale(
+      scale: 0.78,
+      child: CupertinoSwitch(
+        value: value,
+        activeTrackColor: AppColors.primary,
+        onChanged: (next) {
+          HapticFeedback.selectionClick();
+          onChanged(next);
+        },
       ),
     );
   }
