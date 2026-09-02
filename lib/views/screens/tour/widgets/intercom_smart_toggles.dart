@@ -12,17 +12,21 @@ class IntercomSmartToggles extends StatelessWidget {
     required this.windNoiseEnabled,
     required this.helmetAudioEnabled,
     required this.meshBridgeEnabled,
+    required this.fecRecoveryEnabled,
     required this.onWindNoiseChanged,
     required this.onHelmetAudioChanged,
     required this.onMeshBridgeChanged,
+    required this.onFecRecoveryChanged,
   });
 
   final bool windNoiseEnabled;
   final bool helmetAudioEnabled;
   final bool meshBridgeEnabled;
+  final bool fecRecoveryEnabled;
   final ValueChanged<bool> onWindNoiseChanged;
   final ValueChanged<bool> onHelmetAudioChanged;
   final ValueChanged<bool> onMeshBridgeChanged;
+  final ValueChanged<bool> onFecRecoveryChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +51,7 @@ class IntercomSmartToggles extends StatelessWidget {
               _SettingRow(
                 icon: Icons.air_rounded,
                 title: 'Wind noise filter',
-                subtitle: 'Reduces wind at highway speeds',
+                subtitle: 'Cuts wind rumble and background hiss',
                 value: windNoiseEnabled,
                 onChanged: onWindNoiseChanged,
               ),
@@ -55,7 +59,7 @@ class IntercomSmartToggles extends StatelessWidget {
               _SettingRow(
                 icon: Icons.headset_mic_rounded,
                 title: 'Helmet audio',
-                subtitle: 'Route through Bluetooth / Sena',
+                subtitle: 'Routes through Bluetooth / Sena intercom',
                 value: helmetAudioEnabled,
                 onChanged: onHelmetAudioChanged,
               ),
@@ -63,16 +67,17 @@ class IntercomSmartToggles extends StatelessWidget {
               _SettingRow(
                 icon: Icons.wifi_tethering_rounded,
                 title: 'Mesh bridge',
-                subtitle: 'Extend range without mobile data',
+                subtitle: 'Host relays audio between riders',
                 value: meshBridgeEnabled,
                 onChanged: onMeshBridgeChanged,
               ),
               const Divider(height: 1, color: AppColors.divider),
-              const _InfoRow(
+              _SettingRow(
                 icon: Icons.auto_graph_rounded,
                 title: 'Auto FEC recovery',
-                subtitle: 'Keeps audio stable on packet loss',
-                badge: 'On',
+                subtitle: 'Smooths playback when packets drop',
+                value: fecRecoveryEnabled,
+                onChanged: onFecRecoveryChanged,
               ),
             ],
           ),
@@ -131,68 +136,6 @@ class _SettingRow extends StatelessWidget {
             inactiveThumbColor: AppColors.textTertiary,
             inactiveTrackColor: AppColors.cardElevated,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.badge,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String badge;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          _IconTile(icon: icon, active: false),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.label.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(subtitle, style: AppTextStyles.caption),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              border: Border.all(
-                color: AppColors.success.withValues(alpha: 0.24),
-              ),
-            ),
-            child: Text(
-              badge,
-              style: AppTextStyles.caption.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.success,
-              ),
-            ),
           ),
         ],
       ),

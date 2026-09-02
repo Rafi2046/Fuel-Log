@@ -9,6 +9,8 @@ import 'package:nearby_connections/nearby_connections.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
+import 'intercom_audio_settings.dart';
+
 class NearbyAudioPacket {
   final String fromEndpointId;
   final String fromName;
@@ -27,6 +29,9 @@ class NearbyAudioPacket {
 class NearbyAudioTransport {
   NearbyAudioTransport._();
   static final NearbyAudioTransport instance = NearbyAudioTransport._();
+
+  @visibleForTesting
+  static NearbyAudioTransport createForTesting() => NearbyAudioTransport._();
 
   static const int sampleRate = 16000;
   static const int numChannels = 1; // mono
@@ -60,6 +65,12 @@ class NearbyAudioTransport {
   double _prevInputSample = 0;
   double _prevOutputSample = 0;
 
+  IntercomAudioSettings _audioSettings = const IntercomAudioSettings();
+  Uint8List? _lastPlayedChunk;
+  bool _fecPlaybackPrimed = false;
+
+  IntercomAudioSettings get audioSettings => _audioSettings;
+
   Stream<NearbyAudioPacket> get incomingAudio => _incomingAudioController.stream;
   Stream<Set<String>> get connectionChanges => _connectionStateController.stream;
 
@@ -67,6 +78,32 @@ class NearbyAudioTransport {
   Map<String, String> get endpointNames => Map.unmodifiable(_endpointNames);
   int get connectedCount => _connectedEndpoints.length;
   bool get isRunning => _isRunning;
+
+  Future<void> updateAudioSettings(IntercomAudioSettings settings) async {
+    final helmetRouteChanged = _audioSettings.helmetAudioRouteEnabled !=
+        settings.helmetAudioRouteEnabled;
+    _audioSettings = settings;
+
+    if (!_fecRecoveryEnabled) {
+      _fecPlaybackPrimed = true;
+    } else if (!_fecPlaybackPrimed && _audioQueue.length >= _fecMinBufferChunks) {
+      _fecPlaybackPrimed = true;
+    }
+
+    if (helmetRouteChanged && _isTransmitting) {
+      await stopTransmitting();
+      await startTransmitting();
+    }
+
+    debugPrint('[NearbyAudioTransport] Audio settings updated: $settings');
+  }
+
+  bool get _windNoiseFilterEnabled => _audioSettings.windNoiseFilterEnabled;
+  bool get _helmetAudioRouteEnabled => _audioSettings.helmetAudioRouteEnabled;
+  bool get _meshBridgeEnabled => _audioSettings.meshBridgeEnabled;
+  bool get _fecRecoveryEnabled => _audioSettings.fecRecoveryEnabled;
+
+  static const int _fecMinBufferChunks = 2;
 
   // ── Request Required Runtime Permissions ──────────────────────────────────
   Future<bool> requestPermissions() async {
@@ -205,8 +242,8 @@ class NearbyAudioTransport {
               ),
             );
 
-            // Host Multi-Rider Bridge Relay: Forward Rider's audio to all other connected riders!
-            if (_isHost && _connectedEndpoints.length > 1) {
+            // Host multi-rider relay when mesh bridge is enabled.
+            if (_meshBridgeEnabled && _isHost && _connectedEndpoints.length > 1) {
               for (final peerId in _connectedEndpoints) {
                 if (peerId != endpointId) {
                   unawaited(Nearby().sendBytesPayload(peerId, rawBytes));
@@ -272,6 +309,9 @@ class NearbyAudioTransport {
         bufferSize: 8192,
         onBufferUnderflow: () {
           _isPlayerStreamStarted = false;
+          if (_fecRecoveryEnabled && _lastPlayedChunk != null) {
+            unawaited(_player?.feedUint8FromStream(_lastPlayedChunk!));
+          }
         },
       );
       _isPlayerStreamStarted = true;
@@ -285,13 +325,21 @@ class NearbyAudioTransport {
   void _playIncomingAudio(Uint8List pcmBytes) {
     if (pcmBytes.isEmpty || pcmBytes.length % 2 != 0) return;
 
-    // Keep max 15 chunks in queue (~500ms buffer) to avoid memory pile-up and latency
     if (_audioQueue.length > 15) {
       _audioQueue.removeRange(0, _audioQueue.length - 10);
     }
     _audioQueue.add(pcmBytes);
 
-    _processAudioQueue();
+    if (!_fecRecoveryEnabled) {
+      _fecPlaybackPrimed = true;
+    } else if (!_fecPlaybackPrimed &&
+        _audioQueue.length >= _fecMinBufferChunks) {
+      _fecPlaybackPrimed = true;
+    }
+
+    if (_fecPlaybackPrimed) {
+      _processAudioQueue();
+    }
   }
 
   Future<void> _processAudioQueue() async {
@@ -306,6 +354,7 @@ class NearbyAudioTransport {
             await _startPlayerStream();
           }
           await _player!.feedUint8FromStream(chunk);
+          _lastPlayedChunk = chunk;
         }
       } catch (e) {
         debugPrint('[NearbyAudioTransport] Audio feed error: $e');
@@ -328,9 +377,32 @@ class NearbyAudioTransport {
       return;
     }
 
-    // Hardware VoIP Acoustic Echo Cancellation & Noise Suppression on Android
-    final stream = await _recorder!.startStream(
-      const RecordConfig(
+    final stream = await _recorder!.startStream(_buildRecordConfig());
+
+    int chunkIndex = 0;
+    _micSub = stream.listen((chunk) {
+      if (!_isTransmitting) return;
+
+      final cleanChunk =
+          _windNoiseFilterEnabled ? _applyDsdNoiseReduction(chunk) : chunk;
+      if (cleanChunk.isEmpty) return; // Muted by Noise Gate (Silence)
+
+      chunkIndex++;
+      if (chunkIndex % 50 == 0) {
+        debugPrint('[NearbyAudioTransport] 🎙️ Clean audio chunk sent to ${_connectedEndpoints.length} riders (${cleanChunk.length} bytes)');
+      }
+      sendAudioChunk(cleanChunk);
+    });
+
+    debugPrint(
+      '[NearbyAudioTransport] ▶ LIVE AUDIO TRANSMISSION STARTED '
+      '(helmet route: $_helmetAudioRouteEnabled, wind filter: $_windNoiseFilterEnabled)',
+    );
+  }
+
+  RecordConfig _buildRecordConfig() {
+    if (_helmetAudioRouteEnabled) {
+      return const RecordConfig(
         encoder: AudioEncoder.pcm16bits,
         sampleRate: sampleRate,
         numChannels: numChannels,
@@ -341,25 +413,21 @@ class NearbyAudioTransport {
           audioSource: AndroidAudioSource.voiceCommunication,
           audioManagerMode: AudioManagerMode.modeInCommunication,
         ),
+      );
+    }
+
+    return const RecordConfig(
+      encoder: AudioEncoder.pcm16bits,
+      sampleRate: sampleRate,
+      numChannels: numChannels,
+      autoGain: true,
+      echoCancel: true,
+      noiseSuppress: true,
+      androidConfig: AndroidRecordConfig(
+        audioSource: AndroidAudioSource.mic,
+        audioManagerMode: AudioManagerMode.modeNormal,
       ),
     );
-
-    int chunkIndex = 0;
-    _micSub = stream.listen((chunk) {
-      if (!_isTransmitting) return;
-
-      // Apply real-time Noise Gate and High-Pass Filter to eliminate hissing/rumble
-      final cleanChunk = _applyDsdNoiseReduction(chunk);
-      if (cleanChunk.isEmpty) return; // Muted by Noise Gate (Silence)
-
-      chunkIndex++;
-      if (chunkIndex % 50 == 0) {
-        debugPrint('[NearbyAudioTransport] 🎙️ Clean audio chunk sent to ${_connectedEndpoints.length} riders (${cleanChunk.length} bytes)');
-      }
-      sendAudioChunk(cleanChunk);
-    });
-
-    debugPrint('[NearbyAudioTransport] ▶ LIVE AUDIO TRANSMISSION STARTED (VoIP Hardware Filter Active)');
   }
 
   /// Real-Time Digital Signal Processing (DSP):
@@ -430,6 +498,8 @@ class NearbyAudioTransport {
     _audioSub = null;
     _audioQueue.clear();
     _isProcessingQueue = false;
+    _lastPlayedChunk = null;
+    _fecPlaybackPrimed = false;
     _prevInputSample = 0;
     _prevOutputSample = 0;
 

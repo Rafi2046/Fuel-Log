@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fuel_log/core/services/hardware_ptt_service.dart';
+import 'package:fuel_log/core/services/nearby_audio_transport.dart';
 import 'package:fuel_log/viewmodels/intercom_viewmodel.dart';
 
 class FakeHardwarePttService extends HardwarePttService {
@@ -25,11 +27,13 @@ void main() {
 
   group('IntercomViewModel Tests', () {
     late FakeHardwarePttService fakePttService;
+    late NearbyAudioTransport fakeTransport;
     late IntercomViewModel viewModel;
 
     setUp(() {
       fakePttService = FakeHardwarePttService();
-      viewModel = IntercomViewModel(fakePttService);
+      fakeTransport = NearbyAudioTransport.createForTesting();
+      viewModel = IntercomViewModel(fakePttService, fakeTransport);
     });
 
     test('initial state has default tactical settings', () {
@@ -38,6 +42,7 @@ void main() {
       expect(state.isWindNoiseCancellationEnabled, isTrue);
       expect(state.isHelmetAudioRouteEnabled, isTrue);
       expect(state.isMeshBridgeEnabled, isTrue);
+      expect(state.isFecRecoveryEnabled, isTrue);
       expect(state.isMuted, isFalse);
       expect(state.tourName, equals('My Tour'));
       // Only local user (YOU) before any peers connect
@@ -61,25 +66,43 @@ void main() {
       expect(viewModel.state.isHost, isTrue);
     });
 
-    test('toggleWindNoiseCancellation updates state', () async {
+    test('toggleWindNoiseCancellation updates state and transport', () async {
       await viewModel.toggleWindNoiseCancellation(false);
       expect(viewModel.state.isWindNoiseCancellationEnabled, isFalse);
+      expect(
+        fakeTransport.audioSettings.windNoiseFilterEnabled,
+        isFalse,
+      );
       await viewModel.toggleWindNoiseCancellation(true);
       expect(viewModel.state.isWindNoiseCancellationEnabled, isTrue);
+      expect(fakeTransport.audioSettings.windNoiseFilterEnabled, isTrue);
     });
 
-    test('toggleHelmetAudioRoute updates state', () async {
+    test('toggleHelmetAudioRoute updates state and transport', () async {
       await viewModel.toggleHelmetAudioRoute(false);
       expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
+      expect(fakeTransport.audioSettings.helmetAudioRouteEnabled, isFalse);
       await viewModel.toggleHelmetAudioRoute(true);
       expect(viewModel.state.isHelmetAudioRouteEnabled, isTrue);
+      expect(fakeTransport.audioSettings.helmetAudioRouteEnabled, isTrue);
     });
 
-    test('toggleMeshBridge updates state', () {
-      viewModel.toggleMeshBridge(false);
+    test('toggleMeshBridge updates state and transport', () async {
+      await viewModel.toggleMeshBridge(false);
       expect(viewModel.state.isMeshBridgeEnabled, isFalse);
-      viewModel.toggleMeshBridge(true);
+      expect(fakeTransport.audioSettings.meshBridgeEnabled, isFalse);
+      await viewModel.toggleMeshBridge(true);
       expect(viewModel.state.isMeshBridgeEnabled, isTrue);
+      expect(fakeTransport.audioSettings.meshBridgeEnabled, isTrue);
+    });
+
+    test('toggleFecRecovery updates state and transport', () async {
+      await viewModel.toggleFecRecovery(false);
+      expect(viewModel.state.isFecRecoveryEnabled, isFalse);
+      expect(fakeTransport.audioSettings.fecRecoveryEnabled, isFalse);
+      await viewModel.toggleFecRecovery(true);
+      expect(viewModel.state.isFecRecoveryEnabled, isTrue);
+      expect(fakeTransport.audioSettings.fecRecoveryEnabled, isTrue);
     });
 
     test('toggleMute toggles mute state', () async {

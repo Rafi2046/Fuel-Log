@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/hardware_ptt_service.dart';
+import '../core/services/intercom_audio_settings.dart';
 import '../core/services/nearby_audio_transport.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -87,6 +88,7 @@ class IntercomState {
     this.isWindNoiseCancellationEnabled = true,
     this.isHelmetAudioRouteEnabled = true,
     this.isMeshBridgeEnabled = true,
+    this.isFecRecoveryEnabled = true,
     this.isMuted = false,
     this.isOpenMic = true,
     this.tourName = 'My Tour',
@@ -118,6 +120,7 @@ class IntercomState {
   final bool isWindNoiseCancellationEnabled;
   final bool isHelmetAudioRouteEnabled;
   final bool isMeshBridgeEnabled;
+  final bool isFecRecoveryEnabled;
   final bool isMuted;
   final bool isOpenMic;
   final String tourName;
@@ -146,6 +149,7 @@ class IntercomState {
     bool? isWindNoiseCancellationEnabled,
     bool? isHelmetAudioRouteEnabled,
     bool? isMeshBridgeEnabled,
+    bool? isFecRecoveryEnabled,
     bool? isMuted,
     bool? isOpenMic,
     String? tourName,
@@ -171,6 +175,7 @@ class IntercomState {
       isHelmetAudioRouteEnabled:
           isHelmetAudioRouteEnabled ?? this.isHelmetAudioRouteEnabled,
       isMeshBridgeEnabled: isMeshBridgeEnabled ?? this.isMeshBridgeEnabled,
+      isFecRecoveryEnabled: isFecRecoveryEnabled ?? this.isFecRecoveryEnabled,
       isMuted: isMuted ?? this.isMuted,
       isOpenMic: isOpenMic ?? this.isOpenMic,
       tourName: tourName ?? this.tourName,
@@ -200,6 +205,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         _transport = transport ?? NearbyAudioTransport.instance,
         super(const IntercomState()) {
     _loadRecentTourSession();
+    _loadAudioPreferences();
   }
 
   final HardwarePttService _hardwarePttService;
@@ -211,6 +217,10 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   static const _prefTourCode = 'intercom_last_tour_code';
   static const _prefTourName = 'intercom_last_tour_name';
   static const _prefTourIsHost = 'intercom_last_tour_is_host';
+  static const _prefWindNoise = 'intercom_wind_noise_enabled';
+  static const _prefHelmetAudio = 'intercom_helmet_audio_enabled';
+  static const _prefMeshBridge = 'intercom_mesh_bridge_enabled';
+  static const _prefFecRecovery = 'intercom_fec_recovery_enabled';
 
   /// Generates a cryptographically random 6-character uppercase join code.
   static String generateJoinCode() {
@@ -235,6 +245,47 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         );
       }
     } catch (_) {}
+  }
+
+  Future<void> _loadAudioPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = state.copyWith(
+        isWindNoiseCancellationEnabled:
+            prefs.getBool(_prefWindNoise) ?? true,
+        isHelmetAudioRouteEnabled: prefs.getBool(_prefHelmetAudio) ?? true,
+        isMeshBridgeEnabled: prefs.getBool(_prefMeshBridge) ?? true,
+        isFecRecoveryEnabled: prefs.getBool(_prefFecRecovery) ?? true,
+      );
+      await _syncAudioSettingsToTransport();
+    } catch (_) {}
+  }
+
+  Future<void> _saveAudioPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(
+        _prefWindNoise,
+        state.isWindNoiseCancellationEnabled,
+      );
+      await prefs.setBool(
+        _prefHelmetAudio,
+        state.isHelmetAudioRouteEnabled,
+      );
+      await prefs.setBool(_prefMeshBridge, state.isMeshBridgeEnabled);
+      await prefs.setBool(_prefFecRecovery, state.isFecRecoveryEnabled);
+    } catch (_) {}
+  }
+
+  IntercomAudioSettings get _currentAudioSettings => IntercomAudioSettings(
+        windNoiseFilterEnabled: state.isWindNoiseCancellationEnabled,
+        helmetAudioRouteEnabled: state.isHelmetAudioRouteEnabled,
+        meshBridgeEnabled: state.isMeshBridgeEnabled,
+        fecRecoveryEnabled: state.isFecRecoveryEnabled,
+      );
+
+  Future<void> _syncAudioSettingsToTransport() {
+    return _transport.updateAudioSettings(_currentAudioSettings);
   }
 
   Future<void> _saveRecentTourSession({
@@ -298,6 +349,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       isHost: true,
     );
 
+    await _syncAudioSettingsToTransport();
+
     try {
       _connectionSub?.cancel();
       _connectionSub = _transport.connectionChanges.listen(_onConnectionsChanged);
@@ -348,6 +401,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       tourName: name,
       isHost: false,
     );
+
+    await _syncAudioSettingsToTransport();
 
     try {
       _connectionSub?.cancel();
@@ -475,23 +530,34 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
 
   Future<void> toggleWindNoiseCancellation(bool? value) async {
     HapticFeedback.selectionClick();
-    state = state.copyWith(
-      isWindNoiseCancellationEnabled: value ?? !state.isWindNoiseCancellationEnabled,
-    );
+    final enabled = value ?? !state.isWindNoiseCancellationEnabled;
+    state = state.copyWith(isWindNoiseCancellationEnabled: enabled);
+    await _syncAudioSettingsToTransport();
+    await _saveAudioPreferences();
   }
 
   Future<void> toggleHelmetAudioRoute(bool? value) async {
     HapticFeedback.selectionClick();
-    state = state.copyWith(
-      isHelmetAudioRouteEnabled: value ?? !state.isHelmetAudioRouteEnabled,
-    );
+    final enabled = value ?? !state.isHelmetAudioRouteEnabled;
+    state = state.copyWith(isHelmetAudioRouteEnabled: enabled);
+    await _syncAudioSettingsToTransport();
+    await _saveAudioPreferences();
   }
 
-  void toggleMeshBridge(bool? value) {
+  Future<void> toggleMeshBridge(bool? value) async {
     HapticFeedback.selectionClick();
-    state = state.copyWith(
-      isMeshBridgeEnabled: value ?? !state.isMeshBridgeEnabled,
-    );
+    final enabled = value ?? !state.isMeshBridgeEnabled;
+    state = state.copyWith(isMeshBridgeEnabled: enabled);
+    await _syncAudioSettingsToTransport();
+    await _saveAudioPreferences();
+  }
+
+  Future<void> toggleFecRecovery(bool? value) async {
+    HapticFeedback.selectionClick();
+    final enabled = value ?? !state.isFecRecoveryEnabled;
+    state = state.copyWith(isFecRecoveryEnabled: enabled);
+    await _syncAudioSettingsToTransport();
+    await _saveAudioPreferences();
   }
 
   void setTourName(String tourName) => state = state.copyWith(tourName: tourName);

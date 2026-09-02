@@ -142,9 +142,11 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
             windNoiseEnabled: intercomState.isWindNoiseCancellationEnabled,
             helmetAudioEnabled: intercomState.isHelmetAudioRouteEnabled,
             meshBridgeEnabled: intercomState.isMeshBridgeEnabled,
+            fecRecoveryEnabled: intercomState.isFecRecoveryEnabled,
             onWindNoiseChanged: intercomNotifier.toggleWindNoiseCancellation,
             onHelmetAudioChanged: intercomNotifier.toggleHelmetAudioRoute,
             onMeshBridgeChanged: intercomNotifier.toggleMeshBridge,
+            onFecRecoveryChanged: intercomNotifier.toggleFecRecovery,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
