@@ -43,11 +43,17 @@ class NearbyAudioTransport {
   AudioRecorder? _recorder;
   FlutterSoundPlayer? _player;
   StreamSubscription<Uint8List>? _micSub;
+  StreamSubscription<NearbyAudioPacket>? _audioSub;
+
   bool _isPlayerStreamStarted = false;
   bool _isTransmitting = false;
   bool _isRunning = false;
   bool _isHost = false;
   String _targetTourCode = '';
+
+  // Thread-safe FIFO Queue to prevent native AudioTrack SIGSEGV crash
+  final List<Uint8List> _audioQueue = [];
+  bool _isProcessingQueue = false;
 
   Stream<NearbyAudioPacket> get incomingAudio => _incomingAudioController.stream;
   Stream<Set<String>> get connectionChanges => _connectionStateController.stream;
@@ -109,9 +115,7 @@ class NearbyAudioTransport {
       debugPrint('[NearbyAudioTransport] Host advertising error: $e');
     }
 
-    _incomingAudioController.stream.listen((packet) {
-      _playIncomingAudio(packet.bytes);
-    });
+    _setupAudioPacketListener();
   }
 
   // ── RIDER: Join Tour (Discoverer) ─────────────────────────────────────────
@@ -139,7 +143,6 @@ class NearbyAudioTransport {
         serviceId: _serviceId,
         onEndpointFound: (id, name, foundServiceId) {
           debugPrint('[NearbyAudioTransport] 🔍 Found endpoint "$name" ($id).');
-          // Match Tour Code
           if (name.contains('#')) {
             final parts = name.split('#');
             if (parts.length >= 2 && parts[1].toUpperCase() == _targetTourCode) {
@@ -166,7 +169,12 @@ class NearbyAudioTransport {
       debugPrint('[NearbyAudioTransport] Rider discovery error: $e');
     }
 
-    _incomingAudioController.stream.listen((packet) {
+    _setupAudioPacketListener();
+  }
+
+  void _setupAudioPacketListener() {
+    _audioSub?.cancel();
+    _audioSub = _incomingAudioController.stream.listen((packet) {
       _playIncomingAudio(packet.bytes);
     });
   }
@@ -177,18 +185,21 @@ class NearbyAudioTransport {
     final displayName = rawName.contains('#') ? rawName.split('#').last : rawName;
     _endpointNames[id] = displayName.isNotEmpty ? displayName : 'Rider';
 
-    // Auto-accept connection immediately
     Nearby().acceptConnection(
       id,
       onPayLoadRecieved: (endpointId, payload) {
         if (payload.type == PayloadType.BYTES && payload.bytes != null) {
-          _incomingAudioController.add(
-            NearbyAudioPacket(
-              fromEndpointId: endpointId,
-              fromName: _endpointNames[endpointId] ?? endpointId,
-              bytes: payload.bytes!,
-            ),
-          );
+          final rawBytes = payload.bytes!;
+          // Frame sanity check: 16-bit PCM must have an even number of bytes and reasonable length
+          if (rawBytes.length >= 64 && rawBytes.length % 2 == 0) {
+            _incomingAudioController.add(
+              NearbyAudioPacket(
+                fromEndpointId: endpointId,
+                fromName: _endpointNames[endpointId] ?? endpointId,
+                bytes: rawBytes,
+              ),
+            );
+          }
         }
       },
     ).catchError((err) {
@@ -219,7 +230,7 @@ class NearbyAudioTransport {
     _connectionStateController.add(connectedEndpoints);
   }
 
-  // ── Audio Player Setup ────────────────────────────────────────────────────
+  // ── Audio Player Setup (Thread-Safe FIFO Buffer) ──────────────────────────
   Future<void> _initAudioPlayer() async {
     try {
       if (_player == null) {
@@ -236,12 +247,15 @@ class NearbyAudioTransport {
   Future<void> _startPlayerStream() async {
     if (_player == null) return;
     try {
+      if (_isPlayerStreamStarted && !_player!.isStopped) {
+        return;
+      }
       await _player!.startPlayerFromStream(
         codec: Codec.pcm16,
         numChannels: numChannels,
         sampleRate: sampleRate,
         interleaved: true,
-        bufferSize: 4096,
+        bufferSize: 8192,
         onBufferUnderflow: () {
           _isPlayerStreamStarted = false;
         },
@@ -253,18 +267,39 @@ class NearbyAudioTransport {
     }
   }
 
-  Future<void> _playIncomingAudio(Uint8List pcmBytes) async {
-    try {
-      if (_player == null) {
-        await _initAudioPlayer();
-      }
-      if (!_isPlayerStreamStarted || _player!.isStopped) {
-        await _startPlayerStream();
-      }
-      await _player?.feedUint8FromStream(pcmBytes);
-    } catch (e) {
-      debugPrint('[NearbyAudioTransport] Audio playback error: $e');
+  /// Sequential, thread-safe queue to eliminate JNI race conditions and SIGSEGV crashes
+  void _playIncomingAudio(Uint8List pcmBytes) {
+    if (pcmBytes.isEmpty || pcmBytes.length % 2 != 0) return;
+
+    // Keep max 15 chunks in queue (~500ms buffer) to avoid memory pile-up and latency
+    if (_audioQueue.length > 15) {
+      _audioQueue.removeRange(0, _audioQueue.length - 10);
     }
+    _audioQueue.add(pcmBytes);
+
+    _processAudioQueue();
+  }
+
+  Future<void> _processAudioQueue() async {
+    if (_isProcessingQueue) return;
+    _isProcessingQueue = true;
+
+    while (_audioQueue.isNotEmpty && _isRunning) {
+      final chunk = _audioQueue.removeAt(0);
+      try {
+        if (_player != null) {
+          if (!_isPlayerStreamStarted || _player!.isStopped) {
+            await _startPlayerStream();
+          }
+          await _player!.feedUint8FromStream(chunk);
+        }
+      } catch (e) {
+        debugPrint('[NearbyAudioTransport] Audio feed error: $e');
+        break;
+      }
+    }
+
+    _isProcessingQueue = false;
   }
 
   // ── Mic Audio Transmission ────────────────────────────────────────────────
@@ -324,6 +359,11 @@ class NearbyAudioTransport {
   Future<void> stop() async {
     await stopTransmitting();
     _isRunning = false;
+    _audioSub?.cancel();
+    _audioSub = null;
+    _audioQueue.clear();
+    _isProcessingQueue = false;
+
     try {
       await Nearby().stopAdvertising();
       await Nearby().stopDiscovery();
