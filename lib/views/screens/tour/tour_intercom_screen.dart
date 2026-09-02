@@ -146,11 +146,14 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
 
             const SizedBox(height: 16),
 
-            // 3. The PTT Centerpiece (Tactical Button)
+            // 3. The Voice Centerpiece (Hands-Free Call / PTT Button)
             TacticalPttButton(
               isTransmitting: intercomState.isTransmitting,
+              isOpenMic: intercomState.isOpenMic,
               isMuted: intercomState.isMuted,
               onTransmittingChanged: intercomNotifier.setTransmitting,
+              onToggleMute: intercomNotifier.toggleMute,
+              onToggleOpenMic: intercomNotifier.toggleOpenMicMode,
             ),
 
             const SizedBox(height: 24),

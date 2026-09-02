@@ -50,7 +50,7 @@ class P2PVoiceService {
   // ── Sockets & Networking ──────────────────────────────────────────────────
   RawDatagramSocket? _discoverySocket;
   RawDatagramSocket? _audioSocket;
-  Timer? _beaconTimer;
+  Timer? _heartbeatTimer;
 
   String _localId = '';
   String _localName = 'Rider';
@@ -65,6 +65,7 @@ class P2PVoiceService {
   AudioRecorder? _recorder;
   FlutterSoundPlayer? _player;
   StreamSubscription<Uint8List>? _micSub;
+  bool _isPlayerStreamStarted = false;
 
   // ── Streams ───────────────────────────────────────────────────────────────
   final _peerListCtrl = StreamController<List<P2PPeer>>.broadcast();
@@ -77,6 +78,15 @@ class P2PVoiceService {
 
   bool _isInitialized = false;
   bool _isTransmitting = false;
+
+  // ── Known broadcast targets for maximum Hotspot & Wi-Fi coverage ──────────
+  static final List<InternetAddress> _broadcastAddresses = [
+    InternetAddress('255.255.255.255'),
+    InternetAddress('192.168.43.1'),  // Android Hotspot Host
+    InternetAddress('192.168.43.255'),// Android Hotspot Subnet
+    InternetAddress('192.168.49.1'),  // Wi-Fi Direct Host
+    InternetAddress('192.168.49.255'),// Wi-Fi Direct Subnet
+  ];
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -96,7 +106,7 @@ class P2PVoiceService {
         debugPrint('[P2PVoiceService] Microphone permission not granted');
       }
 
-      // 2. Setup UDP Discovery Socket (broadcast enabled)
+      // 2. Setup UDP Discovery Socket
       _discoverySocket = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         discoveryPort,
@@ -117,22 +127,47 @@ class P2PVoiceService {
       _audioSocket!.listen(_handleAudioEvent);
 
       // 4. Setup Audio Player for receiving streams
-      _player = FlutterSoundPlayer();
-      await _player!.openPlayer();
+      await _initAudioPlayer();
+
+      _isInitialized = true;
+      debugPrint('[P2PVoiceService] Sockets & Audio Player initialized on ports $discoveryPort/$audioPort');
+      return true;
+    } catch (e) {
+      debugPrint('[P2PVoiceService] Init error: $e');
+      return false;
+    }
+  }
+
+  Future<void> _initAudioPlayer() async {
+    try {
+      if (_player == null) {
+        _player = FlutterSoundPlayer();
+        await _player!.openPlayer();
+        await _player!.setVolume(1.0);
+      }
+      await _startPlayerStream();
+    } catch (e) {
+      debugPrint('[P2PVoiceService] Player init warning: $e');
+    }
+  }
+
+  Future<void> _startPlayerStream() async {
+    if (_player == null) return;
+    try {
       await _player!.startPlayerFromStream(
         codec: Codec.pcm16,
         numChannels: numChannels,
         sampleRate: sampleRate,
         interleaved: true,
-        bufferSize: 2048,
+        bufferSize: 4096,
+        onBufferUnderflow: () {
+          _isPlayerStreamStarted = false;
+        },
       );
-
-      _isInitialized = true;
-      debugPrint('[P2PVoiceService] Initialized sockets on ports $discoveryPort/$audioPort');
-      return true;
+      _isPlayerStreamStarted = true;
+      debugPrint('[P2PVoiceService] Audio playback stream started.');
     } catch (e) {
-      debugPrint('[P2PVoiceService] Init error: $e');
-      return false;
+      debugPrint('[P2PVoiceService] startPlayerFromStream error: $e');
     }
   }
 
@@ -151,27 +186,59 @@ class P2PVoiceService {
 
     await init(localId: _localId.isEmpty ? _randomId() : _localId, localName: hostName);
 
-    // Periodically broadcast tour beacon across the LAN/Hotspot
-    _beaconTimer?.cancel();
-    _beaconTimer = Timer.periodic(const Duration(milliseconds: 1200), (_) {
-      _broadcastBeacon();
+    // Periodically broadcast tour beacon + member sync across the LAN/Hotspot
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(milliseconds: 1200), (_) {
+      _broadcastBeaconAndSync();
     });
 
     _peerListCtrl.add([]);
     debugPrint('[P2PVoiceService] Hosting tour "$tourName" [$tourCode]');
   }
 
-  void _broadcastBeacon() {
+  void _broadcastBeaconAndSync() {
     if (_discoverySocket == null) return;
-    final msg = jsonEncode({
+
+    // 1. Tour Beacon
+    final beacon = jsonEncode({
       'type': 'beacon',
       'id': _localId,
       'name': _localName,
       'tour': _currentTourName,
       'code': _currentTourCode,
     });
-    final data = utf8.encode(msg);
-    _discoverySocket?.send(data, InternetAddress('255.255.255.255'), discoveryPort);
+    final beaconData = utf8.encode(beacon);
+    for (final addr in _broadcastAddresses) {
+      try {
+        _discoverySocket?.send(beaconData, addr, discoveryPort);
+      } catch (_) {}
+    }
+
+    // 2. Member Sync (so all riders have the full live list)
+    if (_connectedPeers.isNotEmpty) {
+      final sync = jsonEncode({
+        'type': 'sync',
+        'id': _localId,
+        'tour': _currentTourName,
+        'code': _currentTourCode,
+        'members': _connectedPeers.values.map((p) => {
+          'id': p.id,
+          'name': p.name,
+          'addr': p.address.address,
+        }).toList(),
+      });
+      final syncData = utf8.encode(sync);
+      for (final peer in _connectedPeers.values) {
+        try {
+          _discoverySocket?.send(syncData, peer.address, discoveryPort);
+        } catch (_) {}
+      }
+      for (final addr in _broadcastAddresses) {
+        try {
+          _discoverySocket?.send(syncData, addr, discoveryPort);
+        } catch (_) {}
+      }
+    }
   }
 
   // ── RIDER: Start Discovery ────────────────────────────────────────────────
@@ -189,11 +256,28 @@ class P2PVoiceService {
   // ── RIDER: Join a Tour ────────────────────────────────────────────────────
 
   Future<void> joinTour(P2PPeer tourHost) async {
+    _isHost = false;
     _currentTourName = tourHost.tourName;
     _currentTourCode = tourHost.tourCode;
     _connectedPeers[tourHost.id] = tourHost;
 
-    // Send join packet to the host
+    await init(localId: _localId.isEmpty ? _randomId() : _localId, localName: _localName);
+
+    // Send join packet repeatedly to host & broadcast
+    _sendJoinPackets(tourHost);
+
+    // Keep heartbeat active so host knows we are online
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+      _sendJoinPackets(tourHost);
+    });
+
+    _peerListCtrl.add(_connectedPeers.values.toList());
+    debugPrint('[P2PVoiceService] Joined tour: ${tourHost.tourName} (${tourHost.address.address})');
+  }
+
+  void _sendJoinPackets(P2PPeer tourHost) {
+    if (_discoverySocket == null) return;
     final msg = jsonEncode({
       'type': 'join',
       'id': _localId,
@@ -202,10 +286,18 @@ class P2PVoiceService {
       'code': _currentTourCode,
     });
     final data = utf8.encode(msg);
-    _discoverySocket?.send(data, tourHost.address, discoveryPort);
 
-    _peerListCtrl.add(_connectedPeers.values.toList());
-    debugPrint('[P2PVoiceService] Sent join request to ${tourHost.name} (${tourHost.address.address})');
+    // Direct unicast to host IP
+    try {
+      _discoverySocket?.send(data, tourHost.address, discoveryPort);
+    } catch (_) {}
+
+    // Also broadcast to entire subnet
+    for (final addr in _broadcastAddresses) {
+      try {
+        _discoverySocket?.send(data, addr, discoveryPort);
+      } catch (_) {}
+    }
   }
 
   // ── Socket Message Handlers ───────────────────────────────────────────────
@@ -237,6 +329,11 @@ class P2PVoiceService {
           _discoveredCtrl.add(_discoveredTours.values.toList());
         } else if (type == 'join' && _isHost) {
           // A rider joined our hosted tour
+          final tourCode = json['code'] as String?;
+          if (tourCode != null && tourCode.isNotEmpty && tourCode != _currentTourCode) {
+            return;
+          }
+
           final rider = P2PPeer(
             id: peerId,
             name: json['name'] as String? ?? 'Rider',
@@ -257,7 +354,7 @@ class P2PVoiceService {
             'code': _currentTourCode,
           });
           _discoverySocket?.send(utf8.encode(ack), datagram.address, discoveryPort);
-          debugPrint('[P2PVoiceService] Rider ${rider.name} joined the tour.');
+          debugPrint('[P2PVoiceService] Rider ${rider.name} registered with address ${datagram.address.address}');
         } else if (type == 'ack' && !_isHost) {
           // Host acknowledged our join
           final host = P2PPeer(
@@ -270,12 +367,40 @@ class P2PVoiceService {
           );
           _connectedPeers[peerId] = host;
           _peerListCtrl.add(_connectedPeers.values.toList());
+        } else if (type == 'sync' && !_isHost) {
+          // Sync full member list from host
+          final membersRaw = json['members'] as List<dynamic>? ?? [];
+          final host = P2PPeer(
+            id: peerId,
+            name: json['name'] as String? ?? 'Host (Leader)',
+            address: datagram.address,
+            tourName: _currentTourName,
+            tourCode: _currentTourCode,
+            isHost: true,
+          );
+          _connectedPeers[peerId] = host;
+
+          for (final m in membersRaw) {
+            final mId = m['id'] as String?;
+            if (mId != null && mId != _localId) {
+              final mAddr = m['addr'] as String?;
+              _connectedPeers[mId] = P2PPeer(
+                id: mId,
+                name: m['name'] as String? ?? 'Rider',
+                address: mAddr != null ? InternetAddress(mAddr) : datagram.address,
+                tourName: _currentTourName,
+                tourCode: _currentTourCode,
+                isHost: false,
+              );
+            }
+          }
+          _peerListCtrl.add(_connectedPeers.values.toList());
         } else if (type == 'leave') {
           _connectedPeers.remove(peerId);
           _peerListCtrl.add(_connectedPeers.values.toList());
         }
       } catch (e) {
-        // Silently skip malformed packets
+        // Skip malformed packets
       }
     }
   }
@@ -286,19 +411,29 @@ class P2PVoiceService {
       if (datagram == null) return;
 
       final data = datagram.data;
-      // Minimum packet size check: 4 bytes sender prefix + audio payload
       if (data.length > 4) {
         final senderPrefix = utf8.decode(data.sublist(0, 4), allowMalformed: true);
         if (senderPrefix == _localId.substring(0, 4.clamp(0, _localId.length))) {
-          return; // Ignore own looped audio
+          return; // Ignore own audio loopback
         }
         final pcmBytes = data.sublist(4);
-        _player?.feedFromStream(pcmBytes);
+        _playIncomingAudio(pcmBytes);
       }
     }
   }
 
-  // ── PTT Audio Transmission ────────────────────────────────────────────────
+  Future<void> _playIncomingAudio(Uint8List pcmBytes) async {
+    try {
+      if (_player == null || !_isPlayerStreamStarted || _player!.isStopped) {
+        await _startPlayerStream();
+      }
+      await _player?.feedUint8FromStream(pcmBytes);
+    } catch (e) {
+      debugPrint('[P2PVoiceService] Audio playback feed error: $e');
+    }
+  }
+
+  // ── PTT / Live Audio Transmission ─────────────────────────────────────────
 
   Future<void> startTransmitting() async {
     if (_isTransmitting) return;
@@ -316,7 +451,9 @@ class P2PVoiceService {
         encoder: AudioEncoder.pcm16bits,
         sampleRate: sampleRate,
         numChannels: numChannels,
-        bitRate: 16000 * 16,
+        autoGain: true,
+        echoCancel: true,
+        noiseSuppress: true,
       ),
     );
 
@@ -324,22 +461,34 @@ class P2PVoiceService {
       (_localId.padRight(4)).substring(0, 4),
     );
 
+    int chunkIndex = 0;
     _micSub = stream.listen((chunk) {
-      if (_audioSocket == null) return;
+      if (_audioSocket == null || !_isTransmitting) return;
+      chunkIndex++;
+      if (chunkIndex % 60 == 0) {
+        debugPrint('[P2PVoiceService] 🎙️ Mic streaming audio packet (${chunk.length} bytes)');
+      }
+
       final packet = Uint8List(prefixBytes.length + chunk.length);
       packet.setRange(0, prefixBytes.length, prefixBytes);
       packet.setRange(prefixBytes.length, packet.length, chunk);
 
-      // Broadcast to entire local network / Hotspot subnet
-      _audioSocket?.send(packet, InternetAddress('255.255.255.255'), audioPort);
+      // 1. Send to all known broadcast subnets
+      for (final addr in _broadcastAddresses) {
+        try {
+          _audioSocket?.send(packet, addr, audioPort);
+        } catch (_) {}
+      }
 
-      // Also unicast directly to all known connected peer IPs
+      // 2. Send directly to each connected peer IP
       for (final peer in _connectedPeers.values) {
-        _audioSocket?.send(packet, peer.address, audioPort);
+        try {
+          _audioSocket?.send(packet, peer.address, audioPort);
+        } catch (_) {}
       }
     });
 
-    debugPrint('[P2PVoiceService] ▶ PTT TRANSMITTING');
+    debugPrint('[P2PVoiceService] ▶ LIVE AUDIO TRANSMISSION STARTED');
   }
 
   Future<void> stopTransmitting() async {
@@ -348,19 +497,23 @@ class P2PVoiceService {
     await _micSub?.cancel();
     _micSub = null;
     await _recorder?.stop();
-    debugPrint('[P2PVoiceService] ■ PTT IDLE (MUTED)');
+    debugPrint('[P2PVoiceService] ■ AUDIO MUTED / IDLE');
   }
 
   // ── Teardown ──────────────────────────────────────────────────────────────
 
   Future<void> disconnect() async {
     await stopTransmitting();
-    _beaconTimer?.cancel();
-    _beaconTimer = null;
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
 
     if (_discoverySocket != null && _connectedPeers.isNotEmpty) {
       final leaveMsg = utf8.encode(jsonEncode({'type': 'leave', 'id': _localId}));
-      _discoverySocket?.send(leaveMsg, InternetAddress('255.255.255.255'), discoveryPort);
+      for (final addr in _broadcastAddresses) {
+        try {
+          _discoverySocket?.send(leaveMsg, addr, discoveryPort);
+        } catch (_) {}
+      }
     }
 
     _connectedPeers.clear();

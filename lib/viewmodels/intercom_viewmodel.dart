@@ -87,6 +87,7 @@ class IntercomState {
     this.isHelmetAudioRouteEnabled = true,
     this.isMeshBridgeEnabled = true,
     this.isMuted = false,
+    this.isOpenMic = true, // Hands-free call by default so bikers don't need to touch screen
     this.tourName = 'My Tour',
     this.channelCode = '',
     this.joinCode,
@@ -115,6 +116,7 @@ class IntercomState {
   final bool isHelmetAudioRouteEnabled;
   final bool isMeshBridgeEnabled;
   final bool isMuted;
+  final bool isOpenMic;
   final String tourName;
   final String channelCode;
   final String? joinCode;
@@ -139,6 +141,7 @@ class IntercomState {
     bool? isHelmetAudioRouteEnabled,
     bool? isMeshBridgeEnabled,
     bool? isMuted,
+    bool? isOpenMic,
     String? tourName,
     String? channelCode,
     String? joinCode,
@@ -160,6 +163,7 @@ class IntercomState {
           isHelmetAudioRouteEnabled ?? this.isHelmetAudioRouteEnabled,
       isMeshBridgeEnabled: isMeshBridgeEnabled ?? this.isMeshBridgeEnabled,
       isMuted: isMuted ?? this.isMuted,
+      isOpenMic: isOpenMic ?? this.isOpenMic,
       tourName: tourName ?? this.tourName,
       channelCode: channelCode ?? this.channelCode,
       joinCode: joinCode ?? this.joinCode,
@@ -241,6 +245,10 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         isConnected: true,
       );
 
+      if (state.isOpenMic && !state.isMuted) {
+        await setTransmitting(true);
+      }
+
       debugPrint('[IntercomVM] Tour "$tourName" hosted with code: $code');
     } catch (e) {
       debugPrint('[IntercomVM] createTour error: $e');
@@ -297,6 +305,11 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
 
       await _p2p.joinTour(tourHost);
       _hardwarePttService.startListening(setTransmitting);
+
+      if (state.isOpenMic && !state.isMuted) {
+        await setTransmitting(true);
+      }
+
       debugPrint('[IntercomVM] Joining tour: ${tourHost.tourName}');
     } catch (e) {
       debugPrint('[IntercomVM] joinTour error: $e');
@@ -359,13 +372,18 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       isConnected: nowConnected,
       isConnecting: false,
     );
+
+    // If hands-free open mic mode is active, make sure we transmit
+    if (state.isOpenMic && !state.isMuted && !state.isTransmitting) {
+      setTransmitting(true);
+    }
   }
 
-  // ── PTT ───────────────────────────────────────────────────────────────────
+  // ── PTT / Hands-Free Transmission ─────────────────────────────────────────
 
   Future<void> setTransmitting(bool isTransmitting) async {
     if (state.isTransmitting == isTransmitting) return;
-    if (state.isMuted) return;
+    if (state.isMuted && isTransmitting) return;
 
     if (isTransmitting) {
       HapticFeedback.heavyImpact();
@@ -376,17 +394,33 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     }
 
     state = state.copyWith(isTransmitting: isTransmitting);
-    debugPrint('[IntercomVM] PTT: ${isTransmitting ? "TRANSMITTING" : "IDLE"}');
+    debugPrint('[IntercomVM] Audio Transmission: ${isTransmitting ? "TRANSMITTING (LIVE)" : "MUTED"}');
   }
 
   Future<void> toggleMute() async {
     HapticFeedback.mediumImpact();
     final newMute = !state.isMuted;
-    if (newMute && state.isTransmitting) {
+    if (newMute) {
       await _p2p.stopTransmitting();
-      state = state.copyWith(isTransmitting: false);
+      state = state.copyWith(isMuted: true, isTransmitting: false);
+    } else {
+      state = state.copyWith(isMuted: false);
+      if (state.isOpenMic && state.isConnected) {
+        await _p2p.startTransmitting();
+        state = state.copyWith(isTransmitting: true);
+      }
     }
-    state = state.copyWith(isMuted: newMute);
+  }
+
+  Future<void> toggleOpenMicMode([bool? value]) async {
+    HapticFeedback.mediumImpact();
+    final newMode = value ?? !state.isOpenMic;
+    state = state.copyWith(isOpenMic: newMode);
+    if (newMode && state.isConnected && !state.isMuted) {
+      await setTransmitting(true);
+    } else if (!newMode && state.isTransmitting) {
+      await setTransmitting(false);
+    }
   }
 
   // ── Smart toggles ─────────────────────────────────────────────────────────
