@@ -9,6 +9,7 @@ import '../../widgets/app_card.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../../widgets/app_text_field.dart';
 import 'widgets/refueling_cost_section.dart';
+import 'widgets/refueling_date_section.dart';
 import 'widgets/refueling_odometer_section.dart';
 import 'widgets/refueling_tank_level_section.dart';
 
@@ -17,6 +18,10 @@ class RefuelingFormFields extends StatelessWidget {
   const RefuelingFormFields({
     super.key,
     required this.vehicle,
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.onDateChanged,
+    required this.onTimeChanged,
     required this.odometerController,
     required this.tripOdometerController,
     required this.odometerFocus,
@@ -46,6 +51,10 @@ class RefuelingFormFields extends StatelessWidget {
   });
 
   final Vehicle vehicle;
+  final DateTime selectedDate;
+  final TimeOfDay selectedTime;
+  final ValueChanged<DateTime> onDateChanged;
+  final ValueChanged<TimeOfDay> onTimeChanged;
   final TextEditingController odometerController;
   final TextEditingController tripOdometerController;
   final FocusNode odometerFocus;
@@ -134,6 +143,15 @@ class RefuelingFormFields extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 10),
+
+        // Section 0: Refueling Date & Time
+        RefuelingDateSection(
+          selectedDate: selectedDate,
+          selectedTime: selectedTime,
+          onDateChanged: onDateChanged,
+          onTimeChanged: onTimeChanged,
         ),
         const SizedBox(height: 10),
 

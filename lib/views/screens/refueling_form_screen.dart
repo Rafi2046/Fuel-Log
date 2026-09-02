@@ -34,6 +34,8 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
   final _noteController = TextEditingController();
   final _stationController = TextEditingController();
 
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   final _ocrService = ReceiptOcrService();
   bool _isScanning = false;
   bool _isFullTank = true;
@@ -241,9 +243,17 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
       return;
     }
 
+    final combinedDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     final ok = await ref.read(fuelLogProvider.notifier).addFuelLog(
           vehicleId: vehicle.id,
-          date: DateTime.now(),
+          date: combinedDateTime,
           odometer: odometer,
           amount: amount,
           cost: cost,
@@ -351,6 +361,10 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
       if (receipt.odometer != null) {
         _setText(_odometerController, receipt.odometer!.toStringAsFixed(0));
       }
+      if (receipt.date != null) {
+        _selectedDate = receipt.date!;
+        _selectedTime = TimeOfDay.fromDateTime(receipt.date!);
+      }
       _isUpdating = false;
 
       if (receipt.totalCost != null && receipt.amountLiters != null) {
@@ -442,6 +456,10 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                   physics: const ClampingScrollPhysics(),
                   child: RefuelingFormFields(
                     vehicle: vehicle,
+                    selectedDate: _selectedDate,
+                    selectedTime: _selectedTime,
+                    onDateChanged: (val) => setState(() => _selectedDate = val),
+                    onTimeChanged: (val) => setState(() => _selectedTime = val),
                     odometerController: _odometerController,
                     tripOdometerController: _tripOdometerController,
                     odometerFocus: _odometerFocus,
