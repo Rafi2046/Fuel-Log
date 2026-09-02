@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/services/p2p_voice_service.dart';
 import '../../../viewmodels/intercom_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
 import 'widgets/intercom_header_section.dart';
@@ -118,17 +117,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Pending Join Request Banner (For Host)
-            if (intercomState.pendingJoinRequest != null) ...[
-              _PendingJoinRequestBanner(
-                request: intercomState.pendingJoinRequest!,
-                onAccept: () => intercomNotifier.acceptJoinRequest(intercomState.pendingJoinRequest!),
-                onDecline: () => intercomNotifier.declineJoinRequest(intercomState.pendingJoinRequest!),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            // 2. Header Section: Tour Name, Active Mesh Badge & Overlapping Avatar Stack
+            // 1. Header Section: Tour Name, Active Mesh Badge & Overlapping Avatar Stack
             IntercomHeaderSection(
               state: intercomState,
               onMuteToggle: intercomNotifier.toggleMute,
@@ -138,7 +127,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
 
             const SizedBox(height: 16),
 
-            // 3. Active Transmission / Connection Status Banner
+            // 2. Active Transmission / Connection Status Banner
             _TransmissionBanner(state: intercomState),
 
             if (intercomState.errorMessage != null) ...[
@@ -153,7 +142,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
 
             const SizedBox(height: 16),
 
-            // 4. The Voice Centerpiece (Hands-Free Call / PTT Button)
+            // 3. The Voice Centerpiece (Hands-Free Call / PTT Button)
             TacticalPttButton(
               isTransmitting: intercomState.isTransmitting,
               isOpenMic: intercomState.isOpenMic,
@@ -165,7 +154,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
 
             const SizedBox(height: 24),
 
-            // 5. Smart Toggles (Glassmorphism Cards)
+            // 4. Smart Toggles (Glassmorphism Cards)
             IntercomSmartToggles(
               windNoiseEnabled:
                   intercomState.isWindNoiseCancellationEnabled,
@@ -181,144 +170,12 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
 
             const SizedBox(height: 16),
 
-            // 6. Rider Tips & Zero Data Mesh Bridge Info
+            // 5. Rider Tips & Zero Data Mesh Bridge Info
             const IntercomRiderTips(),
 
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Tactical Dialog/Banner for Host to Accept or Decline new riders requesting to join.
-class _PendingJoinRequestBanner extends StatelessWidget {
-  const _PendingJoinRequestBanner({
-    required this.request,
-    required this.onAccept,
-    required this.onDecline,
-  });
-
-  final P2PJoinRequest request;
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1610),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.6), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warning.withValues(alpha: 0.25),
-            blurRadius: 18,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.warning.withValues(alpha: 0.2),
-                  border: Border.all(color: AppColors.warning),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  request.riderName.length >= 2
-                      ? request.riderName.substring(0, 2).toUpperCase()
-                      : 'RD',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.warning,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Rider Wants to Join!',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${request.riderName} (${request.address.address})',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: BorderSide(color: AppColors.error.withValues(alpha: 0.6)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  onPressed: onDecline,
-                  child: Text(
-                    'Decline',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  onPressed: onAccept,
-                  child: Text(
-                    'Accept & Add',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -335,28 +192,25 @@ class _TransmissionBanner extends StatelessWidget {
     final isTransmitting = state.isTransmitting;
     final isConnecting = state.isConnecting;
     final isConnected = state.isConnected;
-    final isWaiting = state.isWaitingForApproval;
 
     String statusText;
     IconData icon;
     Color iconColor;
 
-    if (isWaiting) {
-      statusText = 'WAITING FOR HOST APPROVAL...';
-      icon = Icons.hourglass_top_rounded;
-      iconColor = AppColors.warning;
-    } else if (isTransmitting) {
-      statusText = 'BROADCASTING TO ${state.onlineCount} RIDERS • LIVE AUDIO';
-      icon = Icons.podcasts_rounded;
-      iconColor = AppColors.primary;
+    if (isConnected) {
+      if (isTransmitting) {
+        statusText = 'BROADCASTING TO ${state.onlineCount} RIDERS • LIVE AUDIO';
+        icon = Icons.podcasts_rounded;
+        iconColor = AppColors.primary;
+      } else {
+        statusText = 'OFFLINE P2P VOICE ACTIVE • ${state.channelCode.toUpperCase()}';
+        icon = Icons.check_circle_outline_rounded;
+        iconColor = AppColors.success;
+      }
     } else if (isConnecting) {
       statusText = 'CONNECTING TO OFFLINE P2P MESH...';
       icon = Icons.sync_rounded;
       iconColor = AppColors.warning;
-    } else if (isConnected) {
-      statusText = 'OFFLINE P2P VOICE ACTIVE • ${state.channelCode.toUpperCase()}';
-      icon = Icons.check_circle_outline_rounded;
-      iconColor = AppColors.success;
     } else {
       statusText = 'STANDBY • TAP & HOLD PTT TO TRANSMIT';
       icon = Icons.radio_button_checked_rounded;

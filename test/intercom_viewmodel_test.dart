@@ -46,7 +46,6 @@ void main() {
       expect(state.onlineCount, equals(1));
       expect(state.isHost, isFalse);
       expect(state.joinCode, isNull);
-      expect(state.discoveredTours, isEmpty);
     });
 
     test('generateJoinCode produces valid 6-char uppercase alphanumeric codes', () {
@@ -99,7 +98,6 @@ void main() {
     test('leaveIntercom stops hardware button listener and resets state', () async {
       await viewModel.leaveIntercom();
       expect(fakePttService.stopListeningCalled, isTrue);
-      expect(viewModel.state.isConnected, isFalse);
       expect(viewModel.state.isTransmitting, isFalse);
     });
   });

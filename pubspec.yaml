@@ -71,6 +71,7 @@ dependencies:
   permission_handler: 11.3.1
   flutter_volume_controller: ^2.0.2
   qr_flutter: ^4.1.0
+  nearby_connections: ^4.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
