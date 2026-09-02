@@ -56,6 +56,8 @@ class NearbyAudioTransport {
   bool _isRunning = false;
   bool _isHost = false;
   String _targetTourCode = '';
+  String _riderDiscoveryName = '';
+  Timer? _discoveryRefreshTimer;
 
   // Thread-safe FIFO Queue to prevent native AudioTrack SIGSEGV crash
   final List<Uint8List> _audioQueue = [];
@@ -173,14 +175,23 @@ class NearbyAudioTransport {
     await _initAudioPlayer();
 
     final riderName = 'RIDER#$_targetTourCode#$userName';
+    _riderDiscoveryName = riderName;
     _isRunning = true;
     _connectedEndpoints.clear();
     _endpointNames.clear();
     _connectionStateController.add(_connectedEndpoints);
 
+    await _beginRiderDiscovery();
+    _scheduleDiscoveryRefresh();
+    _setupAudioPacketListener();
+  }
+
+  Future<void> _beginRiderDiscovery() async {
+    if (!_isRunning || _riderDiscoveryName.isEmpty) return;
+
     try {
       final discResult = await Nearby().startDiscovery(
-        riderName,
+        _riderDiscoveryName,
         _strategy,
         serviceId: _serviceId,
         onEndpointFound: (id, name, foundServiceId) {
@@ -188,9 +199,11 @@ class NearbyAudioTransport {
           if (name.contains('#')) {
             final parts = name.split('#');
             if (parts.length >= 2 && parts[1].toUpperCase() == _targetTourCode) {
-              debugPrint('[NearbyAudioTransport] Match found for tour $_targetTourCode! Requesting connection...');
+              debugPrint(
+                '[NearbyAudioTransport] Match found for tour $_targetTourCode! Requesting connection...',
+              );
               Nearby().requestConnection(
-                riderName,
+                _riderDiscoveryName,
                 id,
                 onConnectionInitiated: _onConnectionInitiated,
                 onConnectionResult: _onConnectionResult,
@@ -206,12 +219,38 @@ class NearbyAudioTransport {
           if (id != null) _removeEndpoint(id);
         },
       );
-      debugPrint('[NearbyAudioTransport] 🔎 RIDER Discovery started ($discResult) for tour $_targetTourCode');
+      debugPrint(
+        '[NearbyAudioTransport] 🔎 RIDER Discovery started ($discResult) for tour $_targetTourCode',
+      );
     } catch (e) {
       debugPrint('[NearbyAudioTransport] Rider discovery error: $e');
     }
+  }
 
-    _setupAudioPacketListener();
+  void _scheduleDiscoveryRefresh() {
+    _discoveryRefreshTimer?.cancel();
+    _discoveryRefreshTimer = Timer.periodic(const Duration(seconds: 6), (_) {
+      if (!_isRunning || _isHost || _connectedEndpoints.isNotEmpty) return;
+      unawaited(_refreshRiderDiscovery());
+    });
+  }
+
+  Future<void> _refreshRiderDiscovery() async {
+    if (_isHost || !_isRunning || _connectedEndpoints.isNotEmpty) return;
+
+    try {
+      await Nearby().stopDiscovery();
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      await _beginRiderDiscovery();
+      debugPrint('[NearbyAudioTransport] Rider discovery refreshed.');
+    } catch (e) {
+      debugPrint('[NearbyAudioTransport] Discovery refresh error: $e');
+    }
+  }
+
+  void _stopDiscoveryRefresh() {
+    _discoveryRefreshTimer?.cancel();
+    _discoveryRefreshTimer = null;
   }
 
   void _setupAudioPacketListener() {
@@ -264,7 +303,10 @@ class NearbyAudioTransport {
     if (status == Status.CONNECTED) {
       _connectedEndpoints.add(id);
       _connectionStateController.add(connectedEndpoints);
-      debugPrint('[NearbyAudioTransport] ✅ CONNECTED with $id (${_endpointNames[id]}). Total active peers: ${_connectedEndpoints.length}');
+      _stopDiscoveryRefresh();
+      debugPrint(
+        '[NearbyAudioTransport] ✅ CONNECTED with $id (${_endpointNames[id]}). Total active peers: ${_connectedEndpoints.length}',
+      );
     } else {
       _removeEndpoint(id);
     }
@@ -279,6 +321,9 @@ class NearbyAudioTransport {
     _connectedEndpoints.remove(id);
     _endpointNames.remove(id);
     _connectionStateController.add(connectedEndpoints);
+    if (!_isHost && _isRunning && _connectedEndpoints.isEmpty) {
+      _scheduleDiscoveryRefresh();
+    }
   }
 
   // ── Audio Player Setup (Thread-Safe FIFO Buffer) ──────────────────────────
@@ -493,6 +538,8 @@ class NearbyAudioTransport {
   // ── Teardown ──────────────────────────────────────────────────────────────
   Future<void> stop() async {
     await stopTransmitting();
+    _stopDiscoveryRefresh();
+    _riderDiscoveryName = '';
     _isRunning = false;
     _audioSub?.cancel();
     _audioSub = null;

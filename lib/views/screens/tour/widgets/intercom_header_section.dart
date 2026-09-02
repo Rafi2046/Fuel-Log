@@ -34,7 +34,7 @@ class IntercomHeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = _SessionStatus.fromState(state);
     final isAlone = state.onlineCount <= 1;
-    final avatarStackWidth = _avatarStackWidth(state.members.length);
+    final remoteCount = state.members.where((m) => !m.isCurrentUser).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -96,38 +96,14 @@ class IntercomHeaderSection extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
-                  SizedBox(
-                    height: 40,
-                    width: avatarStackWidth,
-                    child: ClipRect(
-                      clipBehavior: Clip.none,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: List.generate(state.members.length, (index) {
-                          final member = state.members[index];
-                          final color =
-                              _avatarColors[index % _avatarColors.length];
-
-                          return Positioned(
-                            left: index * 24.0,
-                            child: _MemberAvatar(
-                              member: member,
-                              color: color,
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           isAlone
-                              ? 'Just you for now'
-                              : '${state.onlineCount} riders connected',
+                              ? 'Waiting for riders'
+                              : '$remoteCount rider${remoteCount == 1 ? '' : 's'} joined',
                           style: AppTextStyles.label.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
@@ -135,15 +111,45 @@ class IntercomHeaderSection extends StatelessWidget {
                         ),
                         Text(
                           isAlone
-                              ? 'Invite riders with your tour code'
-                              : 'Offline mesh • no mobile data',
+                              ? (state.isHost
+                                  ? 'Share your tour code to invite'
+                                  : 'Searching for tour host nearby')
+                              : '${state.onlineCount} active on this channel',
                           style: AppTextStyles.caption,
                         ),
                       ],
                     ),
                   ),
+                  if (isAlone)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
                 ],
               ),
+              if (state.members.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: Column(
+                    key: ValueKey(state.members.length),
+                    children: [
+                      for (var i = 0; i < state.members.length; i++) ...[
+                        _RiderListTile(
+                          member: state.members[i],
+                          color: _avatarColors[i % _avatarColors.length],
+                        ),
+                        if (i < state.members.length - 1)
+                          const SizedBox(height: AppSpacing.xs),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -178,65 +184,85 @@ class IntercomHeaderSection extends StatelessWidget {
     );
   }
 
-  static double _avatarStackWidth(int memberCount) {
-    if (memberCount <= 0) return 40;
-    const avatarSize = 40.0;
-    const overlap = 24.0;
-    return avatarSize + ((memberCount - 1) * overlap);
-  }
-
   static String _formatCode(String code) =>
       code.replaceAll(' ', '').split('').join(' ');
 }
 
-class _MemberAvatar extends StatelessWidget {
-  const _MemberAvatar({required this.member, required this.color});
+class _RiderListTile extends StatelessWidget {
+  const _RiderListTile({
+    required this.member,
+    required this.color,
+  });
 
   final IntercomMember member;
   final Color color;
 
+  String get _displayName =>
+      member.isCurrentUser ? 'You' : member.name;
+
+  String get _initials {
+    if (member.isCurrentUser) return 'Y';
+    final value = member.initials.trim();
+    if (value.length <= 2) return value.toUpperCase();
+    return value.substring(0, 2).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.18),
+        color: AppColors.cardElevated,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         border: Border.all(
           color: member.isCurrentUser
-              ? AppColors.primary.withValues(alpha: 0.5)
+              ? AppColors.primary.withValues(alpha: 0.22)
               : AppColors.border,
         ),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
+      child: Row(
         children: [
-          Text(
-            member.initials,
-            style: AppTextStyles.caption.copyWith(
-              fontWeight: FontWeight.w700,
-              color: member.isCurrentUser
-                  ? AppColors.primary
-                  : AppColors.textPrimary,
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.16),
+            ),
+            child: Text(
+              _initials,
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w700,
+                color: member.isCurrentUser
+                    ? AppColors.primary
+                    : AppColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              _displayName,
+              style: AppTextStyles.label.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                fontSize: 13,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (member.isOnline)
-            Positioned(
-              right: 1,
-              bottom: 1,
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.success,
-                  border: Border.all(
-                    color: AppColors.card,
-                    width: 1.5,
-                  ),
-                ),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.success,
+                border: Border.all(color: AppColors.cardElevated, width: 1),
               ),
             ),
         ],
@@ -376,8 +402,10 @@ class _SessionStatus {
       }
       if (isAlone) {
         return _SessionStatus(
-          label: 'Channel ready — share code to invite riders',
-          icon: Icons.group_add_outlined,
+          label: state.isHost
+              ? 'Waiting for riders to join…'
+              : 'Looking for tour host…',
+          icon: Icons.radar_rounded,
           iconColor: AppColors.primary,
           textColor: AppColors.textSecondary,
           backgroundColor: AppColors.primary.withValues(alpha: 0.08),

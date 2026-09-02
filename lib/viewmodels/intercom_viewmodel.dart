@@ -334,8 +334,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       joinCode: code,
       channelCode: code,
       isHost: true,
-      isConnecting: false,
-      isConnected: true,
+      isConnecting: true,
+      isConnected: false,
       mode: IntercomMode.hosting,
       lastTourCode: code,
       lastTourName: tourName,
@@ -359,6 +359,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         userName: 'Host',
         tourCode: code,
       );
+
+      state = state.copyWith(isConnecting: false, isConnected: true);
 
       _hardwarePttService.startListening(setTransmitting);
 
@@ -384,8 +386,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     final name = customTourName ?? 'Tour $cleanCode';
 
     state = state.copyWith(
-      isConnecting: false,
-      isConnected: true,
+      isConnecting: true,
+      isConnected: false,
       tourName: name,
       joinCode: cleanCode,
       channelCode: cleanCode,
@@ -412,6 +414,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         userName: 'Rider',
         tourCode: cleanCode,
       );
+
+      state = state.copyWith(isConnecting: false, isConnected: true);
 
       _hardwarePttService.startListening(setTransmitting);
 
