@@ -204,6 +204,15 @@ class NearbyAudioTransport {
                 bytes: rawBytes,
               ),
             );
+
+            // Host Multi-Rider Bridge Relay: Forward Rider's audio to all other connected riders!
+            if (_isHost && _connectedEndpoints.length > 1) {
+              for (final peerId in _connectedEndpoints) {
+                if (peerId != endpointId) {
+                  unawaited(Nearby().sendBytesPayload(peerId, rawBytes));
+                }
+              }
+            }
           }
         }
       },

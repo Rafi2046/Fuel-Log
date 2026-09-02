@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/hardware_ptt_service.dart';
 import '../core/services/nearby_audio_transport.dart';
@@ -103,6 +104,9 @@ class IntercomState {
         batteryPercent: 92,
       ),
     ],
+    this.lastTourCode,
+    this.lastTourName,
+    this.lastTourIsHost = false,
     this.transmissionSeconds = 0,
     this.audioOutputVolume = 0.85,
   });
@@ -122,10 +126,17 @@ class IntercomState {
   final bool isHost;
   final IntercomMode mode;
   final List<IntercomMember> members;
+
+  // Persistent Rejoin Session Fields (WhatsApp/Messenger style)
+  final String? lastTourCode;
+  final String? lastTourName;
+  final bool lastTourIsHost;
+
   final int transmissionSeconds;
   final double audioOutputVolume;
 
   int get onlineCount => members.where((m) => m.isOnline).length;
+  bool get hasRecentTour => lastTourCode != null && lastTourCode!.isNotEmpty;
 
   IntercomState copyWith({
     bool? isTransmitting,
@@ -143,6 +154,10 @@ class IntercomState {
     bool? isHost,
     IntercomMode? mode,
     List<IntercomMember>? members,
+    String? lastTourCode,
+    String? lastTourName,
+    bool? lastTourIsHost,
+    bool clearRecentTour = false,
     int? transmissionSeconds,
     double? audioOutputVolume,
   }) {
@@ -164,6 +179,9 @@ class IntercomState {
       isHost: isHost ?? this.isHost,
       mode: mode ?? this.mode,
       members: members ?? this.members,
+      lastTourCode: clearRecentTour ? null : (lastTourCode ?? this.lastTourCode),
+      lastTourName: clearRecentTour ? null : (lastTourName ?? this.lastTourName),
+      lastTourIsHost: clearRecentTour ? false : (lastTourIsHost ?? this.lastTourIsHost),
       transmissionSeconds: transmissionSeconds ?? this.transmissionSeconds,
       audioOutputVolume: audioOutputVolume ?? this.audioOutputVolume,
     );
@@ -180,7 +198,9 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     NearbyAudioTransport? transport,
   ])  : _hardwarePttService = hardwarePttService ?? HardwarePttService(),
         _transport = transport ?? NearbyAudioTransport.instance,
-        super(const IntercomState());
+        super(const IntercomState()) {
+    _loadRecentTourSession();
+  }
 
   final HardwarePttService _hardwarePttService;
   final NearbyAudioTransport _transport;
@@ -188,11 +208,56 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   StreamSubscription<Set<String>>? _connectionSub;
 
   static const _codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  static const _prefTourCode = 'intercom_last_tour_code';
+  static const _prefTourName = 'intercom_last_tour_name';
+  static const _prefTourIsHost = 'intercom_last_tour_is_host';
 
   /// Generates a cryptographically random 6-character uppercase join code.
   static String generateJoinCode() {
     final rand = Random.secure();
     return List.generate(6, (_) => _codeChars[rand.nextInt(_codeChars.length)]).join();
+  }
+
+  // ── Persistent Session Helpers ────────────────────────────────────────────
+
+  Future<void> _loadRecentTourSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final code = prefs.getString(_prefTourCode);
+      final name = prefs.getString(_prefTourName);
+      final isHost = prefs.getBool(_prefTourIsHost) ?? false;
+
+      if (code != null && code.isNotEmpty) {
+        state = state.copyWith(
+          lastTourCode: code,
+          lastTourName: name ?? 'Recent Tour',
+          lastTourIsHost: isHost,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveRecentTourSession({
+    required String tourCode,
+    required String tourName,
+    required bool isHost,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefTourCode, tourCode);
+      await prefs.setString(_prefTourName, tourName);
+      await prefs.setBool(_prefTourIsHost, isHost);
+    } catch (_) {}
+  }
+
+  Future<void> clearRecentTourSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefTourCode);
+      await prefs.remove(_prefTourName);
+      await prefs.remove(_prefTourIsHost);
+    } catch (_) {}
+    state = state.copyWith(clearRecentTour: true);
   }
 
   // ── Lobby helpers ─────────────────────────────────────────────────────────
@@ -203,6 +268,9 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       joinCode: joinCode,
       channelCode: joinCode,
       isHost: true,
+      lastTourCode: joinCode,
+      lastTourName: tourName,
+      lastTourIsHost: true,
     );
   }
 
@@ -218,7 +286,16 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       isConnecting: false,
       isConnected: true,
       mode: IntercomMode.hosting,
+      lastTourCode: code,
+      lastTourName: tourName,
+      lastTourIsHost: true,
       errorMessage: null,
+    );
+
+    await _saveRecentTourSession(
+      tourCode: code,
+      tourName: tourName,
+      isHost: true,
     );
 
     try {
@@ -249,16 +326,27 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
 
   // ── RIDER: Join with Code ─────────────────────────────────────────────────
 
-  Future<void> joinByCode(String code) async {
+  Future<void> joinByCode(String code, [String? customTourName]) async {
     final cleanCode = code.trim().toUpperCase();
+    final name = customTourName ?? 'Tour $cleanCode';
+
     state = state.copyWith(
       isConnecting: false,
       isConnected: true,
-      tourName: 'Tour $cleanCode',
+      tourName: name,
       joinCode: cleanCode,
       channelCode: cleanCode,
       isHost: false,
+      lastTourCode: cleanCode,
+      lastTourName: name,
+      lastTourIsHost: false,
       errorMessage: null,
+    );
+
+    await _saveRecentTourSession(
+      tourCode: cleanCode,
+      tourName: name,
+      isHost: false,
     );
 
     try {
@@ -284,6 +372,23 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         isConnected: false,
         errorMessage: 'Failed to join: $e',
       );
+    }
+  }
+
+  // ── 1-CLICK REJOIN RECENT TOUR (WhatsApp / Messenger Voice Call Style) ──────
+
+  Future<void> rejoinRecentTour() async {
+    if (!state.hasRecentTour) return;
+    HapticFeedback.heavyImpact();
+
+    final code = state.lastTourCode!;
+    final name = state.lastTourName ?? 'Tour $code';
+    final wasHost = state.lastTourIsHost;
+
+    if (wasHost) {
+      await createTour(tourName: name, preGeneratedCode: code);
+    } else {
+      await joinByCode(code, name);
     }
   }
 
@@ -391,7 +496,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
 
   void setTourName(String tourName) => state = state.copyWith(tourName: tourName);
 
-  // ── Leave / Reset ─────────────────────────────────────────────────────────
+  // ── Leave / Reset (Retains Recent Tour for 1-Click Rejoin) ────────────────
 
   Future<void> leaveIntercom() async {
     HapticFeedback.mediumImpact();
@@ -399,10 +504,18 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     _connectionSub?.cancel();
     _connectionSub = null;
 
+    final savedCode = state.lastTourCode ?? state.joinCode ?? state.channelCode;
+    final savedName = state.lastTourName ?? state.tourName;
+    final savedIsHost = state.lastTourIsHost || state.isHost;
+
     await _transport.stop();
 
-    state = const IntercomState();
-    debugPrint('[IntercomVM] Intercom session reset.');
+    state = IntercomState(
+      lastTourCode: savedCode.isNotEmpty ? savedCode : null,
+      lastTourName: savedName,
+      lastTourIsHost: savedIsHost,
+    );
+    debugPrint('[IntercomVM] Intercom session disconnected (Recent Tour retained: $savedCode).');
   }
 
   @override

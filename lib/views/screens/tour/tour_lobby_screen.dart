@@ -110,6 +110,15 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     _goToIntercomScreen();
   }
 
+  Future<void> _onRejoinRecentTour() async {
+    setState(() => _isLoading = true);
+    HapticFeedback.heavyImpact();
+    await _notifier.rejoinRecentTour();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    _goToIntercomScreen();
+  }
+
   void _goToIntercomScreen() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const TourIntercomScreen()),
@@ -118,6 +127,8 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
 
   @override
   Widget build(BuildContext context) {
+    final intercomState = ref.watch(intercomProvider);
+
     return AppScaffold(
       leading: const AppBackButton(),
       titleWidget: Row(
@@ -153,11 +164,31 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
       ),
       body: Column(
         children: [
+          // 1-Click WhatsApp/Messenger style Rejoin Banner
+          if (intercomState.hasRecentTour) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                4,
+                AppSpacing.screenPadding,
+                6,
+              ),
+              child: _RecentTourRejoinBanner(
+                tourName: intercomState.lastTourName ?? 'Recent Tour',
+                tourCode: intercomState.lastTourCode!,
+                isHost: intercomState.lastTourIsHost,
+                isLoading: _isLoading,
+                onRejoin: _onRejoinRecentTour,
+                onDismiss: () => _notifier.clearRecentTourSession(),
+              ),
+            ),
+          ],
+
           // Tactical Tab Bar
           Container(
             margin: const EdgeInsets.symmetric(
               horizontal: AppSpacing.screenPadding,
-              vertical: 8,
+              vertical: 6,
             ),
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -700,6 +731,162 @@ class _InfoCard extends StatelessWidget {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1-Click Recent Tour Rejoin Banner (WhatsApp / Messenger Style)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RecentTourRejoinBanner extends StatelessWidget {
+  const _RecentTourRejoinBanner({
+    required this.tourName,
+    required this.tourCode,
+    required this.isHost,
+    required this.isLoading,
+    required this.onRejoin,
+    required this.onDismiss,
+  });
+
+  final String tourName;
+  final String tourCode;
+  final bool isHost;
+  final bool isLoading;
+  final VoidCallback onRejoin;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.4),
+          width: 1.3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.14),
+            blurRadius: 16,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                ),
+                child: const Icon(
+                  Icons.history_toggle_off_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            tourName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: isHost
+                                ? AppColors.primary.withValues(alpha: 0.2)
+                                : AppColors.success.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isHost ? 'HOST' : 'RIDER',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                              color: isHost ? AppColors.primary : AppColors.success,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Code: $tourCode • Tap to quickly jump back in',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textTertiary),
+                onPressed: onDismiss,
+                tooltip: 'Dismiss',
+                constraints: const BoxConstraints(maxWidth: 32, maxHeight: 32),
+                padding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          SizedBox(
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: isLoading ? null : onRejoin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                ),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+              ),
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.phone_forwarded_rounded, size: 16),
+              label: Text(
+                isLoading ? 'RECONNECTING...' : 'REJOIN LIVE TOUR',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
