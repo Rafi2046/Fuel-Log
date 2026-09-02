@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../widgets/clean_glass_panel.dart';
 
-/// 2-column grid of tactical glassmorphism cards for intercom smart toggles.
+/// Audio enhancement settings in a single premium list card.
 class IntercomSmartToggles extends StatelessWidget {
   const IntercomSmartToggles({
     super.key,
@@ -28,83 +29,61 @@ class IntercomSmartToggles extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(
-              Icons.tune_rounded,
-              size: 15,
-              color: AppColors.textTertiary,
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: AppSpacing.sm),
+          child: Text(
+            'Audio',
+            style: AppTextStyles.label.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
-            const SizedBox(width: 6),
-            Text(
-              'SMART INTERCOM AUDIO ENHANCEMENTS',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textTertiary,
-                letterSpacing: 1.1,
-              ),
-            ),
-          ],
+          ),
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            // Toggle 1: Wind Noise Cancellation
-            Expanded(
-              child: _TacticalToggleCard(
+        CleanGlassPanel(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              _SettingRow(
                 icon: Icons.air_rounded,
-                title: 'Wind Noise Filter',
-                subtitle: 'Cut 80km/h+ turbulence',
+                title: 'Wind noise filter',
+                subtitle: 'Reduces wind at highway speeds',
                 value: windNoiseEnabled,
                 onChanged: onWindNoiseChanged,
               ),
-            ),
-            const SizedBox(width: 10),
-            // Toggle 2: Helmet Audio Route
-            Expanded(
-              child: _TacticalToggleCard(
+              const Divider(height: 1, color: AppColors.divider),
+              _SettingRow(
                 icon: Icons.headset_mic_rounded,
-                title: 'Helmet Audio',
-                subtitle: 'Bluetooth / Sena direct',
+                title: 'Helmet audio',
+                subtitle: 'Route through Bluetooth / Sena',
                 value: helmetAudioEnabled,
                 onChanged: onHelmetAudioChanged,
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            // Toggle 3: Offline Mesh Bridge
-            Expanded(
-              child: _TacticalToggleCard(
+              const Divider(height: 1, color: AppColors.divider),
+              _SettingRow(
                 icon: Icons.wifi_tethering_rounded,
-                title: 'Mesh Bridge',
-                subtitle: 'Zero cellular data mode',
+                title: 'Mesh bridge',
+                subtitle: 'Extend range without mobile data',
                 value: meshBridgeEnabled,
                 onChanged: onMeshBridgeChanged,
               ),
-            ),
-            const SizedBox(width: 10),
-            // Static/Active info: Auto FEC Recovery
-            Expanded(
-              child: _TacticalInfoCard(
+              const Divider(height: 1, color: AppColors.divider),
+              const _InfoRow(
                 icon: Icons.auto_graph_rounded,
-                title: 'Auto FEC Recovery',
-                subtitle: 'Packet-loss correction on',
-                badgeText: 'ACTIVE',
+                title: 'Auto FEC recovery',
+                subtitle: 'Keeps audio stable on packet loss',
+                badge: 'On',
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _TacticalToggleCard extends StatelessWidget {
-  const _TacticalToggleCard({
+class _SettingRow extends StatelessWidget {
+  const _SettingRow({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -120,86 +99,38 @@ class _TacticalToggleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: value
-              ? AppColors.primary.withValues(alpha: 0.35)
-              : Colors.white.withValues(alpha: 0.07),
-          width: 1.2,
-        ),
-        boxShadow: [
-          if (value)
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: value
-                      ? AppColors.primary.withValues(alpha: 0.16)
-                      : AppColors.cardElevated,
-                  border: Border.all(
-                    color: value
-                        ? AppColors.primary.withValues(alpha: 0.4)
-                        : Colors.white.withValues(alpha: 0.06),
+          _IconTile(icon: icon, active: value),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.label.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                child: Icon(
-                  icon,
-                  size: 16,
-                  color: value ? AppColors.primary : AppColors.textTertiary,
-                ),
-              ),
-              Transform.scale(
-                scale: 0.75,
-                child: Switch(
-                  value: value,
-                  onChanged: onChanged,
-                  activeThumbColor: AppColors.primary,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
-                  inactiveThumbColor: AppColors.textTertiary,
-                  inactiveTrackColor: AppColors.cardElevated,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+                Text(subtitle, style: AppTextStyles.caption),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textTertiary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
+            inactiveThumbColor: AppColors.textTertiary,
+            inactiveTrackColor: AppColors.cardElevated,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
       ),
@@ -207,95 +138,95 @@ class _TacticalToggleCard extends StatelessWidget {
   }
 }
 
-class _TacticalInfoCard extends StatelessWidget {
-  const _TacticalInfoCard({
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.badgeText,
+    required this.badge,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final String badgeText;
+  final String badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          _IconTile(icon: icon, active: false),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.label.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(subtitle, style: AppTextStyles.caption),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.24),
+              ),
+            ),
+            child: Text(
+              badge,
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.success,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconTile extends StatelessWidget {
+  const _IconTile({required this.icon, required this.active});
+
+  final IconData icon;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        color: active
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : AppColors.cardElevated,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.07),
-          width: 1.2,
+          color: active
+              ? AppColors.primary.withValues(alpha: 0.25)
+              : AppColors.border,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.cardElevated,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  border: Border.all(
-                    color: AppColors.success.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  badgeText,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textTertiary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+      child: Icon(
+        icon,
+        size: 17,
+        color: active ? AppColors.primary : AppColors.textSecondary,
       ),
     );
   }
