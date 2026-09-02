@@ -391,5 +391,7 @@
   "docNoteField": "Notes & Remarks",
   "docSavedSuccess": "Document saved successfully",
   "docEmptyTitle": "No Documents Stored",
-  "docEmptySubtitle": "Keep digital copies of your Tax Token, Blue Book, Driving License & Insurance securely in this vault."
+  "docEmptySubtitle": "Keep digital copies of your Tax Token, Blue Book, Driving License & Insurance securely in this vault.",
+  "mapOfflineHint": "Map servers unreachable. Phone has signal, but the app cannot reach map tiles — try Private DNS Off, or switch Wi‑Fi/mobile data.",
+  "mapOfflineRetry": "Retry"
 }

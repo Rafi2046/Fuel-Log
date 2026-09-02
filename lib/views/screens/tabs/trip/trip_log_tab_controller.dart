@@ -28,16 +28,59 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   AnimationController? _mapAnimController;
   double _mapZoom = 15.0;
   LatLng _mapCenter = kDefaultUserLocation;
+  bool _mapIsOnline = true;
+  int _mapTileGeneration = 0;
+  Timer? _networkCheckTimer;
+
+  void _startMapNetworkMonitor() {
+    unawaited(_checkMapNetwork());
+    _networkCheckTimer?.cancel();
+    _networkCheckTimer = Timer.periodic(
+      const Duration(seconds: 8),
+      (_) => unawaited(_checkMapNetwork()),
+    );
+  }
+
+  void _stopMapNetworkMonitor() {
+    _networkCheckTimer?.cancel();
+    _networkCheckTimer = null;
+  }
+
+  Future<void> _checkMapNetwork() async {
+    final online = await NetworkStatus.canReachMapTiles();
+    if (!mounted) return;
+    if (online == _mapIsOnline) return;
+    setState(() {
+      _mapIsOnline = online;
+      if (online) _mapTileGeneration++;
+    });
+  }
+
+  Future<void> _retryMapTiles() async {
+    setState(() => _mapTileGeneration++);
+    await _checkMapNetwork();
+    if (!mounted) return;
+    try {
+      final z = _mapZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
+      _mapController.move(_userLocation, z + 0.01);
+      _mapController.move(_userLocation, z);
+    } catch (_) {}
+  }
 
   @override
   void didUpdateWidget(covariant TripLogTab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive) {
+      unawaited(_checkMapNetwork());
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _fetchLiveLocation();
         try {
           _mapController.move(_userLocation, _mapZoom);
+          // Nudge zoom so tiles reload after tab was inactive.
+          final z = _mapZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
+          _mapController.move(_userLocation, z + 0.01);
+          _mapController.move(_userLocation, z);
         } catch (_) {}
       });
     }
@@ -51,7 +94,8 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   }) {
     if (!mounted) return;
 
-    final clampedZoom = destZoom.clamp(8.5, 18.0);
+    final clampedZoom =
+        destZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
 
     void applyInstantMove() {
       try {
@@ -307,30 +351,35 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
 
   void _zoomIn() {
     final zoom = _mapController.camera.zoom;
-    if (zoom < 18.0) {
+    if (zoom < AppMapTiles.maxZoom) {
       _animatedMapMove(
         _mapController.camera.center,
         zoom + 1.0,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
+        duration: Duration.zero,
       );
     }
   }
 
   void _zoomOut() {
     final zoom = _mapController.camera.zoom;
-    if (zoom > 9.0) {
+    if (zoom > AppMapTiles.minZoom) {
       _animatedMapMove(
         _mapController.camera.center,
         zoom - 1.0,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
+        duration: Duration.zero,
       );
     }
   }
 
   void _recenterUser() {
+    _resetMapNorth();
     _fetchLiveLocation(showFeedback: true);
+  }
+
+  void _resetMapNorth() {
+    try {
+      _mapController.rotate(0);
+    } catch (_) {}
   }
 
   void _onNavigateTo(MockGasStation station) {

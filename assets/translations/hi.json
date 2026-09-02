@@ -322,5 +322,7 @@
   "notificationsEmptySubtitle": "सब कुछ अप-टू-डेट है! सर्विस अलर्ट, रखरखाव अनुस्मारक और मौसम की चेतावनी यहां दिखाई देंगी।",
   "notificationsClearAll": "सभी हटाएं",
   "notificationsMarkRead": "सभी पढ़ा हुआ चिह्नित करें",
-  "notificationsViewAction": "विवरण देखें"
+  "notificationsViewAction": "विवरण देखें",
+  "mapOfflineHint": "सिग्नल है, लेकिन मैप सर्वर तक ऐप पहुँच नहीं पा रहा। Private DNS Off करें, फिर Retry दबाएँ।",
+  "mapOfflineRetry": "फिर से कोशिश"
 }

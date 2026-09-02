@@ -99,6 +99,7 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
         onZoomIn: _zoomIn,
         onZoomOut: _zoomOut,
         onRecenter: _recenterUser,
+        onResetNorth: _resetMapNorth,
       ),
     );
   }

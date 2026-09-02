@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_map_tiles.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/services/reverse_geocoding_service.dart';
 import '../../models/mock_gas_station.dart';
@@ -216,29 +217,22 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
               initialZoom: _zoom,
               minZoom: 8.5,
               maxZoom: 18,
-              backgroundColor: const Color(0xFF0F0F12),
+              backgroundColor: AppMapTiles.backgroundColor,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.drag |
+                    InteractiveFlag.flingAnimation |
+                    InteractiveFlag.pinchMove |
+                    InteractiveFlag.pinchZoom |
+                    InteractiveFlag.rotate |
+                    InteractiveFlag.doubleTapZoom,
+              ),
               onPositionChanged: (camera, _) {
                 _zoom = camera.zoom;
                 _center = camera.center;
               },
             ),
             children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.fuel_log',
-                retinaMode: false,
-                tileBuilder: (context, tileWidget, tile) {
-                  return ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      -0.2126, -0.7152, -0.0722, 0, 255,
-                      -0.2126, -0.7152, -0.0722, 0, 255,
-                      -0.2126, -0.7152, -0.0722, 0, 255,
-                      0, 0, 0, 1, 0,
-                    ]),
-                    child: tileWidget,
-                  );
-                },
-              ),
+              ...AppMapTiles.stackedLayers(context: context),
             ],
           ),
           const IgnorePointer(

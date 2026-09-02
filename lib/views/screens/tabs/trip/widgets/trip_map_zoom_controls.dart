@@ -10,11 +10,13 @@ class TripMapZoomControls extends StatelessWidget {
     required this.onZoomIn,
     required this.onZoomOut,
     required this.onRecenter,
+    this.onResetNorth,
   });
 
   final VoidCallback onZoomIn;
   final VoidCallback onZoomOut;
   final VoidCallback onRecenter;
+  final VoidCallback? onResetNorth;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +75,35 @@ class TripMapZoomControls extends StatelessWidget {
             ],
           ),
         ),
+        if (onResetNorth != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF18181F).withValues(alpha: 0.94),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF2E2E38)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: InkWell(
+              onTap: onResetNorth,
+              borderRadius: BorderRadius.circular(20),
+              child: const Padding(
+                padding: EdgeInsets.all(9),
+                child: Icon(
+                  LucideIcons.compass,
+                  size: 17,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(

@@ -61,18 +61,24 @@ dependencies:
   file_picker: ^12.1.1
   screen_brightness: ^2.0.0+1
   flutter_svg: ^2.0.17
-  flutter_native_splash: ^2.4.7
+  flutter_native_splash: 2.4.7
   syncfusion_flutter_pdfviewer: ^34.2.5
   local_auth: ^3.0.2
   image: ^4.9.2
   # Tour Intercom — Offline P2P Voice (WiFi Direct / Hotspot UDP Mesh, no internet)
-  record: ^7.1.1                       # Microphone PCM stream capture
+  record: ^6.2.1                       # Mic PCM (7.x needs Dart 3.12+)
   flutter_sound: ^9.14.6              # PCM audio playback injection
   permission_handler: 11.3.1
   flutter_volume_controller: ^2.0.2
   qr_flutter: ^4.1.0
   nearby_connections: ^4.3.0
   mobile_scanner: ^7.4.0
+
+# Flutter 3.41 / Dart 3.11 pins meta 1.17; splash 2.4.7 wants xml 6.x while
+# Syncfusion 34 wants xml 7.x — override keeps both resolvable.
+dependency_overrides:
+  xml: 7.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

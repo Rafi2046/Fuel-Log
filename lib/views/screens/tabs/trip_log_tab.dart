@@ -9,11 +9,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_map_tiles.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/gas_station_service.dart';
 import '../../../core/services/navigation_routing_service.dart';
+import '../../../core/utils/network_status.dart';
 import '../../../core/utils/notification_service.dart';
+import '../../widgets/map_offline_banner.dart';
 import '../../../models/mock_gas_station.dart';
 import '../../widgets/station_list_modal_sheet.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
@@ -60,6 +63,8 @@ class TripLogTabState extends State<TripLogTab>
     _mapController = MapController();
     _carouselController = PageController(viewportFraction: 0.86);
 
+    _startMapNetworkMonitor();
+
     if (widget.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _fetchLiveLocation();
@@ -70,6 +75,7 @@ class TripLogTabState extends State<TripLogTab>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _stopMapNetworkMonitor();
     _tripTimer?.cancel();
     _gpsPollingTimer?.cancel();
     _gpsStream?.cancel();
