@@ -39,8 +39,17 @@ mixin TripLogMapLayersMixin on TripLogTabController {
                       _mapController.move(_mapCenter, _mapZoom);
                     } catch (_) {}
                   },
-                  onPositionChanged: (camera, _) {
-                    _mapZoom = camera.zoom;
+                  onPositionChanged: (camera, hasGesture) {
+                    final clampedZoom = camera.zoom.clamp(
+                      AppMapTiles.minZoom,
+                      AppMapTiles.maxZoom,
+                    );
+                    if (clampedZoom != camera.zoom) {
+                      try {
+                        _mapController.move(camera.center, clampedZoom);
+                      } catch (_) {}
+                    }
+                    _mapZoom = clampedZoom;
                     _mapCenter = camera.center;
                   },
                 ),

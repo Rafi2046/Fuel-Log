@@ -214,9 +214,9 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _center,
-              initialZoom: _zoom,
-              minZoom: 8.5,
-              maxZoom: 18,
+              initialZoom: _zoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom),
+              minZoom: AppMapTiles.minZoom,
+              maxZoom: AppMapTiles.maxZoom,
               backgroundColor: AppMapTiles.backgroundColor,
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.drag |

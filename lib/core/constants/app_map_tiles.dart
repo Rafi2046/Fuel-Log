@@ -15,6 +15,8 @@ abstract final class AppMapTiles {
 
   /// Light neutral fill while tiles load (matches OSM, avoids black gaps).
   static const backgroundColor = Color(0xFFE8E4DA);
+
+  /// Bangladesh-wide view at z9; prevents zooming out so far tiles never load.
   static const minZoom = 9.0;
   static const maxZoom = 19.0;
 
@@ -29,8 +31,10 @@ abstract final class AppMapTiles {
       key: key,
       urlTemplate: urlTemplate,
       userAgentPackageName: userAgentPackageName,
-      maxNativeZoom: 19,
+      minZoom: minZoom,
       maxZoom: maxZoom,
+      minNativeZoom: 0,
+      maxNativeZoom: 19,
       // Retina simulation quadruples tile count; OSM allows only 2 parallel
       // connections — causes black gaps and choppy zoom on phones.
       retinaMode: false,
