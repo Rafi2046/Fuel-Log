@@ -9,6 +9,7 @@ import '../../../viewmodels/intercom_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
 import 'tour_intercom_screen.dart';
 import 'widgets/tour_join_code_sheet.dart';
+import 'widgets/tour_qr_scanner_sheet.dart';
 
 /// Entry point for Tour Intercom — Create (host) or Join (discover) a tour.
 /// Uses Google Nearby Connections — 100% OFFLINE ZERO-DATA P2P MESH.
@@ -58,21 +59,31 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     final code = IntercomViewModel.generateJoinCode();
     _notifier.setTourCodeAndName(tourName: name, joinCode: code);
 
+    setState(() => _isLoading = true);
+    // 1. Host enters and starts tour session immediately
+    await _notifier.createTour(tourName: name, preGeneratedCode: code);
     if (!mounted) return;
+    setState(() => _isLoading = false);
 
-    await TourJoinCodeSheet.show(
-      context,
-      joinCode: code,
-      tourName: name,
-      onEnterTour: () async {
-        Navigator.of(context).pop();
-        setState(() => _isLoading = true);
-        await _notifier.createTour(tourName: name, preGeneratedCode: code);
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        _goToIntercomScreen();
-      },
+    // 2. Navigate host to the live Intercom room
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (ctx) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            TourJoinCodeSheet.show(ctx, joinCode: code, tourName: name);
+          });
+          return const TourIntercomScreen();
+        },
+      ),
     );
+  }
+
+  Future<void> _onScanQr() async {
+    final scannedCode = await TourQrScannerSheet.show(context);
+    if (scannedCode != null && scannedCode.isNotEmpty) {
+      _joinCodeController.text = scannedCode;
+      await _onJoinByCode();
+    }
   }
 
   Future<void> _onJoinByCode() async {
@@ -201,6 +212,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
                   joinCodeFocus: _joinCodeFocus,
                   isLoading: _isLoading,
                   onJoinByCode: _onJoinByCode,
+                  onScanQr: _onScanQr,
                 ),
               ],
             ),
@@ -420,12 +432,14 @@ class _JoinTourTab extends StatelessWidget {
     required this.joinCodeFocus,
     required this.isLoading,
     required this.onJoinByCode,
+    required this.onScanQr,
   });
 
   final TextEditingController joinCodeController;
   final FocusNode joinCodeFocus;
   final bool isLoading;
   final VoidCallback onJoinByCode;
+  final VoidCallback onScanQr;
 
   @override
   Widget build(BuildContext context) {
@@ -438,6 +452,57 @@ class _JoinTourTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Scan QR Code Quick Action Button
+          SizedBox(
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: isLoading ? null : onScanQr,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                ),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+              ),
+              icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
+              label: Text(
+                'SCAN HOST QR CODE',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'OR ENTER CODE MANUALLY',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textTertiary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
           // Join by Code Section
           Container(
             padding: const EdgeInsets.all(18),

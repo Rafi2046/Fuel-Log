@@ -225,9 +225,9 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       _connectionSub?.cancel();
       _connectionSub = _transport.connectionChanges.listen(_onConnectionsChanged);
 
-      await _transport.start(
+      await _transport.startHosting(
         userName: 'Host',
-        tourId: code,
+        tourCode: code,
       );
 
       _hardwarePttService.startListening(setTransmitting);
@@ -265,9 +265,9 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       _connectionSub?.cancel();
       _connectionSub = _transport.connectionChanges.listen(_onConnectionsChanged);
 
-      await _transport.start(
+      await _transport.startJoining(
         userName: 'Rider',
-        tourId: cleanCode,
+        tourCode: cleanCode,
       );
 
       _hardwarePttService.startListening(setTransmitting);

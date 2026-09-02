@@ -30,8 +30,8 @@ class NearbyAudioTransport {
   static const int sampleRate = 16000;
   static const int numChannels = 1; // mono
 
-  final Strategy _strategy = Strategy.P2P_CLUSTER;
-  String _serviceId = 'com.ridelog.bd.intercom';
+  final Strategy _strategy = Strategy.P2P_STAR;
+  static const String _serviceId = 'com.ridelog.bd.intercom';
 
   final Set<String> _connectedEndpoints = {};
   final Map<String, String> _endpointNames = {};
@@ -46,6 +46,8 @@ class NearbyAudioTransport {
   bool _isPlayerStreamStarted = false;
   bool _isTransmitting = false;
   bool _isRunning = false;
+  bool _isHost = false;
+  String _targetTourCode = '';
 
   Stream<NearbyAudioPacket> get incomingAudio => _incomingAudioController.stream;
   Stream<Set<String>> get connectionChanges => _connectionStateController.stream;
@@ -59,88 +61,111 @@ class NearbyAudioTransport {
   Future<bool> requestPermissions() async {
     if (Platform.isAndroid) {
       final statuses = await [
-        Permission.location,
         Permission.microphone,
+        Permission.location,
+        Permission.bluetoothScan,
         Permission.bluetoothAdvertise,
         Permission.bluetoothConnect,
-        Permission.bluetoothScan,
         Permission.nearbyWifiDevices,
       ].request();
 
       final micGranted = statuses[Permission.microphone]?.isGranted ?? false;
-      final locationGranted = statuses[Permission.location]?.isGranted ?? false;
-
-      debugPrint('[NearbyAudioTransport] Permissions -> Mic: $micGranted, Location: $locationGranted');
+      final locGranted = statuses[Permission.location]?.isGranted ?? false;
+      debugPrint('[NearbyAudioTransport] Permissions -> Mic: $micGranted, Location: $locGranted');
       return micGranted;
     }
     return true;
   }
 
-  // ── Start Auto-Connect Mesh (Advertising + Discovery) ─────────────────────
-  Future<void> start({
+  // ── HOST: Start Hosting Tour (Advertiser) ─────────────────────────────────
+  Future<void> startHosting({
     required String userName,
-    String? tourId,
+    required String tourCode,
   }) async {
-    if (_isRunning) await stop();
+    await stop();
+    _isHost = true;
+    _targetTourCode = tourCode.trim().toUpperCase();
 
     await requestPermissions();
     await _initAudioPlayer();
 
-    if (tourId != null && tourId.isNotEmpty) {
-      _serviceId = 'com.ridelog.bd.intercom.${tourId.toUpperCase()}';
-    } else {
-      _serviceId = 'com.ridelog.bd.intercom';
-    }
-
+    final advertisedName = 'HOST#$_targetTourCode#$userName';
     _isRunning = true;
     _connectedEndpoints.clear();
     _endpointNames.clear();
     _connectionStateController.add(_connectedEndpoints);
 
-    // 1. Start Advertising so nearby riders can discover this device
     try {
-      await Nearby().startAdvertising(
-        userName,
+      final advResult = await Nearby().startAdvertising(
+        advertisedName,
         _strategy,
         serviceId: _serviceId,
         onConnectionInitiated: _onConnectionInitiated,
         onConnectionResult: _onConnectionResult,
         onDisconnected: _onDisconnected,
       );
-      debugPrint('[NearbyAudioTransport] 📡 Advertising started as "$userName" (Service: $_serviceId)');
+      debugPrint('[NearbyAudioTransport] 📡 HOST Advertising started ($advResult) as "$advertisedName"');
     } catch (e) {
-      debugPrint('[NearbyAudioTransport] Advertising error: $e');
+      debugPrint('[NearbyAudioTransport] Host advertising error: $e');
     }
 
-    // 2. Start Discovery to auto-find and connect with nearby riders
+    _incomingAudioController.stream.listen((packet) {
+      _playIncomingAudio(packet.bytes);
+    });
+  }
+
+  // ── RIDER: Join Tour (Discoverer) ─────────────────────────────────────────
+  Future<void> startJoining({
+    required String userName,
+    required String tourCode,
+  }) async {
+    await stop();
+    _isHost = false;
+    _targetTourCode = tourCode.trim().toUpperCase();
+
+    await requestPermissions();
+    await _initAudioPlayer();
+
+    final riderName = 'RIDER#$_targetTourCode#$userName';
+    _isRunning = true;
+    _connectedEndpoints.clear();
+    _endpointNames.clear();
+    _connectionStateController.add(_connectedEndpoints);
+
     try {
-      await Nearby().startDiscovery(
-        userName,
+      final discResult = await Nearby().startDiscovery(
+        riderName,
         _strategy,
         serviceId: _serviceId,
         onEndpointFound: (id, name, foundServiceId) {
-          debugPrint('[NearbyAudioTransport] 🔍 Found rider endpoint "$name" ($id). Requesting connection...');
-          Nearby().requestConnection(
-            userName,
-            id,
-            onConnectionInitiated: _onConnectionInitiated,
-            onConnectionResult: _onConnectionResult,
-            onDisconnected: _onDisconnected,
-          ).catchError((err) {
-            debugPrint('[NearbyAudioTransport] requestConnection error: $err');
-            return false;
-          });
+          debugPrint('[NearbyAudioTransport] 🔍 Found endpoint "$name" ($id).');
+          // Match Tour Code
+          if (name.contains('#')) {
+            final parts = name.split('#');
+            if (parts.length >= 2 && parts[1].toUpperCase() == _targetTourCode) {
+              debugPrint('[NearbyAudioTransport] Match found for tour $_targetTourCode! Requesting connection...');
+              Nearby().requestConnection(
+                riderName,
+                id,
+                onConnectionInitiated: _onConnectionInitiated,
+                onConnectionResult: _onConnectionResult,
+                onDisconnected: _onDisconnected,
+              ).catchError((err) {
+                debugPrint('[NearbyAudioTransport] requestConnection error: $err');
+                return false;
+              });
+            }
+          }
         },
         onEndpointLost: (id) {
           if (id != null) _removeEndpoint(id);
         },
       );
-      debugPrint('[NearbyAudioTransport] 🔎 Discovery started...');
+      debugPrint('[NearbyAudioTransport] 🔎 RIDER Discovery started ($discResult) for tour $_targetTourCode');
     } catch (e) {
-      debugPrint('[NearbyAudioTransport] Discovery error: $e');
+      debugPrint('[NearbyAudioTransport] Rider discovery error: $e');
     }
 
-    // Listen to incoming audio and feed to player
     _incomingAudioController.stream.listen((packet) {
       _playIncomingAudio(packet.bytes);
     });
@@ -148,9 +173,11 @@ class NearbyAudioTransport {
 
   void _onConnectionInitiated(String id, ConnectionInfo info) {
     debugPrint('[NearbyAudioTransport] 🤝 Connection initiated with "${info.endpointName}" ($id). Auto-accepting...');
-    _endpointNames[id] = info.endpointName;
+    final rawName = info.endpointName;
+    final displayName = rawName.contains('#') ? rawName.split('#').last : rawName;
+    _endpointNames[id] = displayName.isNotEmpty ? displayName : 'Rider';
 
-    // Auto-accept connection without manual prompt
+    // Auto-accept connection immediately
     Nearby().acceptConnection(
       id,
       onPayLoadRecieved: (endpointId, payload) {
@@ -175,7 +202,7 @@ class NearbyAudioTransport {
     if (status == Status.CONNECTED) {
       _connectedEndpoints.add(id);
       _connectionStateController.add(connectedEndpoints);
-      debugPrint('[NearbyAudioTransport] ✅ CONNECTED with $id (${_endpointNames[id]}). Total riders: ${_connectedEndpoints.length}');
+      debugPrint('[NearbyAudioTransport] ✅ CONNECTED with $id (${_endpointNames[id]}). Total active peers: ${_connectedEndpoints.length}');
     } else {
       _removeEndpoint(id);
     }

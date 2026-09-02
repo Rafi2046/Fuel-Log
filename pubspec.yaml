@@ -72,6 +72,7 @@ dependencies:
   flutter_volume_controller: ^2.0.2
   qr_flutter: ^4.1.0
   nearby_connections: ^4.3.0
+  mobile_scanner: ^7.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
