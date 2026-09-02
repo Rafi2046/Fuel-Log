@@ -4,8 +4,12 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
+  flutter_sound
+  flutter_volume_controller
   geolocator_windows
   local_auth_windows
+  permission_handler_windows
+  record_windows
   screen_brightness_windows
   share_plus
   sqlite3_flutter_libs

@@ -13,12 +13,14 @@ class TripDefaultFabs extends StatelessWidget {
     required this.onManualEntry,
     required this.onToggleTracking,
     this.onHistory,
+    this.onIntercom,
   });
 
   final bool isTracking;
   final VoidCallback onManualEntry;
   final VoidCallback onToggleTracking;
   final VoidCallback? onHistory;
+  final VoidCallback? onIntercom;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +88,42 @@ class TripDefaultFabs extends StatelessWidget {
                   child: const Center(
                     child: Icon(
                       LucideIcons.route,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (onIntercom != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF18181F).withValues(alpha: 0.94),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onIntercom,
+                  child: const Center(
+                    child: Icon(
+                      LucideIcons.radio,
                       size: 18,
                       color: AppColors.primary,
                     ),

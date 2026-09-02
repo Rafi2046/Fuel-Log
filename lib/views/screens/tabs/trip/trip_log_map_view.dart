@@ -162,6 +162,11 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
                             showTripManualEntrySheet(context),
                         onToggleTracking: _toggleGeneralTripTracking,
                         onHistory: () => showTripHistoryModalSheet(context),
+                        onIntercom: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const TourLobbyScreen(),
+                          ),
+                        ),
                       )),
           ),
         ],

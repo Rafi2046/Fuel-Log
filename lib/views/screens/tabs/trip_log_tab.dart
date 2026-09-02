@@ -19,6 +19,7 @@ import '../../widgets/station_list_modal_sheet.dart';
 import '../../widgets/trip_manual_entry_sheet.dart';
 import '../../widgets/weather_drive_card.dart';
 import 'dashboard_bottom_bar.dart';
+import '../tour/tour_lobby_screen.dart';
 import 'trip/widgets/active_navigation_bottom_bar.dart';
 import 'trip/widgets/nearby_stations_carousel.dart';
 import 'trip/widgets/navigation_top_hud.dart';

@@ -12,21 +12,36 @@
 		<string>Fuel Log needs access to your location to find nearby gas stations and log trips accurately.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>Fuel Log needs access to your location to track your trip mileage and locate fuel pumps.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>FuelSync needs access to your microphone for real-time tour intercom and Push-to-Talk voice transmission.</string>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>FuelSync needs Bluetooth access to route intercom voice through your motorcycle helmet and headset.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>FuelSync needs Bluetooth peripheral access for helmet intercom audio.</string>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>location</string>
+			<string>audio</string>
+			<string>voip</string>
 		</array>
 		<key>NSCameraUsageDescription</key>
 		<string>Fuel Log needs camera access to scan fuel receipts and pump meters.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Fuel Log needs photo library access to pick receipt images for OCR scanning.</string>
 		<key>NSLocalNetworkUsageDescription</key>
-		<string>Allow Flutter tools on your computer to connect and debug this app on your device.</string>
+		<string>FuelSync Tour Intercom uses local Wi-Fi to connect nearby riders for offline voice chat without internet.</string>
 		<key>NSBonjourServices</key>
 		<array>
 			<string>_dartVmService._tcp</string>
 			<string>_dartobservatory._tcp</string>
+			<string>_fuelsync-tour._tcp</string>
 		</array>
+		<key>UIRequiresPersistentWiFi</key>
+		<true/>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>FuelSync uses Bluetooth to discover nearby riders for offline Tour Intercom voice chat.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>FuelSync uses Bluetooth to connect with nearby riders when riding in areas with no cellular data.</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>

@@ -4,6 +4,9 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
+  flutter_sound
+  flutter_volume_controller
+  record_linux
   sqlite3_flutter_libs
   syncfusion_pdfviewer_linux
   url_launcher_linux

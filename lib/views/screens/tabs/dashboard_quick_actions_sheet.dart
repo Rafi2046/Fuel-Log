@@ -14,6 +14,7 @@ import '../refueling_form_screen.dart';
 import '../reports/reports_screen.dart';
 import '../services/services_screen.dart';
 import '../services/widgets/add_cost_service_sheet.dart';
+import '../tour/tour_lobby_screen.dart';
 
 /// Contextual quick actions from the center FAB.
 Future<void> showDashboardQuickActionsSheet(
@@ -100,6 +101,24 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
                         nav.push(
                           MaterialPageRoute<void>(
                             builder: (_) => const RefuelingFormScreen(),
+                          ),
+                        );
+                      });
+                    },
+                  ),
+                  _sheetDivider(),
+                  _ActionTile(
+                    icon: LucideIcons.radio,
+                    accent: true,
+                    title: 'Tour Intercom (PTT)',
+                    subtitle: 'Walkie-talkie mode • Hardware volume key voice',
+                    onTap: () {
+                      final nav = Navigator.of(context);
+                      nav.pop();
+                      Future.microtask(() {
+                        nav.push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const TourLobbyScreen(),
                           ),
                         );
                       });

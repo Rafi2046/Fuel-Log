@@ -65,6 +65,12 @@ dependencies:
   syncfusion_flutter_pdfviewer: ^34.2.5
   local_auth: ^3.0.2
   image: ^4.9.2
+  # Tour Intercom — Offline P2P Voice (WiFi Direct / Hotspot UDP Mesh, no internet)
+  record: ^7.1.1                       # Microphone PCM stream capture
+  flutter_sound: ^9.14.6              # PCM audio playback injection
+  permission_handler: 11.3.1
+  flutter_volume_controller: ^2.0.2
+  qr_flutter: ^4.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
