@@ -10,63 +10,64 @@ import '../core/services/hardware_ptt_service.dart';
 import '../core/services/p2p_voice_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Model
+// Member model
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Connected member in the tour intercom session.
 class IntercomMember {
   const IntercomMember({
     required this.id,
     required this.name,
     required this.initials,
-    this.isOnline = true,
-    this.isSpeaking = false,
     this.isCurrentUser = false,
+    this.isSpeaking = false,
+    this.isOnline = true,
     this.batteryPercent = 85,
+    this.latencyMs = 12,
   });
 
   final String id;
   final String name;
   final String initials;
-  final bool isOnline;
-  final bool isSpeaking;
   final bool isCurrentUser;
+  final bool isSpeaking;
+  final bool isOnline;
   final int batteryPercent;
+  final int latencyMs;
 
   IntercomMember copyWith({
-    String? id,
-    String? name,
-    String? initials,
-    bool? isOnline,
     bool? isSpeaking,
-    bool? isCurrentUser,
+    bool? isOnline,
     int? batteryPercent,
+    int? latencyMs,
   }) {
     return IntercomMember(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      initials: initials ?? this.initials,
-      isOnline: isOnline ?? this.isOnline,
+      id: id,
+      name: name,
+      initials: initials,
+      isCurrentUser: isCurrentUser,
       isSpeaking: isSpeaking ?? this.isSpeaking,
-      isCurrentUser: isCurrentUser ?? this.isCurrentUser,
+      isOnline: isOnline ?? this.isOnline,
       batteryPercent: batteryPercent ?? this.batteryPercent,
+      latencyMs: latencyMs ?? this.latencyMs,
     );
   }
 
-  static String _initialsFor(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.substring(0, min(3, name.length)).toUpperCase();
-  }
-
   factory IntercomMember.fromPeer(P2PPeer peer) {
+    final cleanName = peer.name.trim();
+    final initials = cleanName.length >= 2
+        ? cleanName.substring(0, 2).toUpperCase()
+        : cleanName.isNotEmpty
+            ? cleanName.substring(0, 1).toUpperCase()
+            : 'RD';
+
     return IntercomMember(
       id: peer.id,
       name: peer.name,
-      initials: _initialsFor(peer.name),
+      initials: initials,
+      isCurrentUser: false,
       isOnline: true,
+      batteryPercent: 88,
+      latencyMs: 8,
     );
   }
 }
@@ -82,12 +83,14 @@ class IntercomState {
     this.isTransmitting = false,
     this.isConnecting = false,
     this.isConnected = false,
+    this.isWaitingForApproval = false,
+    this.pendingJoinRequest,
     this.errorMessage,
     this.isWindNoiseCancellationEnabled = true,
     this.isHelmetAudioRouteEnabled = true,
     this.isMeshBridgeEnabled = true,
     this.isMuted = false,
-    this.isOpenMic = true, // Hands-free call by default so bikers don't need to touch screen
+    this.isOpenMic = true,
     this.tourName = 'My Tour',
     this.channelCode = '',
     this.joinCode,
@@ -111,6 +114,8 @@ class IntercomState {
   final bool isTransmitting;
   final bool isConnecting;
   final bool isConnected;
+  final bool isWaitingForApproval;
+  final P2PJoinRequest? pendingJoinRequest;
   final String? errorMessage;
   final bool isWindNoiseCancellationEnabled;
   final bool isHelmetAudioRouteEnabled;
@@ -136,6 +141,9 @@ class IntercomState {
     bool? isTransmitting,
     bool? isConnecting,
     bool? isConnected,
+    bool? isWaitingForApproval,
+    P2PJoinRequest? pendingJoinRequest,
+    bool clearPendingRequest = false,
     String? errorMessage,
     bool? isWindNoiseCancellationEnabled,
     bool? isHelmetAudioRouteEnabled,
@@ -156,6 +164,8 @@ class IntercomState {
       isTransmitting: isTransmitting ?? this.isTransmitting,
       isConnecting: isConnecting ?? this.isConnecting,
       isConnected: isConnected ?? this.isConnected,
+      isWaitingForApproval: isWaitingForApproval ?? this.isWaitingForApproval,
+      pendingJoinRequest: clearPendingRequest ? null : (pendingJoinRequest ?? this.pendingJoinRequest),
       errorMessage: errorMessage,
       isWindNoiseCancellationEnabled:
           isWindNoiseCancellationEnabled ?? this.isWindNoiseCancellationEnabled,
@@ -194,6 +204,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
 
   StreamSubscription<List<P2PPeer>>? _peerSub;
   StreamSubscription<List<P2PPeer>>? _discoverySub;
+  StreamSubscription<P2PJoinRequest?>? _joinRequestSub;
+  StreamSubscription<bool>? _joinResponseSub;
 
   static const _codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -238,6 +250,11 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       _peerSub?.cancel();
       _peerSub = _p2p.connectedPeers.listen(_onPeersChanged);
 
+      _joinRequestSub?.cancel();
+      _joinRequestSub = _p2p.joinRequests.listen((req) {
+        state = state.copyWith(pendingJoinRequest: req);
+      });
+
       _hardwarePttService.startListening(setTransmitting);
 
       state = state.copyWith(
@@ -258,6 +275,20 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         errorMessage: 'Failed to start tour: $e',
       );
     }
+  }
+
+  // ── HOST: Accept / Decline Join Requests ──────────────────────────────────
+
+  Future<void> acceptJoinRequest(P2PJoinRequest req) async {
+    HapticFeedback.mediumImpact();
+    await _p2p.acceptJoinRequest(req);
+    state = state.copyWith(clearPendingRequest: true);
+  }
+
+  Future<void> declineJoinRequest(P2PJoinRequest req) async {
+    HapticFeedback.lightImpact();
+    await _p2p.declineJoinRequest(req);
+    state = state.copyWith(clearPendingRequest: true);
   }
 
   // ── RIDER: Discover + Join ─────────────────────────────────────────────────
@@ -281,6 +312,27 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       _peerSub?.cancel();
       _peerSub = _p2p.connectedPeers.listen(_onPeersChanged);
 
+      _joinResponseSub?.cancel();
+      _joinResponseSub = _p2p.joinResponses.listen((accepted) {
+        if (accepted) {
+          state = state.copyWith(
+            isConnected: true,
+            isConnecting: false,
+            isWaitingForApproval: false,
+          );
+          if (state.isOpenMic && !state.isMuted) {
+            setTransmitting(true);
+          }
+        } else {
+          state = state.copyWith(
+            isConnected: false,
+            isConnecting: false,
+            isWaitingForApproval: false,
+            errorMessage: 'Join request declined by host.',
+          );
+        }
+      });
+
       state = state.copyWith(isConnecting: false);
       debugPrint('[IntercomVM] Browsing for tours over local network...');
     } catch (e) {
@@ -293,28 +345,49 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   }
 
   Future<void> joinTour(P2PPeer tourHost) async {
-    state = state.copyWith(isConnecting: true, errorMessage: null);
+    state = state.copyWith(
+      isConnecting: true,
+      isWaitingForApproval: true,
+      errorMessage: null,
+      tourName: tourHost.tourName.isNotEmpty ? tourHost.tourName : 'Bike Tour',
+      joinCode: tourHost.tourCode,
+      channelCode: tourHost.tourCode,
+      isHost: false,
+    );
+
     try {
-      state = state.copyWith(
-        tourName: tourHost.tourName.isNotEmpty ? tourHost.tourName : 'Bike Tour',
-        joinCode: tourHost.tourCode,
-        channelCode: tourHost.tourCode,
-        isHost: false,
-        isConnected: true,
-      );
+      _joinResponseSub?.cancel();
+      _joinResponseSub = _p2p.joinResponses.listen((accepted) {
+        if (accepted) {
+          state = state.copyWith(
+            isConnected: true,
+            isConnecting: false,
+            isWaitingForApproval: false,
+          );
+          if (state.isOpenMic && !state.isMuted) {
+            setTransmitting(true);
+          }
+        } else {
+          state = state.copyWith(
+            isConnected: false,
+            isConnecting: false,
+            isWaitingForApproval: false,
+            errorMessage: 'Join request declined by host.',
+          );
+        }
+      });
+
+      _peerSub?.cancel();
+      _peerSub = _p2p.connectedPeers.listen(_onPeersChanged);
 
       await _p2p.joinTour(tourHost);
       _hardwarePttService.startListening(setTransmitting);
-
-      if (state.isOpenMic && !state.isMuted) {
-        await setTransmitting(true);
-      }
-
-      debugPrint('[IntercomVM] Joining tour: ${tourHost.tourName}');
+      debugPrint('[IntercomVM] Sent join request to ${tourHost.tourName}');
     } catch (e) {
       debugPrint('[IntercomVM] joinTour error: $e');
       state = state.copyWith(
         isConnecting: false,
+        isWaitingForApproval: false,
         errorMessage: 'Failed to join: $e',
       );
     }
@@ -323,7 +396,11 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   /// RIDER: Joins tour manually by 6-character code
   Future<void> joinByCode(String code) async {
     final cleanCode = code.trim().toUpperCase();
-    state = state.copyWith(isConnecting: true, errorMessage: null);
+    state = state.copyWith(
+      isConnecting: true,
+      isWaitingForApproval: true,
+      errorMessage: null,
+    );
 
     try {
       final matching = state.discoveredTours.firstWhere(
@@ -343,6 +420,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       debugPrint('[IntercomVM] joinByCode error: $e');
       state = state.copyWith(
         isConnecting: false,
+        isWaitingForApproval: false,
         errorMessage: 'Failed to join by code: $e',
       );
     }
@@ -371,10 +449,11 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       members: allMembers,
       isConnected: nowConnected,
       isConnecting: false,
+      isWaitingForApproval: false,
     );
 
     // If hands-free open mic mode is active, make sure we transmit
-    if (state.isOpenMic && !state.isMuted && !state.isTransmitting) {
+    if (state.isOpenMic && !state.isMuted && !state.isTransmitting && nowConnected) {
       setTransmitting(true);
     }
   }
@@ -448,54 +527,42 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
 
   void setTourName(String tourName) => state = state.copyWith(tourName: tourName);
 
-  void setVolume(double volume) =>
-      state = state.copyWith(audioOutputVolume: volume.clamp(0.0, 1.0));
-
-  // ── Teardown ──────────────────────────────────────────────────────────────
+  // ── Leave / Reset ─────────────────────────────────────────────────────────
 
   Future<void> leaveIntercom() async {
+    HapticFeedback.mediumImpact();
     _hardwarePttService.stopListening();
-    await _peerSub?.cancel();
-    await _discoverySub?.cancel();
+    _peerSub?.cancel();
+    _peerSub = null;
+    _discoverySub?.cancel();
+    _discoverySub = null;
+    _joinRequestSub?.cancel();
+    _joinRequestSub = null;
+    _joinResponseSub?.cancel();
+    _joinResponseSub = null;
+
     await _p2p.disconnect();
-    state = state.copyWith(
-      isConnected: false,
-      isTransmitting: false,
-      mode: IntercomMode.idle,
-      members: const [
-        IntercomMember(
-          id: 'local',
-          name: 'You',
-          initials: 'YOU',
-          isCurrentUser: true,
-          isOnline: true,
-          batteryPercent: 92,
-        ),
-      ],
-      discoveredTours: [],
-    );
+
+    state = const IntercomState();
+    debugPrint('[IntercomVM] Intercom session reset.');
   }
 
   @override
   void dispose() {
+    _hardwarePttService.stopListening();
     _peerSub?.cancel();
     _discoverySub?.cancel();
-    _hardwarePttService.stopListening();
+    _joinRequestSub?.cancel();
+    _joinResponseSub?.cancel();
     super.dispose();
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Providers
+// Riverpod Provider
 // ─────────────────────────────────────────────────────────────────────────────
 
-final hardwarePttServiceProvider = Provider<HardwarePttService>((_) => HardwarePttService());
-
-final intercomProvider = StateNotifierProvider<IntercomViewModel, IntercomState>((ref) {
-  final pttService = ref.watch(hardwarePttServiceProvider);
-  return IntercomViewModel(pttService);
-});
-
-final isTransmittingProvider = Provider<bool>((ref) {
-  return ref.watch(intercomProvider).isTransmitting;
-});
+final intercomProvider =
+    StateNotifierProvider<IntercomViewModel, IntercomState>(
+  (ref) => IntercomViewModel(),
+);

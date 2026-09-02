@@ -22,7 +22,7 @@ class TourLobbyScreen extends ConsumerStatefulWidget {
 
 class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     with SingleTickerProviderStateMixin {
-  late final IntercomViewModel _notifier;
+  IntercomViewModel get _notifier => ref.read(intercomProvider.notifier);
   late final TabController _tabController;
 
   final _tourNameController = TextEditingController(text: 'My Bike Tour');
@@ -36,7 +36,6 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
   @override
   void initState() {
     super.initState();
-    _notifier = ref.read(intercomProvider.notifier);
     _tabController = TabController(length: 2, vsync: this)
       ..addListener(_onTabChanged);
   }
