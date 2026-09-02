@@ -24,55 +24,58 @@ class DashboardNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : AppColors.textTertiary;
 
-    return Center(
-      child: AnimatedContainer(
-        duration: AppMotion.fast,
-        curve: AppMotion.emphasized,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: isSelected
-            ? BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primary.withValues(alpha: 0.16),
-                    AppColors.primary.withValues(alpha: 0.06),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                ),
+    return AnimatedContainer(
+      duration: AppMotion.fast,
+      curve: AppMotion.emphasized,
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        gradient: isSelected
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.16),
+                  AppColors.primary.withValues(alpha: 0.06),
+                ],
               )
             : null,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: _iconSize),
-            const SizedBox(height: _iconLabelGap),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              strutStyle: const StrutStyle(
-                fontSize: 10,
-                height: 1,
-                forceStrutHeight: true,
-                leading: 0,
-              ),
-              textHeightBehavior: const TextHeightBehavior(
-                applyHeightToFirstAscent: false,
-                applyHeightToLastDescent: false,
-              ),
-              style: AppTextStyles.caption.copyWith(
-                color: color,
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                height: 1.0,
-              ),
-            ),
-          ],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.2)
+              : Colors.transparent,
         ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: _iconSize),
+          const SizedBox(height: _iconLabelGap),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            strutStyle: const StrutStyle(
+              fontSize: 10,
+              height: 1,
+              forceStrutHeight: true,
+              leading: 0,
+            ),
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: false,
+              applyHeightToLastDescent: false,
+            ),
+            style: AppTextStyles.caption.copyWith(
+              color: color,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              height: 1.0,
+            ),
+          ),
+        ],
       ),
     );
   }
