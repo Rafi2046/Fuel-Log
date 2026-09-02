@@ -60,6 +60,7 @@ class P2PVoiceService {
 
   final Map<String, P2PPeer> _connectedPeers = {};
   final Map<String, P2PPeer> _discoveredTours = {};
+  List<InternetAddress> _cachedBroadcastTargets = [];
 
   // ── Audio Engine ──────────────────────────────────────────────────────────
   AudioRecorder? _recorder;
@@ -79,14 +80,38 @@ class P2PVoiceService {
   bool _isInitialized = false;
   bool _isTransmitting = false;
 
-  // ── Known broadcast targets for maximum Hotspot & Wi-Fi coverage ──────────
-  static final List<InternetAddress> _broadcastAddresses = [
-    InternetAddress('255.255.255.255'),
-    InternetAddress('192.168.43.1'),  // Android Hotspot Host
-    InternetAddress('192.168.43.255'),// Android Hotspot Subnet
-    InternetAddress('192.168.49.1'),  // Wi-Fi Direct Host
-    InternetAddress('192.168.49.255'),// Wi-Fi Direct Subnet
-  ];
+  // ── Network Discovery Targets ─────────────────────────────────────────────
+
+  Future<List<InternetAddress>> _getAllBroadcastAndGatewayTargets() async {
+    final targets = <InternetAddress>{
+      InternetAddress('255.255.255.255'),
+      InternetAddress('192.168.43.1'),   // Android Hotspot Host
+      InternetAddress('192.168.43.255'), // Android Hotspot Subnet
+      InternetAddress('192.168.49.1'),   // Wi-Fi Direct Host
+      InternetAddress('192.168.49.255'), // Wi-Fi Direct Subnet
+    };
+
+    try {
+      final interfaces = await NetworkInterface.list(
+        includeLoopback: false,
+        type: InternetAddressType.IPv4,
+      );
+      for (final iface in interfaces) {
+        for (final addr in iface.addresses) {
+          final ip = addr.address;
+          final parts = ip.split('.');
+          if (parts.length == 4) {
+            final prefix = '${parts[0]}.${parts[1]}.${parts[2]}';
+            targets.add(InternetAddress('$prefix.255')); // Subnet broadcast
+            targets.add(InternetAddress('$prefix.1'));   // Gateway/Host router
+          }
+        }
+      }
+    } catch (_) {}
+
+    _cachedBroadcastTargets = targets.toList();
+    return _cachedBroadcastTargets;
+  }
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -106,7 +131,10 @@ class P2PVoiceService {
         debugPrint('[P2PVoiceService] Microphone permission not granted');
       }
 
-      // 2. Setup UDP Discovery Socket
+      // 2. Discover local IP subnets
+      await _getAllBroadcastAndGatewayTargets();
+
+      // 3. Setup UDP Discovery Socket
       _discoverySocket = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         discoveryPort,
@@ -116,7 +144,7 @@ class P2PVoiceService {
       _discoverySocket!.broadcastEnabled = true;
       _discoverySocket!.listen(_handleDiscoveryEvent);
 
-      // 3. Setup UDP Audio Socket
+      // 4. Setup UDP Audio Socket
       _audioSocket = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         audioPort,
@@ -126,7 +154,7 @@ class P2PVoiceService {
       _audioSocket!.broadcastEnabled = true;
       _audioSocket!.listen(_handleAudioEvent);
 
-      // 4. Setup Audio Player for receiving streams
+      // 5. Setup Audio Player for receiving streams
       await _initAudioPlayer();
 
       _isInitialized = true;
@@ -196,8 +224,11 @@ class P2PVoiceService {
     debugPrint('[P2PVoiceService] Hosting tour "$tourName" [$tourCode]');
   }
 
-  void _broadcastBeaconAndSync() {
+  void _broadcastBeaconAndSync() async {
     if (_discoverySocket == null) return;
+
+    // Refresh targets periodically
+    final targets = await _getAllBroadcastAndGatewayTargets();
 
     // 1. Tour Beacon
     final beacon = jsonEncode({
@@ -208,7 +239,7 @@ class P2PVoiceService {
       'code': _currentTourCode,
     });
     final beaconData = utf8.encode(beacon);
-    for (final addr in _broadcastAddresses) {
+    for (final addr in targets) {
       try {
         _discoverySocket?.send(beaconData, addr, discoveryPort);
       } catch (_) {}
@@ -233,7 +264,7 @@ class P2PVoiceService {
           _discoverySocket?.send(syncData, peer.address, discoveryPort);
         } catch (_) {}
       }
-      for (final addr in _broadcastAddresses) {
+      for (final addr in targets) {
         try {
           _discoverySocket?.send(syncData, addr, discoveryPort);
         } catch (_) {}
@@ -268,7 +299,7 @@ class P2PVoiceService {
 
     // Keep heartbeat active so host knows we are online
     _heartbeatTimer?.cancel();
-    _heartbeatTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+    _heartbeatTimer = Timer.periodic(const Duration(milliseconds: 1200), (_) {
       _sendJoinPackets(tourHost);
     });
 
@@ -276,7 +307,7 @@ class P2PVoiceService {
     debugPrint('[P2PVoiceService] Joined tour: ${tourHost.tourName} (${tourHost.address.address})');
   }
 
-  void _sendJoinPackets(P2PPeer tourHost) {
+  void _sendJoinPackets(P2PPeer tourHost) async {
     if (_discoverySocket == null) return;
     final msg = jsonEncode({
       'type': 'join',
@@ -292,8 +323,9 @@ class P2PVoiceService {
       _discoverySocket?.send(data, tourHost.address, discoveryPort);
     } catch (_) {}
 
-    // Also broadcast to entire subnet
-    for (final addr in _broadcastAddresses) {
+    // Send to all computed broadcast and gateway targets
+    final targets = await _getAllBroadcastAndGatewayTargets();
+    for (final addr in targets) {
       try {
         _discoverySocket?.send(data, addr, discoveryPort);
       } catch (_) {}
@@ -329,8 +361,8 @@ class P2PVoiceService {
           _discoveredCtrl.add(_discoveredTours.values.toList());
         } else if (type == 'join' && _isHost) {
           // A rider joined our hosted tour
-          final tourCode = json['code'] as String?;
-          if (tourCode != null && tourCode.isNotEmpty && tourCode != _currentTourCode) {
+          final tourCode = (json['code'] as String?)?.toUpperCase();
+          if (tourCode != null && tourCode.isNotEmpty && tourCode != _currentTourCode.toUpperCase()) {
             return;
           }
 
@@ -345,7 +377,7 @@ class P2PVoiceService {
           _connectedPeers[peerId] = rider;
           _peerListCtrl.add(_connectedPeers.values.toList());
 
-          // Send welcome ack back to the rider
+          // Send welcome ack directly back to the rider
           final ack = jsonEncode({
             'type': 'ack',
             'id': _localId,
@@ -354,7 +386,8 @@ class P2PVoiceService {
             'code': _currentTourCode,
           });
           _discoverySocket?.send(utf8.encode(ack), datagram.address, discoveryPort);
-          debugPrint('[P2PVoiceService] Rider ${rider.name} registered with address ${datagram.address.address}');
+          _broadcastBeaconAndSync();
+          debugPrint('[P2PVoiceService] Rider ${rider.name} registered (${datagram.address.address}). Total peers: ${_connectedPeers.length}');
         } else if (type == 'ack' && !_isHost) {
           // Host acknowledged our join
           final host = P2PPeer(
@@ -424,7 +457,10 @@ class P2PVoiceService {
 
   Future<void> _playIncomingAudio(Uint8List pcmBytes) async {
     try {
-      if (_player == null || !_isPlayerStreamStarted || _player!.isStopped) {
+      if (_player == null) {
+        await _initAudioPlayer();
+      }
+      if (!_isPlayerStreamStarted || _player!.isStopped) {
         await _startPlayerStream();
       }
       await _player?.feedUint8FromStream(pcmBytes);
@@ -466,24 +502,24 @@ class P2PVoiceService {
       if (_audioSocket == null || !_isTransmitting) return;
       chunkIndex++;
       if (chunkIndex % 60 == 0) {
-        debugPrint('[P2PVoiceService] 🎙️ Mic streaming audio packet (${chunk.length} bytes)');
+        debugPrint('[P2PVoiceService] 🎙️ Streaming audio packet (${chunk.length} bytes)');
       }
 
       final packet = Uint8List(prefixBytes.length + chunk.length);
       packet.setRange(0, prefixBytes.length, prefixBytes);
       packet.setRange(prefixBytes.length, packet.length, chunk);
 
-      // 1. Send to all known broadcast subnets
-      for (final addr in _broadcastAddresses) {
-        try {
-          _audioSocket?.send(packet, addr, audioPort);
-        } catch (_) {}
-      }
-
-      // 2. Send directly to each connected peer IP
+      // 1. Send DIRECT UNICAST to every connected peer IP
       for (final peer in _connectedPeers.values) {
         try {
           _audioSocket?.send(packet, peer.address, audioPort);
+        } catch (_) {}
+      }
+
+      // 2. Send to all cached subnet targets & broadcast addresses
+      for (final addr in _cachedBroadcastTargets) {
+        try {
+          _audioSocket?.send(packet, addr, audioPort);
         } catch (_) {}
       }
     });
@@ -509,7 +545,7 @@ class P2PVoiceService {
 
     if (_discoverySocket != null && _connectedPeers.isNotEmpty) {
       final leaveMsg = utf8.encode(jsonEncode({'type': 'leave', 'id': _localId}));
-      for (final addr in _broadcastAddresses) {
+      for (final addr in _cachedBroadcastTargets) {
         try {
           _discoverySocket?.send(leaveMsg, addr, discoveryPort);
         } catch (_) {}
