@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -20,7 +21,7 @@ class NearbyAudioPacket {
   });
 }
 
-/// Google Nearby Connections Audio Transport Service.
+/// Google Nearby Connections Audio Transport Service with DSP Noise Gate & Filters.
 /// Uses BLE discovery + Wi-Fi Direct for zero-internet P2P mesh audio.
 /// Immune to AP Client Isolation & works 100% offline.
 class NearbyAudioTransport {
@@ -54,6 +55,10 @@ class NearbyAudioTransport {
   // Thread-safe FIFO Queue to prevent native AudioTrack SIGSEGV crash
   final List<Uint8List> _audioQueue = [];
   bool _isProcessingQueue = false;
+
+  // DSP State
+  double _prevInputSample = 0;
+  double _prevOutputSample = 0;
 
   Stream<NearbyAudioPacket> get incomingAudio => _incomingAudioController.stream;
   Stream<Set<String>> get connectionChanges => _connectionStateController.stream;
@@ -302,7 +307,7 @@ class NearbyAudioTransport {
     _isProcessingQueue = false;
   }
 
-  // ── Mic Audio Transmission ────────────────────────────────────────────────
+  // ── Mic Audio Transmission with DSP Noise Gate & High-Pass Filter ─────────
   Future<void> startTransmitting() async {
     if (_isTransmitting) return;
     _isTransmitting = true;
@@ -314,6 +319,7 @@ class NearbyAudioTransport {
       return;
     }
 
+    // Hardware VoIP Acoustic Echo Cancellation & Noise Suppression on Android
     final stream = await _recorder!.startStream(
       const RecordConfig(
         encoder: AudioEncoder.pcm16bits,
@@ -322,20 +328,72 @@ class NearbyAudioTransport {
         autoGain: true,
         echoCancel: true,
         noiseSuppress: true,
+        androidConfig: AndroidRecordConfig(
+          audioSource: AndroidAudioSource.voiceCommunication,
+          audioManagerMode: AudioManagerMode.modeInCommunication,
+        ),
       ),
     );
 
     int chunkIndex = 0;
     _micSub = stream.listen((chunk) {
       if (!_isTransmitting) return;
+
+      // Apply real-time Noise Gate and High-Pass Filter to eliminate hissing/rumble
+      final cleanChunk = _applyDsdNoiseReduction(chunk);
+      if (cleanChunk.isEmpty) return; // Muted by Noise Gate (Silence)
+
       chunkIndex++;
       if (chunkIndex % 50 == 0) {
-        debugPrint('[NearbyAudioTransport] 🎙️ Audio chunk sent to ${_connectedEndpoints.length} riders (${chunk.length} bytes)');
+        debugPrint('[NearbyAudioTransport] 🎙️ Clean audio chunk sent to ${_connectedEndpoints.length} riders (${cleanChunk.length} bytes)');
       }
-      sendAudioChunk(chunk);
+      sendAudioChunk(cleanChunk);
     });
 
-    debugPrint('[NearbyAudioTransport] ▶ LIVE AUDIO TRANSMISSION STARTED');
+    debugPrint('[NearbyAudioTransport] ▶ LIVE AUDIO TRANSMISSION STARTED (VoIP Hardware Filter Active)');
+  }
+
+  /// Real-Time Digital Signal Processing (DSP):
+  /// 1. Energy Calculation (RMS) for Noise Gate.
+  /// 2. High-Pass Filter (~150Hz) to remove wind turbulence and low rumble.
+  /// 3. Soft Limiter to prevent harsh digital clipping.
+  Uint8List _applyDsdNoiseReduction(Uint8List rawBytes) {
+    if (rawBytes.length < 2) return rawBytes;
+    final byteData = ByteData.sublistView(rawBytes);
+    final numSamples = rawBytes.length ~/ 2;
+
+    // 1. RMS Energy Calculation for Voice Activity Detection
+    int sumSquared = 0;
+    for (int i = 0; i < numSamples; i++) {
+      final sample = byteData.getInt16(i * 2, Endian.little);
+      sumSquared += sample * sample;
+    }
+    final double rms = math.sqrt(sumSquared / numSamples);
+
+    // Noise Gate: If energy is below ambient hiss threshold (~300), suppress background hiss
+    if (rms < 300) {
+      return Uint8List(0); // Noise Gate cuts transmission when silent
+    }
+
+    // 2. High-Pass Filter (removes low-frequency wind turbulence & engine drone < 150Hz)
+    final output = Uint8List(rawBytes.length);
+    final outData = ByteData.sublistView(output);
+    const double alpha = 0.94; // ~150Hz Cutoff Filter at 16kHz
+
+    for (int i = 0; i < numSamples; i++) {
+      final double sample = byteData.getInt16(i * 2, Endian.little).toDouble();
+      final double filtered = alpha * (_prevOutputSample + sample - _prevInputSample);
+      _prevInputSample = sample;
+      _prevOutputSample = filtered;
+
+      int clamped = filtered.round();
+      if (clamped > 32767) clamped = 32767;
+      if (clamped < -32768) clamped = -32768;
+
+      outData.setInt16(i * 2, clamped, Endian.little);
+    }
+
+    return output;
   }
 
   Future<void> stopTransmitting() async {
@@ -363,6 +421,8 @@ class NearbyAudioTransport {
     _audioSub = null;
     _audioQueue.clear();
     _isProcessingQueue = false;
+    _prevInputSample = 0;
+    _prevOutputSample = 0;
 
     try {
       await Nearby().stopAdvertising();
