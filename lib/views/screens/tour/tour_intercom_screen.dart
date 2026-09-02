@@ -107,7 +107,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
     final intercomNotifier = ref.read(intercomProvider.notifier);
 
     return AppScaffold(
-      title: 'TOUR INTERCOM',
+      title: 'Tour intercom',
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.screenPadding,
         vertical: 10,

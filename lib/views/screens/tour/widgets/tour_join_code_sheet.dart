@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
 
 /// Bottom sheet showing QR code + join code for the host to share with riders.
 class TourJoinCodeSheet extends StatefulWidget {
@@ -18,7 +19,8 @@ class TourJoinCodeSheet extends StatefulWidget {
 
   final String joinCode;
   final String tourName;
-  /// If provided (create flow), shows an "ENTER TOUR" CTA button at the bottom.
+
+  /// If provided (create flow), shows an "Enter tour" CTA button at the bottom.
   final VoidCallback? onEnterTour;
 
   static Future<void> show(
@@ -30,7 +32,7 @@ class TourJoinCodeSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      isDismissible: onEnterTour == null, // prevent swipe-dismiss when enter tour required
+      isDismissible: onEnterTour == null,
       enableDrag: onEnterTour == null,
       backgroundColor: Colors.transparent,
       builder: (_) => TourJoinCodeSheet(
@@ -47,6 +49,10 @@ class TourJoinCodeSheet extends StatefulWidget {
 
 class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
   bool _codeCopied = false;
+
+  static final _buttonShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+  );
 
   void _copyCode() {
     Clipboard.setData(ClipboardData(text: widget.joinCode));
@@ -73,37 +79,38 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardElevated,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+        border: Border.all(color: AppColors.border),
       ),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
-        20,
+        AppSpacing.md,
         AppSpacing.screenPadding,
-        MediaQuery.of(context).padding.bottom + 24,
+        MediaQuery.of(context).padding.bottom + AppSpacing.lg,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag handle
           Container(
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.md),
 
-          // Title
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.15),
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: const Icon(
                   Icons.person_add_rounded,
@@ -111,27 +118,18 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                   size: 18,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'INVITE RIDERS',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 0.8,
-                      ),
+                      'Invite riders',
+                      style: AppTextStyles.title.copyWith(fontSize: 16),
                     ),
                     Text(
                       widget.tourName,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
-                      ),
+                      style: AppTextStyles.caption,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -142,25 +140,19 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                 icon: const Icon(Icons.close_rounded, size: 20),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               ),
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
 
-          // QR Code
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                ),
-              ],
+              border: Border.all(color: AppColors.border),
             ),
             child: QrImageView(
               data: widget.joinCode,
@@ -178,133 +170,115 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.md),
 
-          // Code display
           Text(
-            'JOIN CODE',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-              letterSpacing: 1.2,
-            ),
+            'Join code',
+            style: AppTextStyles.label.copyWith(fontSize: 12),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.4),
-                width: 1.5,
+                color: AppColors.primary.withValues(alpha: 0.35),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                ),
-              ],
             ),
             child: Text(
               widget.joinCode,
+              textAlign: TextAlign.center,
               style: GoogleFonts.jetBrainsMono(
-                fontSize: 30,
-                fontWeight: FontWeight.w700,
+                fontSize: 28,
+                fontWeight: FontWeight.w600,
                 color: AppColors.primary,
-                letterSpacing: 12,
+                letterSpacing: 8,
               ),
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.md),
 
-          // Copy + Share row
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _copyCode,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _codeCopied ? AppColors.success : AppColors.primary,
-                    side: BorderSide(
-                      color: _codeCopied
-                          ? AppColors.success.withValues(alpha: 0.6)
-                          : AppColors.primary.withValues(alpha: 0.4),
+                child: SizedBox(
+                  height: AppSpacing.buttonHeightCompact,
+                  child: OutlinedButton.icon(
+                    onPressed: _copyCode,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor:
+                          _codeCopied ? AppColors.success : AppColors.primary,
+                      side: BorderSide(
+                        color: _codeCopied
+                            ? AppColors.success.withValues(alpha: 0.5)
+                            : AppColors.border,
+                      ),
+                      shape: _buttonShape,
+                      textStyle: AppTextStyles.label.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    icon: Icon(
+                      _codeCopied
+                          ? Icons.check_rounded
+                          : Icons.content_copy_rounded,
+                      size: 16,
                     ),
-                  ),
-                  icon: Icon(
-                    _codeCopied ? Icons.check_rounded : Icons.content_copy_rounded,
-                    size: 16,
-                  ),
-                  label: Text(
-                    _codeCopied ? 'COPIED!' : 'COPY CODE',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+                    label: Text(_codeCopied ? 'Copied' : 'Copy code'),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _shareCode,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                child: SizedBox(
+                  height: AppSpacing.buttonHeightCompact,
+                  child: ElevatedButton.icon(
+                    onPressed: _shareCode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: _buttonShape,
+                      textStyle: AppTextStyles.label.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
                     ),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.share_rounded, size: 16),
-                  label: Text(
-                    'SHARE',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+                    icon: const Icon(Icons.share_rounded, size: 16),
+                    label: const Text('Share'),
                   ),
                 ),
               ),
             ],
           ),
 
-          // ENTER TOUR button — shown only in create flow
           if (widget.onEnterTour != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: AppSpacing.buttonHeightCompact,
               child: ElevatedButton.icon(
                 onPressed: widget.onEnterTour,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.success,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                  ),
                   elevation: 0,
+                  shape: _buttonShape,
+                  textStyle: AppTextStyles.button.copyWith(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
                 ),
                 icon: const Icon(Icons.sensors_rounded, size: 18),
-                label: Text(
-                  'ENTER TOUR',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
+                label: const Text('Enter tour'),
               ),
             ),
           ],
