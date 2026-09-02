@@ -10,6 +10,7 @@ import '../../../../../core/database/app_database.dart';
 import '../../../../../core/services/trip_category_prefs.dart';
 import '../../../../../core/utils/app_formatters.dart';
 import '../../../../../core/utils/mileage_calculator.dart';
+import '../../../../../core/utils/trip_stats_helper.dart';
 import '../../../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../../../viewmodels/vehicle_viewmodel.dart';
 
@@ -26,20 +27,10 @@ class TripSummaryCard extends ConsumerWidget {
 
   static final _dateFormat = DateFormat('dd MMM yyyy • hh:mm a');
 
-  int get _durationSec {
-    if (trip.durationSec > 0) return trip.durationSec;
-    final diff = trip.endedAt.difference(trip.startedAt).inSeconds;
-    return diff > 0 ? diff : 0;
-  }
+  int get _durationSec => TripStatsHelper.effectiveDurationSec(trip);
 
-  static String _formatDuration(int seconds) {
-    if (seconds <= 0) return '—';
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    if (h > 0) return '${h}h ${m.toString().padLeft(2, '0')}m';
-    if (m > 0) return '${m}m';
-    return '${seconds}s';
-  }
+  static String _formatDuration(int seconds) =>
+      TripStatsHelper.formatDuration(seconds);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,29 +53,22 @@ class TripSummaryCard extends ConsumerWidget {
     final durationSec = _durationSec;
     final durationText = _formatDuration(durationSec);
 
-    String speedText = '—';
-    if (durationSec > 0 && trip.distanceKm > 0) {
-      final kmh = trip.distanceKm / (durationSec / 3600);
-      speedText = '${kmh.toStringAsFixed(0)} km/h';
-    }
+    final speedText = TripStatsHelper.formatAvgSpeed(
+      trip.distanceKm,
+      durationSec,
+    );
 
     final vehicle = ref.watch(activeVehicleProvider).valueOrNull;
     final isEv = vehicle?.isElectric ?? false;
     final mileageUnit = isEv ? 'km/kWh' : 'km/L';
 
-    final derivedCost = (trip.totalCost != null && trip.totalCost! > 0)
-        ? trip.totalCost
-        : (trip.costPerKm != null &&
-                trip.costPerKm! > 0 &&
-                trip.distanceKm > 0
-            ? trip.costPerKm! * trip.distanceKm
-            : null);
-    final costText = derivedCost != null
-        ? AppCurrency.format(derivedCost)
+    final logs = ref.watch(vehicleLogsProvider).valueOrNull ?? const [];
+    final costResult = TripStatsHelper.resolveCost(trip, logs);
+    final costText = costResult.amount != null
+        ? '${costResult.isEstimate ? '~' : ''}${AppCurrency.format(costResult.amount!)}'
         : '৳ —';
 
     String mileageText = '—';
-    final logs = ref.watch(vehicleLogsProvider).valueOrNull ?? const [];
     final avgMileage = calculateAverageMileage(logs);
     if (avgMileage > 0) {
       mileageText = '${avgMileage.toStringAsFixed(1)} $mileageUnit';

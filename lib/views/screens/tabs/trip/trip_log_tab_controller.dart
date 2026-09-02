@@ -17,6 +17,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   Duration _tripDuration = Duration.zero;
   double _tripDistanceCoveredKm = 0.0;
   LatLng? _lastGpsPoint;
+  DateTime? _lastGpsAt;
   LatLng? _tripStartLocation;
   DateTime? _tripStartedAt;
   bool _isGeneralTripTracking = false;
@@ -389,23 +390,35 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   void _handleTripGpsPosition(Position position) {
     if (!mounted) return;
     if (!_isGeneralTripTracking && !_isNavigating) return;
-    if (position.accuracy > 65) return;
+    if (position.accuracy > 40) return;
 
     final currentLatLng = LatLng(position.latitude, position.longitude);
+    final sampleTime = position.timestamp;
 
-    if (_lastGpsPoint != null) {
+    if (_lastGpsPoint != null && _lastGpsAt != null) {
       final deltaM = _distanceCalc.as(
         LengthUnit.Meter,
         _lastGpsPoint!,
         currentLatLng,
       );
-      if (deltaM >= 2.0 && deltaM < 500.0) {
-        _tripDistanceCoveredKm += deltaM / 1000.0;
-        _lastGpsPoint = currentLatLng;
-        _tripTrackPoints.add(currentLatLng);
-      } else if (deltaM >= 12.0) {
-        // GPS jump — move anchor without adding bogus distance.
-        _lastGpsPoint = currentLatLng;
+      final elapsedSec =
+          sampleTime.difference(_lastGpsAt!).inMilliseconds / 1000.0;
+      if (elapsedSec > 0) {
+        final impliedSpeedMs = deltaM / elapsedSec;
+        final deviceSpeedMs = position.speed >= 0 ? position.speed : null;
+        final speedMs = deviceSpeedMs ?? impliedSpeedMs;
+
+        // Ignore GPS drift when barely moving; cap unrealistic jumps.
+        final moving = speedMs >= 0.8 && deltaM >= 4.0 && deltaM < 250.0;
+        final accurateEnough = position.accuracy <= 25 || speedMs >= 2.0;
+
+        if (moving && accurateEnough) {
+          _tripDistanceCoveredKm += deltaM / 1000.0;
+          _lastGpsPoint = currentLatLng;
+          _tripTrackPoints.add(currentLatLng);
+        } else if (deltaM >= 20.0) {
+          _lastGpsPoint = currentLatLng;
+        }
       }
     } else {
       _lastGpsPoint = currentLatLng;
@@ -413,6 +426,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
         _tripTrackPoints.add(currentLatLng);
       }
     }
+    _lastGpsAt = sampleTime;
 
     NotificationService().updateActiveTripNotification(
       distanceKm: _tripDistanceCoveredKm,
@@ -466,6 +480,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _tripDuration = Duration.zero;
     _tripDistanceCoveredKm = 0.0;
     _lastGpsPoint = _userLocation;
+    _lastGpsAt = DateTime.now();
     _tripTrackPoints
       ..clear()
       ..add(_userLocation);
@@ -484,6 +499,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _tripDuration = Duration.zero;
     _tripDistanceCoveredKm = 0.0;
     _lastGpsPoint = null;
+    _lastGpsAt = null;
     _tripStartLocation = null;
     _tripStartedAt = null;
     _tripTrackPoints.clear();

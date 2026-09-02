@@ -14,6 +14,8 @@ import '../../core/database/app_database.dart';
 import '../../core/services/navigation_routing_service.dart';
 import '../../core/services/reverse_geocoding_service.dart';
 import '../../core/services/trip_category_prefs.dart';
+import '../../core/utils/trip_stats_helper.dart';
+import '../../viewmodels/fuel_log_viewmodel.dart';
 import '../../viewmodels/trip_log_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import 'app_primary_button.dart';
@@ -105,6 +107,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
   void initState() {
     super.initState();
     _applyPrefill(widget.prefill);
+    _prefillCostFromFuelHistory();
     _startOdoCtrl.addListener(_syncDistanceFromOdo);
     _endOdoCtrl.addListener(_syncDistanceFromOdo);
     _costPerKmCtrl.addListener(_syncTripCostFromRate);
@@ -175,9 +178,9 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
 
     if (prefill.initialDistanceKm != null) {
       final km = prefill.initialDistanceKm!;
-      _distanceCtrl.text = km.truncateToDouble() == km
-          ? km.toStringAsFixed(0)
-          : (km < 10 ? km.toStringAsFixed(2) : km.toStringAsFixed(1));
+      _distanceCtrl.text = km < 10
+          ? km.toStringAsFixed(2)
+          : km.toStringAsFixed(1);
     }
 
     final endedAt = prefill.endedAt ?? DateTime.now();
@@ -190,6 +193,17 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
     _startTime = TimeOfDay.fromDateTime(startedAt);
     _endDate = DateTime(endedAt.year, endedAt.month, endedAt.day);
     _endTime = TimeOfDay.fromDateTime(endedAt);
+  }
+
+  void _prefillCostFromFuelHistory() {
+    if (_costPerKmCtrl.text.trim().isNotEmpty) return;
+    final logs = ref.read(vehicleLogsProvider).valueOrNull ?? const [];
+    final avg = TripStatsHelper.averageCostPerKm(logs);
+    if (avg <= 0) return;
+    _costPerKmCtrl.text = avg < 10
+        ? avg.toStringAsFixed(1)
+        : avg.toStringAsFixed(0);
+    _syncTripCostFromRate();
   }
 
   @override
