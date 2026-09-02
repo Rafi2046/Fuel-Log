@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_text_styles.dart';
 import '../../../viewmodels/intercom_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
 import 'tour_intercom_screen.dart';
@@ -36,6 +37,9 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
   }
 
   @override
@@ -94,7 +98,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
         SnackBar(
           content: Text(
             'Enter the 6-character tour join code.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 13),
+            style: AppTextStyles.caption.copyWith(color: AppColors.textPrimary),
           ),
           backgroundColor: AppColors.card,
           behavior: SnackBarBehavior.floating,
@@ -131,120 +135,100 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
 
     return AppScaffold(
       leading: const AppBackButton(),
-      titleWidget: Row(
-        mainAxisSize: MainAxisSize.min,
+      title: 'Tour intercom',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.4),
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenPadding,
+              AppSpacing.sm,
+              AppSpacing.screenPadding,
+              0,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.offline_bolt_rounded, size: 12, color: AppColors.primary),
-                const SizedBox(width: 4),
-                Text(
-                  'NEARBY P2P MESH',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                    letterSpacing: 0.8,
+                if (intercomState.hasRecentTour) ...[
+                  _RecentTourRejoinBanner(
+                    tourName: intercomState.lastTourName ?? 'Recent tour',
+                    tourCode: intercomState.lastTourCode!,
+                    isHost: intercomState.lastTourIsHost,
+                    isLoading: _isLoading,
+                    onRejoin: _onRejoinRecentTour,
+                    onDismiss: () => _notifier.clearRecentTourSession(),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: AppColors.cardElevated,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelColor: AppColors.textPrimary,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    labelStyle: AppTextStyles.label.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    unselectedLabelStyle:
+                        AppTextStyles.label.copyWith(fontSize: 13),
+                    tabs: const [
+                      Tab(height: 36, text: 'Host'),
+                      Tab(height: 36, text: 'Join'),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 1-Click WhatsApp/Messenger style Rejoin Banner
-          if (intercomState.hasRecentTour) ...[
-            Padding(
+          Expanded(
+            child: ListView(
+              physics: const ClampingScrollPhysics(),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.screenPadding,
-                4,
+                AppSpacing.md,
                 AppSpacing.screenPadding,
-                6,
+                AppSpacing.lg,
               ),
-              child: _RecentTourRejoinBanner(
-                tourName: intercomState.lastTourName ?? 'Recent Tour',
-                tourCode: intercomState.lastTourCode!,
-                isHost: intercomState.lastTourIsHost,
-                isLoading: _isLoading,
-                onRejoin: _onRejoinRecentTour,
-                onDismiss: () => _notifier.clearRecentTourSession(),
-              ),
-            ),
-          ],
-
-          // Tactical Tab Bar
-          Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenPadding,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelColor: Colors.white,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.add_circle_outline_rounded, size: 16),
-                  text: 'HOST TOUR',
-                ),
-                Tab(
-                  icon: Icon(Icons.group_add_rounded, size: 16),
-                  text: 'JOIN TOUR',
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
               children: [
-                // Tab 1: Host Tour
-                _HostTourTab(
-                  tourNameController: _tourNameController,
-                  tourNameFocus: _tourNameFocus,
-                  isLoading: _isLoading,
-                  onCreateTour: _onCreateTour,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: _tabController.index == 0
+                      ? _HostTourTab(
+                          key: const ValueKey('host-tab'),
+                          tourNameController: _tourNameController,
+                          tourNameFocus: _tourNameFocus,
+                          isLoading: _isLoading,
+                          onCreateTour: _onCreateTour,
+                        )
+                      : _JoinTourTab(
+                          key: const ValueKey('join-tab'),
+                          joinCodeController: _joinCodeController,
+                          joinCodeFocus: _joinCodeFocus,
+                          isLoading: _isLoading,
+                          onJoinByCode: _onJoinByCode,
+                          onScanQr: _onScanQr,
+                        ),
                 ),
-
-                // Tab 2: Join Tour
-                _JoinTourTab(
-                  joinCodeController: _joinCodeController,
-                  joinCodeFocus: _joinCodeFocus,
-                  isLoading: _isLoading,
-                  onJoinByCode: _onJoinByCode,
-                  onScanQr: _onScanQr,
-                ),
+                const SizedBox(height: AppSpacing.md),
+                const _TourHowItWorksCard(),
+                const SizedBox(height: AppSpacing.md),
+                const _TourRequirementsCard(),
               ],
             ),
           ),
@@ -260,6 +244,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
 
 class _HostTourTab extends StatelessWidget {
   const _HostTourTab({
+    super.key,
     required this.tourNameController,
     required this.tourNameFocus,
     required this.isLoading,
@@ -273,182 +258,77 @@ class _HostTourTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPadding,
-        vertical: 16,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Hero Banner
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.22),
-                  AppColors.card,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.podcasts_outlined,
+                size: 18,
+                color: AppColors.textSecondary,
               ),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.35),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Nearby riders connect offline over Bluetooth and Wi‑Fi Direct. No mobile data needed.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Tour name',
+          style: AppTextStyles.label.copyWith(fontSize: 12),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: tourNameController,
+          focusNode: tourNameFocus,
+          style: AppTextStyles.body.copyWith(fontSize: 15),
+          decoration: const InputDecoration(
+            prefixIcon: Icon(
+              Icons.two_wheeler_outlined,
+              color: AppColors.textSecondary,
+              size: 20,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.6),
-                      width: 1.5,
+            hintText: 'e.g. Sylhet highway tour',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          height: AppSpacing.buttonHeightCompact,
+          child: ElevatedButton(
+            onPressed: isLoading ? null : onCreateTour,
+            child: isLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
                     ),
+                  )
+                : Text(
+                    'Host tour',
+                    style: AppTextStyles.button.copyWith(fontSize: 14),
                   ),
-                  child: const Icon(
-                    Icons.podcasts_rounded,
-                    color: AppColors.primary,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Start a Tour Mesh',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Nearby riders auto-connect over Wi-Fi Direct. 100% offline with zero data cost.',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ),
-
-          const SizedBox(height: 22),
-
-          Text(
-            'TOUR NAME',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textTertiary,
-              letterSpacing: 1.0,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          TextField(
-            controller: tourNameController,
-            focusNode: tourNameFocus,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.two_wheeler_rounded,
-                  color: AppColors.primary, size: 20),
-              hintText: 'e.g. Sylhet Highway Tour',
-              hintStyle: GoogleFonts.plusJakartaSans(
-                color: AppColors.textTertiary,
-                fontSize: 14,
-              ),
-              filled: true,
-              fillColor: AppColors.card,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: isLoading ? null : onCreateTour,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                ),
-                elevation: 0,
-              ),
-              icon: isLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.rocket_launch_rounded, size: 20),
-              label: Text(
-                isLoading ? 'STARTING MESH...' : 'HOST TOUR NOW',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          _InfoCard(items: const [
-            _InfoItem(
-              icon: Icons.bluetooth_audio_rounded,
-              text: 'Google Nearby Connections uses Bluetooth + Wi-Fi Direct automatically.',
-            ),
-            _InfoItem(
-              icon: Icons.cell_wifi_rounded,
-              text: 'No Personal Hotspot setup required — devices connect automatically.',
-            ),
-            _InfoItem(
-              icon: Icons.shield_rounded,
-              text: 'End-to-end encrypted local P2P audio streaming.',
-            ),
-          ]),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -459,6 +339,7 @@ class _HostTourTab extends StatelessWidget {
 
 class _JoinTourTab extends StatelessWidget {
   const _JoinTourTab({
+    super.key,
     required this.joinCodeController,
     required this.joinCodeFocus,
     required this.isLoading,
@@ -474,210 +355,103 @@ class _JoinTourTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPadding,
-        vertical: 16,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Scan QR Code Quick Action Button
-          SizedBox(
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: isLoading ? null : onScanQr,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                ),
-                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-              ),
-              icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
-              label: Text(
-                'SCAN HOST QR CODE',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: AppSpacing.buttonHeightCompact,
+          child: OutlinedButton.icon(
+            onPressed: isLoading ? null : onScanQr,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               ),
             ),
+            icon: const Icon(Icons.qr_code_scanner_outlined, size: 18),
+            label: Text(
+              'Scan host QR code',
+              style: AppTextStyles.button.copyWith(fontSize: 14),
+            ),
           ),
-
-          const SizedBox(height: 16),
-
-          Row(
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            const Expanded(child: Divider(color: AppColors.divider)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: Text(
+                'or enter code',
+                style: AppTextStyles.caption,
+              ),
+            ),
+            const Expanded(child: Divider(color: AppColors.divider)),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'OR ENTER CODE MANUALLY',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textTertiary,
-                    letterSpacing: 1.0,
-                  ),
+              Text(
+                'Join via tour code',
+                style: AppTextStyles.title.copyWith(fontSize: 15),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Enter the 6-character code from your host',
+                style: AppTextStyles.caption,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: joinCodeController,
+                focusNode: joinCodeFocus,
+                textCapitalization: TextCapitalization.characters,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.firaCode(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 6,
+                  color: AppColors.textPrimary,
+                ),
+                maxLength: 6,
+                decoration: const InputDecoration(
+                  counterText: '',
+                  hintText: '• • • • • •',
                 ),
               ),
-              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: AppSpacing.buttonHeightCompact,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : onJoinByCode,
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Join tour',
+                          style: AppTextStyles.button.copyWith(fontSize: 14),
+                        ),
+                ),
+              ),
             ],
           ),
-
-          const SizedBox(height: 16),
-
-          // Join by Code Section
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                      ),
-                      child: const Icon(
-                        Icons.key_rounded,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Join via Tour Code',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Enter the 6-character code from your host',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: joinCodeController,
-                  focusNode: joinCodeFocus,
-                  textCapitalization: TextCapitalization.characters,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.firaCode(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 8,
-                    color: AppColors.primary,
-                  ),
-                  maxLength: 6,
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: '• • • • • •',
-                    hintStyle: GoogleFonts.firaCode(
-                      fontSize: 20,
-                      letterSpacing: 6,
-                      color: AppColors.textTertiary,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      borderSide: BorderSide(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      borderSide: BorderSide(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: isLoading ? null : onJoinByCode,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                      ),
-                      elevation: 0,
-                    ),
-                    icon: isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.login_rounded, size: 18),
-                    label: Text(
-                      isLoading ? 'JOINING MESH...' : 'JOIN WITH CODE',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          _InfoCard(items: const [
-            _InfoItem(
-              icon: Icons.near_me_rounded,
-              text: 'Host এবং Rider উভয়ের Bluetooth ও Wi-Fi অন থাকলে নিজে থেকেই Mesh যুক্ত হবে।',
-            ),
-            _InfoItem(
-              icon: Icons.signal_cellular_off_rounded,
-              text: 'কোনো ইন্টারনেট ডাটা বা মোবাইল নেটওয়ার্কের প্রয়োজন নেই।',
-            ),
-          ]),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -693,45 +467,105 @@ class _InfoItem {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.items});
+  const _InfoCard({required this.title, required this.items});
+
+  final String title;
   final List<_InfoItem> items;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
-        children: items.map((item) {
-          final isLast = item == items.last;
-          return Padding(
-            padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(item.icon, size: 16, color: AppColors.textTertiary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item.text,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11.5,
-                      color: AppColors.textSecondary,
-                      height: 1.35,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTextStyles.label.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...items.map((item) {
+            final isLast = item == items.last;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.sm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(item.icon, size: 15, color: AppColors.textTertiary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      item.text,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
+    );
+  }
+}
+
+class _TourHowItWorksCard extends StatelessWidget {
+  const _TourHowItWorksCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      title: 'How it works',
+      items: const [
+        _InfoItem(
+          icon: Icons.add_circle_outline,
+          text: 'Host creates a tour and shares the join code or QR.',
+        ),
+        _InfoItem(
+          icon: Icons.group_outlined,
+          text: 'Riders join with the code — no internet needed.',
+        ),
+        _InfoItem(
+          icon: Icons.mic_none_outlined,
+          text: 'Push to talk with your group while riding.',
+        ),
+      ],
+    );
+  }
+}
+
+class _TourRequirementsCard extends StatelessWidget {
+  const _TourRequirementsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      title: 'Before you start',
+      items: const [
+        _InfoItem(
+          icon: Icons.bluetooth_outlined,
+          text: 'Turn on Bluetooth on every phone.',
+        ),
+        _InfoItem(
+          icon: Icons.wifi_outlined,
+          text: 'Keep Wi‑Fi on — used for nearby device discovery.',
+        ),
+        _InfoItem(
+          icon: Icons.shield_outlined,
+          text: 'Audio stays on-device; no mobile data is used.',
+        ),
+      ],
     );
   }
 }
@@ -760,41 +594,23 @@ class _RecentTourRejoinBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.4),
-          width: 1.3,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.14),
-            blurRadius: 16,
-            spreadRadius: 1,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.18),
-                ),
-                child: const Icon(
-                  Icons.history_toggle_off_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
+              Icon(
+                Icons.history_rounded,
+                size: 18,
+                color: AppColors.textSecondary,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -804,9 +620,8 @@ class _RecentTourRejoinBanner extends StatelessWidget {
                         Flexible(
                           child: Text(
                             tourName,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
+                            style: AppTextStyles.label.copyWith(
+                              fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                             maxLines: 1,
@@ -814,76 +629,55 @@ class _RecentTourRejoinBanner extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: isHost
-                                ? AppColors.primary.withValues(alpha: 0.2)
-                                : AppColors.success.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            isHost ? 'HOST' : 'RIDER',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w800,
-                              color: isHost ? AppColors.primary : AppColors.success,
-                            ),
+                        Text(
+                          isHost ? 'Host' : 'Rider',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
                     Text(
-                      'Code: $tourCode • Tap to quickly jump back in',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
+                      'Code $tourCode',
+                      style: AppTextStyles.caption,
                     ),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textTertiary),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
                 onPressed: onDismiss,
-                tooltip: 'Dismiss',
                 constraints: const BoxConstraints(maxWidth: 32, maxHeight: 32),
                 padding: EdgeInsets.zero,
               ),
             ],
           ),
-
-          const SizedBox(height: 10),
-
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
-            height: 40,
-            child: ElevatedButton.icon(
+            height: AppSpacing.buttonHeightCompact,
+            child: OutlinedButton(
               onPressed: isLoading ? null : onRejoin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                side: const BorderSide(color: AppColors.border),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 ),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
               ),
-              icon: isLoading
+              child: isLoading
                   ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.phone_forwarded_rounded, size: 16),
-              label: Text(
-                isLoading ? 'RECONNECTING...' : 'REJOIN LIVE TOUR',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.6,
-                ),
-              ),
+                  : Text(
+                      'Rejoin tour',
+                      style: AppTextStyles.button.copyWith(fontSize: 13),
+                    ),
             ),
           ),
         ],
