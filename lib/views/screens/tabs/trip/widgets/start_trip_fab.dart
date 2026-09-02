@@ -14,11 +14,12 @@ class StartTripFab extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isTracking;
 
-  // Soft pill — matches reference Start Trip (not sharp rect, not full capsule)
   static final _radius = BorderRadius.circular(28);
 
   @override
   Widget build(BuildContext context) {
+    final label = isTracking ? 'endTripLog'.tr() : 'startTrip'.tr();
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: _radius,
@@ -41,26 +42,31 @@ class StartTripFab extends StatelessWidget {
           child: Container(
             height: 48,
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  isTracking ? LucideIcons.square : LucideIcons.play,
-                  color: Colors.white,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  isTracking ? 'endTripLog'.tr() : 'startTrip'.tr(),
-                  style: AppTextStyles.button.copyWith(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isTracking ? LucideIcons.square : LucideIcons.play,
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    letterSpacing: 0.2,
+                    size: 18,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    style: AppTextStyles.button.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -68,4 +74,3 @@ class StartTripFab extends StatelessWidget {
     );
   }
 }
-

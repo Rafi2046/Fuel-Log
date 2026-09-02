@@ -70,7 +70,7 @@
   "navTrip": "ट्रिप",
   "tripTitle": "ट्रिप लॉग",
   "startTrip": "ट्रिप शुरू",
-  "endTripLog": "ट्रिप खत्म और सेव",
+  "endTripLog": "ट्रिप समाप्त",
   "liveTripStarted": "लाइव ट्रिप रिकॉर्ड शुरू। चलें — GPS ट्रैक कर रहा है।",
   "liveTripFinished": "ट्रिप खत्म: {km} किमी, {min} मिनट",
   "liveTripNeedGps": "लाइव ट्रिप के लिए GPS चालू करें",

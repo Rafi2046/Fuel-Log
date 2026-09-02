@@ -86,7 +86,7 @@
   "navTrip": "Trip",
   "tripTitle": "Trip Log",
   "startTrip": "Start Trip",
-  "endTripLog": "End trip & save",
+  "endTripLog": "End Trip",
   "liveTripStarted": "Live trip recording started. Drive — GPS is tracking.",
   "liveTripFinished": "Trip finished: {km} km in {min} min",
   "liveTripNeedGps": "Turn on GPS to record a live trip",

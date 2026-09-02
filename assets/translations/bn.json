@@ -86,7 +86,7 @@
   "navTrip": "ট্রিপ",
   "tripTitle": "ট্রিপ লগ",
   "startTrip": "ট্রিপ শুরু",
-  "endTripLog": "ট্রিপ শেষ ও সেভ",
+  "endTripLog": "ট্রিপ শেষ",
   "liveTripStarted": "লাইভ ট্রিপ রেকর্ড শুরু। চালান — GPS ট্র্যাক করছে।",
   "liveTripFinished": "ট্রিপ শেষ: {km} কিমি, {min} মিনিট",
   "liveTripNeedGps": "লাইভ ট্রিপের জন্য GPS চালু করুন",

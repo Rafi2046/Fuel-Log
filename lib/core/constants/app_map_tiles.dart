@@ -5,7 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 abstract final class AppMapTiles {
   static const userAgentPackageName = 'com.example.fuel_log';
 
-  /// Standard OSM raster tiles (XYZ).
   static const urlTemplate =
       'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -13,20 +12,34 @@ abstract final class AppMapTiles {
     'tile.openstreetmap.org',
   ];
 
-  /// Light neutral fill while tiles load (matches OSM, avoids black gaps).
-  static const backgroundColor = Color(0xFFE8E4DA);
+  /// Shown only while tiles load (not the final map colour).
+  static const backgroundColor = Color(0xFF1A1D24);
 
-  /// Bangladesh-wide view at z9; prevents zooming out so far tiles never load.
   static const minZoom = 9.0;
   static const maxZoom = 19.0;
+
+  /// Soft darken so OSM stays readable but fits the dark app chrome.
+  static Widget osmSoftDarkTileBuilder(
+    BuildContext context,
+    Widget tileWidget,
+    TileImage tile,
+  ) {
+    return ColorFiltered(
+      colorFilter: const ColorFilter.mode(
+        Color(0xFF2A3040),
+        BlendMode.darken,
+      ),
+      child: tileWidget,
+    );
+  }
 
   static TileLayer layer({
     int keepBuffer = 4,
     int panBuffer = 2,
     BuildContext? context,
     Key? key,
+    bool softDark = false,
   }) {
-    // headers MUST be mutable — TileLayer calls putIfAbsent('User-Agent').
     return TileLayer(
       key: key,
       urlTemplate: urlTemplate,
@@ -35,12 +48,11 @@ abstract final class AppMapTiles {
       maxZoom: maxZoom,
       minNativeZoom: 0,
       maxNativeZoom: 19,
-      // Retina simulation quadruples tile count; OSM allows only 2 parallel
-      // connections — causes black gaps and choppy zoom on phones.
       retinaMode: false,
       keepBuffer: keepBuffer,
       panBuffer: panBuffer,
       tileDisplay: const TileDisplay.instantaneous(),
+      tileBuilder: softDark ? osmSoftDarkTileBuilder : null,
       tileProvider: NetworkTileProvider(
         headers: <String, String>{},
         silenceExceptions: true,
@@ -53,6 +65,7 @@ abstract final class AppMapTiles {
     int panBuffer = 2,
     BuildContext? context,
     Key? key,
+    bool softDark = false,
   }) {
     return [
       layer(
@@ -60,6 +73,7 @@ abstract final class AppMapTiles {
         panBuffer: panBuffer,
         context: context,
         key: key,
+        softDark: softDark,
       ),
     ];
   }

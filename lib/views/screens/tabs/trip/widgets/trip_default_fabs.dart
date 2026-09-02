@@ -32,8 +32,8 @@ class TripDefaultFabs extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: const Color(0xFF18181F).withValues(alpha: 0.94),
               shape: BoxShape.circle,
@@ -63,10 +63,10 @@ class TripDefaultFabs extends StatelessWidget {
             ),
           ),
           if (onHistory != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: const Color(0xFF18181F).withValues(alpha: 0.94),
                 shape: BoxShape.circle,
@@ -97,10 +97,10 @@ class TripDefaultFabs extends StatelessWidget {
             ),
           ],
           if (onIntercom != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: const Color(0xFF18181F).withValues(alpha: 0.94),
                 shape: BoxShape.circle,
@@ -132,7 +132,7 @@ class TripDefaultFabs extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: StartTripFab(
               isTracking: isTracking,
