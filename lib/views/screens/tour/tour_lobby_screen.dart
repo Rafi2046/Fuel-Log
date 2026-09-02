@@ -6,9 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/models/intercom_rider_role.dart';
 import '../../../viewmodels/intercom_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
 import 'tour_intercom_screen.dart';
+import 'widgets/intercom_rider_role_selector.dart';
 import 'widgets/tour_join_code_sheet.dart';
 import 'widgets/tour_qr_scanner_sheet.dart';
 
@@ -32,6 +34,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
   final _joinCodeFocus = FocusNode();
 
   bool _isLoading = false;
+  IntercomRiderRole _selectedRole = IntercomRiderRole.groupRider;
 
   @override
   void initState() {
@@ -39,6 +42,11 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _selectedRole = ref.read(intercomProvider).riderRole;
+      setState(() {});
     });
   }
 
@@ -62,6 +70,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
 
     final code = IntercomViewModel.generateJoinCode();
     _notifier.setTourCodeAndName(tourName: name, joinCode: code);
+    await _notifier.setRiderRole(_selectedRole);
 
     setState(() => _isLoading = true);
     // 1. Host enters and starts tour session immediately
@@ -108,6 +117,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     }
     setState(() => _isLoading = true);
     HapticFeedback.heavyImpact();
+    await _notifier.setRiderRole(_selectedRole);
     await _notifier.joinByCode(code);
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -117,6 +127,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
   Future<void> _onRejoinRecentTour() async {
     setState(() => _isLoading = true);
     HapticFeedback.heavyImpact();
+    _selectedRole = ref.read(intercomProvider).riderRole;
     await _notifier.rejoinRecentTour();
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -214,6 +225,9 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
                           tourNameController: _tourNameController,
                           tourNameFocus: _tourNameFocus,
                           isLoading: _isLoading,
+                          selectedRole: _selectedRole,
+                          onRoleChanged: (role) =>
+                              setState(() => _selectedRole = role),
                           onCreateTour: _onCreateTour,
                         )
                       : _JoinTourTab(
@@ -221,6 +235,9 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
                           joinCodeController: _joinCodeController,
                           joinCodeFocus: _joinCodeFocus,
                           isLoading: _isLoading,
+                          selectedRole: _selectedRole,
+                          onRoleChanged: (role) =>
+                              setState(() => _selectedRole = role),
                           onJoinByCode: _onJoinByCode,
                           onScanQr: _onScanQr,
                         ),
@@ -248,12 +265,16 @@ class _HostTourTab extends StatelessWidget {
     required this.tourNameController,
     required this.tourNameFocus,
     required this.isLoading,
+    required this.selectedRole,
+    required this.onRoleChanged,
     required this.onCreateTour,
   });
 
   final TextEditingController tourNameController;
   final FocusNode tourNameFocus;
   final bool isLoading;
+  final IntercomRiderRole selectedRole;
+  final ValueChanged<IntercomRiderRole> onRoleChanged;
   final VoidCallback onCreateTour;
 
   @override
@@ -309,6 +330,11 @@ class _HostTourTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
+        IntercomRiderRoleSelector(
+          selectedRole: selectedRole,
+          onRoleChanged: onRoleChanged,
+        ),
+        const SizedBox(height: AppSpacing.md),
         SizedBox(
           height: AppSpacing.buttonHeightCompact,
           child: ElevatedButton(
@@ -343,6 +369,8 @@ class _JoinTourTab extends StatelessWidget {
     required this.joinCodeController,
     required this.joinCodeFocus,
     required this.isLoading,
+    required this.selectedRole,
+    required this.onRoleChanged,
     required this.onJoinByCode,
     required this.onScanQr,
   });
@@ -350,6 +378,8 @@ class _JoinTourTab extends StatelessWidget {
   final TextEditingController joinCodeController;
   final FocusNode joinCodeFocus;
   final bool isLoading;
+  final IntercomRiderRole selectedRole;
+  final ValueChanged<IntercomRiderRole> onRoleChanged;
   final VoidCallback onJoinByCode;
   final VoidCallback onScanQr;
 
@@ -450,6 +480,11 @@ class _JoinTourTab extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        IntercomRiderRoleSelector(
+          selectedRole: selectedRole,
+          onRoleChanged: onRoleChanged,
         ),
       ],
     );

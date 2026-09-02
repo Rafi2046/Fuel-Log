@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fuel_log/core/models/intercom_rider_role.dart';
 import 'package:fuel_log/core/services/hardware_ptt_service.dart';
+import 'package:fuel_log/core/services/intercom_session_service.dart';
 import 'package:fuel_log/core/services/nearby_audio_transport.dart';
 import 'package:fuel_log/viewmodels/intercom_viewmodel.dart';
 
@@ -22,18 +24,67 @@ class FakeHardwarePttService extends HardwarePttService {
   }
 }
 
+class FakeIntercomSessionService extends IntercomSessionService {
+  int startSessionCalls = 0;
+  int updateSessionCalls = 0;
+  int stopSessionCalls = 0;
+  IntercomRiderRole? lastRole;
+
+  @override
+  Future<void> startSession({
+    required String tourName,
+    required IntercomRiderRole role,
+    required bool isTransmitting,
+    required bool isMuted,
+    required bool openMic,
+  }) async {
+    startSessionCalls++;
+    lastRole = role;
+    _sessionActive = true;
+  }
+
+  @override
+  Future<void> updateSession({
+    required String tourName,
+    required IntercomRiderRole role,
+    required bool isTransmitting,
+    required bool isMuted,
+    required bool openMic,
+  }) async {
+    updateSessionCalls++;
+    lastRole = role;
+  }
+
+  @override
+  Future<void> stopSession() async {
+    stopSessionCalls++;
+    _sessionActive = false;
+  }
+
+  bool _sessionActive = false;
+
+  @override
+  bool get isSessionActive => _sessionActive;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('IntercomViewModel Tests', () {
     late FakeHardwarePttService fakePttService;
     late NearbyAudioTransport fakeTransport;
+    late FakeIntercomSessionService fakeSessionService;
     late IntercomViewModel viewModel;
 
     setUp(() {
       fakePttService = FakeHardwarePttService();
       fakeTransport = NearbyAudioTransport.createForTesting();
-      viewModel = IntercomViewModel(fakePttService, fakeTransport);
+      fakeSessionService = FakeIntercomSessionService();
+      viewModel = IntercomViewModel(
+        fakePttService,
+        fakeTransport,
+        fakeSessionService,
+      );
     });
 
     test('initial state has default tactical settings', () {
@@ -44,10 +95,9 @@ void main() {
       expect(state.isMeshBridgeEnabled, isTrue);
       expect(state.isFecRecoveryEnabled, isTrue);
       expect(state.isLoudspeakerEnabled, isFalse);
-      expect(state.isCoRiderModeEnabled, isFalse);
+      expect(state.riderRole, IntercomRiderRole.groupRider);
       expect(state.isMuted, isFalse);
       expect(state.tourName, equals('My Tour'));
-      // Only local user (YOU) before any peers connect
       expect(state.members.length, equals(1));
       expect(state.members.first.isCurrentUser, isTrue);
       expect(state.onlineCount, equals(1));
@@ -111,25 +161,37 @@ void main() {
       await viewModel.toggleLoudspeaker(true);
       expect(viewModel.state.isLoudspeakerEnabled, isTrue);
       expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
+      expect(viewModel.state.riderRole, IntercomRiderRole.sameBikeDriver);
       expect(fakeTransport.audioSettings.loudspeakerEnabled, isTrue);
       await viewModel.toggleLoudspeaker(false);
       expect(viewModel.state.isLoudspeakerEnabled, isFalse);
       expect(fakeTransport.audioSettings.loudspeakerEnabled, isFalse);
     });
 
-    test('toggleCoRiderMode applies same-bike preset', () async {
-      await viewModel.toggleOpenMicMode(true);
-      await viewModel.toggleCoRiderMode(true);
-      expect(viewModel.state.isCoRiderModeEnabled, isTrue);
+    test('setRiderRole applies driver preset', () async {
+      await viewModel.setRiderRole(IntercomRiderRole.sameBikeDriver);
+      expect(viewModel.state.riderRole, IntercomRiderRole.sameBikeDriver);
       expect(viewModel.state.isLoudspeakerEnabled, isTrue);
       expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
       expect(viewModel.state.isOpenMic, isFalse);
-      expect(viewModel.state.isWindNoiseCancellationEnabled, isTrue);
-      expect(fakeTransport.audioSettings.coRiderModeEnabled, isTrue);
-      expect(fakeTransport.audioSettings.loudspeakerEnabled, isTrue);
+      expect(fakeTransport.audioSettings.riderRole,
+          IntercomRiderRole.sameBikeDriver);
+    });
+
+    test('setRiderRole applies pillion preset', () async {
+      await viewModel.setRiderRole(IntercomRiderRole.sameBikePillion);
+      expect(viewModel.state.riderRole, IntercomRiderRole.sameBikePillion);
+      expect(viewModel.state.isHelmetAudioRouteEnabled, isTrue);
+      expect(viewModel.state.isLoudspeakerEnabled, isFalse);
+      expect(viewModel.state.isOpenMic, isTrue);
+      expect(fakeTransport.audioSettings.pillionModeEnabled, isTrue);
+    });
+
+    test('toggleCoRiderMode maps to driver role', () async {
+      await viewModel.toggleCoRiderMode(true);
+      expect(viewModel.state.riderRole, IntercomRiderRole.sameBikeDriver);
       await viewModel.toggleCoRiderMode(false);
-      expect(viewModel.state.isCoRiderModeEnabled, isFalse);
-      expect(fakeTransport.audioSettings.coRiderModeEnabled, isFalse);
+      expect(viewModel.state.riderRole, IntercomRiderRole.groupRider);
     });
 
     test('toggleMute toggles mute state', () async {
@@ -148,6 +210,7 @@ void main() {
     test('leaveIntercom stops hardware button listener and resets state', () async {
       await viewModel.leaveIntercom();
       expect(fakePttService.stopListeningCalled, isTrue);
+      expect(fakeSessionService.stopSessionCalls, equals(1));
       expect(viewModel.state.isTransmitting, isFalse);
     });
   });

@@ -1,3 +1,5 @@
+import '../models/intercom_rider_role.dart';
+
 /// Runtime audio processing flags for tour intercom.
 class IntercomAudioSettings {
   const IntercomAudioSettings({
@@ -6,7 +8,7 @@ class IntercomAudioSettings {
     this.meshBridgeEnabled = true,
     this.fecRecoveryEnabled = true,
     this.loudspeakerEnabled = false,
-    this.coRiderModeEnabled = false,
+    this.riderRole = IntercomRiderRole.groupRider,
   });
 
   final bool windNoiseFilterEnabled;
@@ -14,7 +16,13 @@ class IntercomAudioSettings {
   final bool meshBridgeEnabled;
   final bool fecRecoveryEnabled;
   final bool loudspeakerEnabled;
-  final bool coRiderModeEnabled;
+  final IntercomRiderRole riderRole;
+
+  bool get coRiderModeEnabled =>
+      riderRole == IntercomRiderRole.sameBikeDriver ||
+      riderRole == IntercomRiderRole.sameBikePillion;
+
+  bool get pillionModeEnabled => riderRole == IntercomRiderRole.sameBikePillion;
 
   IntercomAudioSettings copyWith({
     bool? windNoiseFilterEnabled,
@@ -22,7 +30,7 @@ class IntercomAudioSettings {
     bool? meshBridgeEnabled,
     bool? fecRecoveryEnabled,
     bool? loudspeakerEnabled,
-    bool? coRiderModeEnabled,
+    IntercomRiderRole? riderRole,
   }) {
     return IntercomAudioSettings(
       windNoiseFilterEnabled:
@@ -32,7 +40,7 @@ class IntercomAudioSettings {
       meshBridgeEnabled: meshBridgeEnabled ?? this.meshBridgeEnabled,
       fecRecoveryEnabled: fecRecoveryEnabled ?? this.fecRecoveryEnabled,
       loudspeakerEnabled: loudspeakerEnabled ?? this.loudspeakerEnabled,
-      coRiderModeEnabled: coRiderModeEnabled ?? this.coRiderModeEnabled,
+      riderRole: riderRole ?? this.riderRole,
     );
   }
 
@@ -44,7 +52,7 @@ class IntercomAudioSettings {
         other.meshBridgeEnabled == meshBridgeEnabled &&
         other.fecRecoveryEnabled == fecRecoveryEnabled &&
         other.loudspeakerEnabled == loudspeakerEnabled &&
-        other.coRiderModeEnabled == coRiderModeEnabled;
+        other.riderRole == riderRole;
   }
 
   @override
@@ -54,6 +62,6 @@ class IntercomAudioSettings {
         meshBridgeEnabled,
         fecRecoveryEnabled,
         loudspeakerEnabled,
-        coRiderModeEnabled,
+        riderRole,
       );
 }

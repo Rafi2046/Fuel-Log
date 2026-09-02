@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/models/intercom_rider_role.dart';
 import '../../../widgets/clean_glass_panel.dart';
 
 /// Audio enhancement settings in a single premium list card.
@@ -16,11 +17,10 @@ class IntercomSmartToggles extends StatelessWidget {
     required this.meshBridgeEnabled,
     required this.fecRecoveryEnabled,
     required this.loudspeakerEnabled,
-    required this.coRiderModeEnabled,
+    required this.riderRole,
     required this.onWindNoiseChanged,
     required this.onHelmetAudioChanged,
     required this.onLoudspeakerChanged,
-    required this.onCoRiderModeChanged,
     required this.onMeshBridgeChanged,
     required this.onFecRecoveryChanged,
   });
@@ -30,15 +30,18 @@ class IntercomSmartToggles extends StatelessWidget {
   final bool meshBridgeEnabled;
   final bool fecRecoveryEnabled;
   final bool loudspeakerEnabled;
-  final bool coRiderModeEnabled;
+  final IntercomRiderRole riderRole;
   final ValueChanged<bool> onWindNoiseChanged;
   final ValueChanged<bool> onHelmetAudioChanged;
   final ValueChanged<bool> onLoudspeakerChanged;
-  final ValueChanged<bool> onCoRiderModeChanged;
   final ValueChanged<bool> onMeshBridgeChanged;
   final ValueChanged<bool> onFecRecoveryChanged;
 
   static const _dividerIndent = 46.0;
+
+  bool get _isDriverRole => riderRole == IntercomRiderRole.sameBikeDriver;
+  bool get _isPillionRole => riderRole == IntercomRiderRole.sameBikePillion;
+  bool get _roleLocksRouting => _isDriverRole || _isPillionRole;
 
   @override
   Widget build(BuildContext context) {
@@ -72,30 +75,24 @@ class IntercomSmartToggles extends StatelessWidget {
               _InsetDivider(indent: _dividerIndent),
               _SettingRow(
                 icon: Icons.headset_mic_rounded,
-                title: 'Helmet audio',
-                subtitle: 'Route through Bluetooth / Sena',
+                title: 'Helmet / earphone audio',
+                subtitle: _isPillionRole
+                    ? 'On for pocket + earphone mode'
+                    : 'Route through Bluetooth / wired headset',
                 value: helmetAudioEnabled,
-                enabled: !coRiderModeEnabled,
+                enabled: !_isDriverRole,
                 onChanged: onHelmetAudioChanged,
               ),
               _InsetDivider(indent: _dividerIndent),
               _SettingRow(
                 icon: Icons.volume_up_rounded,
                 title: 'Loudspeaker',
-                subtitle: coRiderModeEnabled
-                    ? 'On for co-rider mode'
+                subtitle: _isDriverRole
+                    ? 'On for mounted driver mode'
                     : 'Play through phone speaker',
-                value: loudspeakerEnabled || coRiderModeEnabled,
-                enabled: !coRiderModeEnabled,
+                value: loudspeakerEnabled,
+                enabled: !_roleLocksRouting,
                 onChanged: onLoudspeakerChanged,
-              ),
-              _InsetDivider(indent: _dividerIndent),
-              _SettingRow(
-                icon: Icons.two_wheeler_rounded,
-                title: 'Co-rider mode',
-                subtitle: 'Same bike — PTT + speaker for driver & pillion',
-                value: coRiderModeEnabled,
-                onChanged: onCoRiderModeChanged,
               ),
               _InsetDivider(indent: _dividerIndent),
               _SettingRow(

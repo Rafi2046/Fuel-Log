@@ -68,6 +68,11 @@
             android:exported="false"
             android:foregroundServiceType="location"
             tools:node="merge" />
+        <service
+            android:name=".IntercomForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

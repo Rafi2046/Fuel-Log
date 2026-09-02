@@ -86,7 +86,7 @@ class NearbyAudioTransport {
     final micConfigChanged = _audioSettings.helmetAudioRouteEnabled !=
             settings.helmetAudioRouteEnabled ||
         _audioSettings.loudspeakerEnabled != settings.loudspeakerEnabled ||
-        _audioSettings.coRiderModeEnabled != settings.coRiderModeEnabled;
+        _audioSettings.riderRole != settings.riderRole;
     _audioSettings = settings;
 
     if (!_fecRecoveryEnabled) {
@@ -108,8 +108,7 @@ class NearbyAudioTransport {
   }
 
   Future<void> _applyAudioRoute() async {
-    final useSpeakerphone =
-        (_loudspeakerEnabled || _coRiderModeEnabled) && !_helmetAudioRouteEnabled;
+    final useSpeakerphone = _loudspeakerEnabled && !_helmetAudioRouteEnabled;
     await IntercomAudioRouteService.instance
         .setSpeakerphoneEnabled(useSpeakerphone);
   }
@@ -130,8 +129,13 @@ class NearbyAudioTransport {
   bool get _fecRecoveryEnabled => _audioSettings.fecRecoveryEnabled;
   bool get _loudspeakerEnabled => _audioSettings.loudspeakerEnabled;
   bool get _coRiderModeEnabled => _audioSettings.coRiderModeEnabled;
+  bool get _pillionModeEnabled => _audioSettings.pillionModeEnabled;
 
-  double get _noiseGateThreshold => _coRiderModeEnabled ? 140.0 : 300.0;
+  double get _noiseGateThreshold {
+    if (_pillionModeEnabled) return 120.0;
+    if (_coRiderModeEnabled) return 140.0;
+    return 300.0;
+  }
 
   static const int _fecMinBufferChunks = 2;
 

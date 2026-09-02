@@ -8,6 +8,8 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../viewmodels/intercom_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
 import 'widgets/intercom_header_section.dart';
+import 'widgets/intercom_rider_role_selector.dart';
+import 'widgets/intercom_role_status_card.dart';
 import 'widgets/intercom_smart_toggles.dart';
 import 'widgets/tactical_ptt_button.dart';
 import 'widgets/tour_join_code_sheet.dart';
@@ -27,12 +29,14 @@ class TourIntercomScreen extends ConsumerStatefulWidget {
   ConsumerState<TourIntercomScreen> createState() => _TourIntercomScreenState();
 }
 
-class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
+class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
+    with WidgetsBindingObserver {
   IntercomViewModel get _notifier => ref.read(intercomProvider.notifier);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final state = ref.read(intercomProvider);
@@ -45,6 +49,17 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _notifier.onAppLifecycleChanged(state);
   }
 
   void _handleLeave() {
@@ -96,10 +111,30 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
     TourJoinCodeSheet.show(context, joinCode: code, tourName: state.tourName);
   }
 
+  String _footerTip(IntercomState state) {
+    if (state.isPillionMode) {
+      return 'Pillion tip: plug in earphones, lock your phone, and use the notification '
+          'or headset button to talk.';
+    }
+    if (state.isDriverMode) {
+      return 'Driver tip: hold PTT or a volume button to talk. Intercom stays active on the lock screen.';
+    }
+    return 'Tip: press and hold a volume button for push-to-talk with gloves on.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final intercomState = ref.watch(intercomProvider);
     final intercomNotifier = ref.read(intercomProvider.notifier);
+
+    ref.listen<IntercomState>(intercomProvider, (previous, next) {
+      if (previous?.isConnected == true &&
+          !next.isConnected &&
+          next.mode == IntercomMode.idle &&
+          mounted) {
+        Navigator.of(context).maybePop();
+      }
+    });
 
     return AppScaffold(
       title: 'Tour intercom',
@@ -129,6 +164,14 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
             ),
           ],
           const SizedBox(height: AppSpacing.md),
+          IntercomRoleStatusCard(state: intercomState),
+          const SizedBox(height: AppSpacing.md),
+          IntercomRiderRoleSelector(
+            compact: true,
+            selectedRole: intercomState.riderRole,
+            onRoleChanged: intercomNotifier.setRiderRole,
+          ),
+          const SizedBox(height: AppSpacing.md),
           TacticalPttButton(
             isTransmitting: intercomState.isTransmitting,
             isOpenMic: intercomState.isOpenMic,
@@ -142,21 +185,18 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
             windNoiseEnabled: intercomState.isWindNoiseCancellationEnabled,
             helmetAudioEnabled: intercomState.isHelmetAudioRouteEnabled,
             loudspeakerEnabled: intercomState.isLoudspeakerEnabled,
-            coRiderModeEnabled: intercomState.isCoRiderModeEnabled,
+            riderRole: intercomState.riderRole,
             meshBridgeEnabled: intercomState.isMeshBridgeEnabled,
             fecRecoveryEnabled: intercomState.isFecRecoveryEnabled,
             onWindNoiseChanged: intercomNotifier.toggleWindNoiseCancellation,
             onHelmetAudioChanged: intercomNotifier.toggleHelmetAudioRoute,
             onLoudspeakerChanged: intercomNotifier.toggleLoudspeaker,
-            onCoRiderModeChanged: intercomNotifier.toggleCoRiderMode,
             onMeshBridgeChanged: intercomNotifier.toggleMeshBridge,
             onFecRecoveryChanged: intercomNotifier.toggleFecRecovery,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            intercomState.isCoRiderModeEnabled
-                ? 'Co-rider tip: hold PTT or a volume button to talk — wind filter keeps highway noise down.'
-                : 'Tip: press and hold a volume button for push-to-talk with gloves on.',
+            _footerTip(intercomState),
             textAlign: TextAlign.center,
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textTertiary,

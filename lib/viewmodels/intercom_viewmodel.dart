@@ -3,11 +3,14 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/models/intercom_rider_role.dart';
 import '../core/services/hardware_ptt_service.dart';
 import '../core/services/intercom_audio_settings.dart';
+import '../core/services/intercom_session_service.dart';
 import '../core/services/nearby_audio_transport.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,7 +93,8 @@ class IntercomState {
     this.isMeshBridgeEnabled = true,
     this.isFecRecoveryEnabled = true,
     this.isLoudspeakerEnabled = false,
-    this.isCoRiderModeEnabled = false,
+    this.riderRole = IntercomRiderRole.groupRider,
+    this.isBackgroundSessionActive = false,
     this.isMuted = false,
     this.isOpenMic = true,
     this.tourName = 'My Tour',
@@ -124,7 +128,8 @@ class IntercomState {
   final bool isMeshBridgeEnabled;
   final bool isFecRecoveryEnabled;
   final bool isLoudspeakerEnabled;
-  final bool isCoRiderModeEnabled;
+  final IntercomRiderRole riderRole;
+  final bool isBackgroundSessionActive;
   final bool isMuted;
   final bool isOpenMic;
   final String tourName;
@@ -144,6 +149,9 @@ class IntercomState {
 
   int get onlineCount => members.where((m) => m.isOnline).length;
   bool get hasRecentTour => lastTourCode != null && lastTourCode!.isNotEmpty;
+  bool get isCoRiderModeEnabled => riderRole != IntercomRiderRole.groupRider;
+  bool get isPillionMode => riderRole == IntercomRiderRole.sameBikePillion;
+  bool get isDriverMode => riderRole == IntercomRiderRole.sameBikeDriver;
 
   IntercomState copyWith({
     bool? isTransmitting,
@@ -155,7 +163,8 @@ class IntercomState {
     bool? isMeshBridgeEnabled,
     bool? isFecRecoveryEnabled,
     bool? isLoudspeakerEnabled,
-    bool? isCoRiderModeEnabled,
+    IntercomRiderRole? riderRole,
+    bool? isBackgroundSessionActive,
     bool? isMuted,
     bool? isOpenMic,
     String? tourName,
@@ -183,7 +192,9 @@ class IntercomState {
       isMeshBridgeEnabled: isMeshBridgeEnabled ?? this.isMeshBridgeEnabled,
       isFecRecoveryEnabled: isFecRecoveryEnabled ?? this.isFecRecoveryEnabled,
       isLoudspeakerEnabled: isLoudspeakerEnabled ?? this.isLoudspeakerEnabled,
-      isCoRiderModeEnabled: isCoRiderModeEnabled ?? this.isCoRiderModeEnabled,
+      riderRole: riderRole ?? this.riderRole,
+      isBackgroundSessionActive:
+          isBackgroundSessionActive ?? this.isBackgroundSessionActive,
       isMuted: isMuted ?? this.isMuted,
       isOpenMic: isOpenMic ?? this.isOpenMic,
       tourName: tourName ?? this.tourName,
@@ -209,15 +220,19 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   IntercomViewModel([
     HardwarePttService? hardwarePttService,
     NearbyAudioTransport? transport,
+    IntercomSessionService? sessionService,
   ])  : _hardwarePttService = hardwarePttService ?? HardwarePttService(),
         _transport = transport ?? NearbyAudioTransport.instance,
+        _sessionService = sessionService ?? IntercomSessionService.instance,
         super(const IntercomState()) {
     _loadRecentTourSession();
     _loadAudioPreferences();
+    _sessionService.setEventHandler(_onSessionEvent);
   }
 
   final HardwarePttService _hardwarePttService;
   final NearbyAudioTransport _transport;
+  final IntercomSessionService _sessionService;
 
   StreamSubscription<Set<String>>? _connectionSub;
 
@@ -230,7 +245,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   static const _prefMeshBridge = 'intercom_mesh_bridge_enabled';
   static const _prefFecRecovery = 'intercom_fec_recovery_enabled';
   static const _prefLoudspeaker = 'intercom_loudspeaker_enabled';
-  static const _prefCoRiderMode = 'intercom_co_rider_mode_enabled';
+  static const _prefRiderRole = 'intercom_rider_role';
 
   /// Generates a cryptographically random 6-character uppercase join code.
   static String generateJoinCode() {
@@ -267,7 +282,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         isMeshBridgeEnabled: prefs.getBool(_prefMeshBridge) ?? true,
         isFecRecoveryEnabled: prefs.getBool(_prefFecRecovery) ?? true,
         isLoudspeakerEnabled: prefs.getBool(_prefLoudspeaker) ?? false,
-        isCoRiderModeEnabled: prefs.getBool(_prefCoRiderMode) ?? false,
+        riderRole: _loadRiderRole(prefs),
       );
       await _syncAudioSettingsToTransport();
     } catch (_) {}
@@ -287,8 +302,19 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       await prefs.setBool(_prefMeshBridge, state.isMeshBridgeEnabled);
       await prefs.setBool(_prefFecRecovery, state.isFecRecoveryEnabled);
       await prefs.setBool(_prefLoudspeaker, state.isLoudspeakerEnabled);
-      await prefs.setBool(_prefCoRiderMode, state.isCoRiderModeEnabled);
+      await prefs.setString(_prefRiderRole, state.riderRole.name);
     } catch (_) {}
+  }
+
+  IntercomRiderRole _loadRiderRole(SharedPreferences prefs) {
+    final saved = prefs.getString(_prefRiderRole);
+    if (saved != null) {
+      return IntercomRiderRoleX.fromPref(saved);
+    }
+    final legacyCoRider = prefs.getBool('intercom_co_rider_mode_enabled') ?? false;
+    return legacyCoRider
+        ? IntercomRiderRole.sameBikeDriver
+        : IntercomRiderRole.groupRider;
   }
 
   IntercomAudioSettings get _currentAudioSettings => IntercomAudioSettings(
@@ -297,11 +323,90 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         meshBridgeEnabled: state.isMeshBridgeEnabled,
         fecRecoveryEnabled: state.isFecRecoveryEnabled,
         loudspeakerEnabled: state.isLoudspeakerEnabled,
-        coRiderModeEnabled: state.isCoRiderModeEnabled,
+        riderRole: state.riderRole,
       );
 
   Future<void> _syncAudioSettingsToTransport() {
     return _transport.updateAudioSettings(_currentAudioSettings);
+  }
+
+  Future<void> _syncBackgroundSession() async {
+    if (!state.isConnected) return;
+    await _sessionService.updateSession(
+      tourName: state.tourName,
+      role: state.riderRole,
+      isTransmitting: state.isTransmitting,
+      isMuted: state.isMuted,
+      openMic: state.isOpenMic,
+    );
+    state = state.copyWith(isBackgroundSessionActive: _sessionService.isSessionActive);
+  }
+
+  Future<void> _startBackgroundSession() async {
+    await _sessionService.startSession(
+      tourName: state.tourName,
+      role: state.riderRole,
+      isTransmitting: state.isTransmitting,
+      isMuted: state.isMuted,
+      openMic: state.isOpenMic,
+    );
+    state = state.copyWith(isBackgroundSessionActive: _sessionService.isSessionActive);
+  }
+
+  Future<void> _stopBackgroundSession() async {
+    await _sessionService.stopSession();
+    state = state.copyWith(isBackgroundSessionActive: false);
+  }
+
+  void _onSessionEvent(IntercomSessionEvent event) {
+    switch (event) {
+      case IntercomSessionEvent.pttDown:
+        if (!state.isOpenMic && !state.isMuted) {
+          unawaited(setTransmitting(true));
+        }
+      case IntercomSessionEvent.pttUp:
+        if (!state.isOpenMic) {
+          unawaited(setTransmitting(false));
+        }
+      case IntercomSessionEvent.pttToggle:
+        if (!state.isOpenMic && !state.isMuted) {
+          unawaited(setTransmitting(!state.isTransmitting));
+        }
+      case IntercomSessionEvent.muteToggle:
+        unawaited(toggleMute());
+      case IntercomSessionEvent.leave:
+        unawaited(leaveIntercom());
+    }
+  }
+
+  Future<void> onAppLifecycleChanged(AppLifecycleState lifecycle) async {
+    if (!state.isConnected) return;
+    if (lifecycle == AppLifecycleState.paused ||
+        lifecycle == AppLifecycleState.inactive) {
+      await _syncBackgroundSession();
+    }
+  }
+
+  Future<void> setRiderRole(IntercomRiderRole role) async {
+    HapticFeedback.selectionClick();
+    final preset = IntercomRolePreset.forRole(role);
+    state = state.copyWith(
+      riderRole: role,
+      isHelmetAudioRouteEnabled: preset.helmetAudioRouteEnabled,
+      isLoudspeakerEnabled: preset.loudspeakerEnabled,
+      isWindNoiseCancellationEnabled: preset.windNoiseFilterEnabled,
+      isOpenMic: preset.openMic,
+    );
+
+    if (!preset.openMic && state.isTransmitting) {
+      await setTransmitting(false);
+    } else if (preset.openMic && state.isConnected && !state.isMuted) {
+      await setTransmitting(true);
+    }
+
+    await _syncAudioSettingsToTransport();
+    await _syncBackgroundSession();
+    await _saveAudioPreferences();
   }
 
   Future<void> _saveRecentTourSession({
@@ -379,6 +484,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       state = state.copyWith(isConnecting: false, isConnected: true);
 
       _hardwarePttService.startListening(setTransmitting);
+      await _startBackgroundSession();
 
       if (state.isOpenMic && !state.isMuted) {
         await setTransmitting(true);
@@ -434,6 +540,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       state = state.copyWith(isConnecting: false, isConnected: true);
 
       _hardwarePttService.startListening(setTransmitting);
+      await _startBackgroundSession();
 
       if (state.isOpenMic && !state.isMuted) {
         await setTransmitting(true);
@@ -517,6 +624,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     }
 
     state = state.copyWith(isTransmitting: isTransmitting);
+    await _syncBackgroundSession();
     debugPrint('[IntercomVM] Audio Transmission: ${isTransmitting ? "TRANSMITTING (LIVE)" : "MUTED"}');
   }
 
@@ -533,6 +641,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         state = state.copyWith(isTransmitting: true);
       }
     }
+    await _syncBackgroundSession();
   }
 
   Future<void> toggleOpenMicMode([bool? value]) async {
@@ -544,6 +653,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     } else if (!newMode && state.isTransmitting) {
       await setTransmitting(false);
     }
+    await _syncBackgroundSession();
   }
 
   // ── Smart toggles ─────────────────────────────────────────────────────────
@@ -562,9 +672,10 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     state = state.copyWith(
       isHelmetAudioRouteEnabled: enabled,
       isLoudspeakerEnabled: enabled ? false : state.isLoudspeakerEnabled,
-      isCoRiderModeEnabled: enabled ? false : state.isCoRiderModeEnabled,
+      riderRole: IntercomRiderRole.groupRider,
     );
     await _syncAudioSettingsToTransport();
+    await _syncBackgroundSession();
     await _saveAudioPreferences();
   }
 
@@ -575,37 +686,26 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       state = state.copyWith(
         isLoudspeakerEnabled: true,
         isHelmetAudioRouteEnabled: false,
-        isCoRiderModeEnabled: false,
+        riderRole: IntercomRiderRole.sameBikeDriver,
       );
     } else {
       state = state.copyWith(
         isLoudspeakerEnabled: false,
-        isCoRiderModeEnabled: false,
+        riderRole: IntercomRiderRole.groupRider,
       );
     }
     await _syncAudioSettingsToTransport();
+    await _syncBackgroundSession();
     await _saveAudioPreferences();
   }
 
   Future<void> toggleCoRiderMode(bool? value) async {
-    HapticFeedback.selectionClick();
     final enabled = value ?? !state.isCoRiderModeEnabled;
-    if (enabled) {
-      state = state.copyWith(
-        isCoRiderModeEnabled: true,
-        isLoudspeakerEnabled: true,
-        isHelmetAudioRouteEnabled: false,
-        isWindNoiseCancellationEnabled: true,
-        isOpenMic: false,
-      );
-      if (state.isTransmitting) {
-        await setTransmitting(false);
-      }
-    } else {
-      state = state.copyWith(isCoRiderModeEnabled: false);
-    }
-    await _syncAudioSettingsToTransport();
-    await _saveAudioPreferences();
+    await setRiderRole(
+      enabled
+          ? IntercomRiderRole.sameBikeDriver
+          : IntercomRiderRole.groupRider,
+    );
   }
 
   Future<void> toggleMeshBridge(bool? value) async {
@@ -637,19 +737,23 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     final savedCode = state.lastTourCode ?? state.joinCode ?? state.channelCode;
     final savedName = state.lastTourName ?? state.tourName;
     final savedIsHost = state.lastTourIsHost || state.isHost;
+    final savedRole = state.riderRole;
 
+    await _stopBackgroundSession();
     await _transport.stop();
 
     state = IntercomState(
       lastTourCode: savedCode.isNotEmpty ? savedCode : null,
       lastTourName: savedName,
       lastTourIsHost: savedIsHost,
+      riderRole: savedRole,
     );
     debugPrint('[IntercomVM] Intercom session disconnected (Recent Tour retained: $savedCode).');
   }
 
   @override
   void dispose() {
+    _sessionService.setEventHandler(null);
     _hardwarePttService.stopListening();
     _connectionSub?.cancel();
     super.dispose();
