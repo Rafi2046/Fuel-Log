@@ -5,18 +5,24 @@ class IntercomAudioSettings {
     this.helmetAudioRouteEnabled = true,
     this.meshBridgeEnabled = true,
     this.fecRecoveryEnabled = true,
+    this.loudspeakerEnabled = false,
+    this.coRiderModeEnabled = false,
   });
 
   final bool windNoiseFilterEnabled;
   final bool helmetAudioRouteEnabled;
   final bool meshBridgeEnabled;
   final bool fecRecoveryEnabled;
+  final bool loudspeakerEnabled;
+  final bool coRiderModeEnabled;
 
   IntercomAudioSettings copyWith({
     bool? windNoiseFilterEnabled,
     bool? helmetAudioRouteEnabled,
     bool? meshBridgeEnabled,
     bool? fecRecoveryEnabled,
+    bool? loudspeakerEnabled,
+    bool? coRiderModeEnabled,
   }) {
     return IntercomAudioSettings(
       windNoiseFilterEnabled:
@@ -25,6 +31,8 @@ class IntercomAudioSettings {
           helmetAudioRouteEnabled ?? this.helmetAudioRouteEnabled,
       meshBridgeEnabled: meshBridgeEnabled ?? this.meshBridgeEnabled,
       fecRecoveryEnabled: fecRecoveryEnabled ?? this.fecRecoveryEnabled,
+      loudspeakerEnabled: loudspeakerEnabled ?? this.loudspeakerEnabled,
+      coRiderModeEnabled: coRiderModeEnabled ?? this.coRiderModeEnabled,
     );
   }
 
@@ -34,7 +42,9 @@ class IntercomAudioSettings {
         other.windNoiseFilterEnabled == windNoiseFilterEnabled &&
         other.helmetAudioRouteEnabled == helmetAudioRouteEnabled &&
         other.meshBridgeEnabled == meshBridgeEnabled &&
-        other.fecRecoveryEnabled == fecRecoveryEnabled;
+        other.fecRecoveryEnabled == fecRecoveryEnabled &&
+        other.loudspeakerEnabled == loudspeakerEnabled &&
+        other.coRiderModeEnabled == coRiderModeEnabled;
   }
 
   @override
@@ -43,5 +53,7 @@ class IntercomAudioSettings {
         helmetAudioRouteEnabled,
         meshBridgeEnabled,
         fecRecoveryEnabled,
+        loudspeakerEnabled,
+        coRiderModeEnabled,
       );
 }

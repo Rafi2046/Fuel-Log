@@ -43,6 +43,8 @@ void main() {
       expect(state.isHelmetAudioRouteEnabled, isTrue);
       expect(state.isMeshBridgeEnabled, isTrue);
       expect(state.isFecRecoveryEnabled, isTrue);
+      expect(state.isLoudspeakerEnabled, isFalse);
+      expect(state.isCoRiderModeEnabled, isFalse);
       expect(state.isMuted, isFalse);
       expect(state.tourName, equals('My Tour'));
       // Only local user (YOU) before any peers connect
@@ -103,6 +105,31 @@ void main() {
       await viewModel.toggleFecRecovery(true);
       expect(viewModel.state.isFecRecoveryEnabled, isTrue);
       expect(fakeTransport.audioSettings.fecRecoveryEnabled, isTrue);
+    });
+
+    test('toggleLoudspeaker updates state and transport', () async {
+      await viewModel.toggleLoudspeaker(true);
+      expect(viewModel.state.isLoudspeakerEnabled, isTrue);
+      expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
+      expect(fakeTransport.audioSettings.loudspeakerEnabled, isTrue);
+      await viewModel.toggleLoudspeaker(false);
+      expect(viewModel.state.isLoudspeakerEnabled, isFalse);
+      expect(fakeTransport.audioSettings.loudspeakerEnabled, isFalse);
+    });
+
+    test('toggleCoRiderMode applies same-bike preset', () async {
+      await viewModel.toggleOpenMicMode(true);
+      await viewModel.toggleCoRiderMode(true);
+      expect(viewModel.state.isCoRiderModeEnabled, isTrue);
+      expect(viewModel.state.isLoudspeakerEnabled, isTrue);
+      expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
+      expect(viewModel.state.isOpenMic, isFalse);
+      expect(viewModel.state.isWindNoiseCancellationEnabled, isTrue);
+      expect(fakeTransport.audioSettings.coRiderModeEnabled, isTrue);
+      expect(fakeTransport.audioSettings.loudspeakerEnabled, isTrue);
+      await viewModel.toggleCoRiderMode(false);
+      expect(viewModel.state.isCoRiderModeEnabled, isFalse);
+      expect(fakeTransport.audioSettings.coRiderModeEnabled, isFalse);
     });
 
     test('toggleMute toggles mute state', () async {

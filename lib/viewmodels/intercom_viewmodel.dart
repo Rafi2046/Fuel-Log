@@ -89,6 +89,8 @@ class IntercomState {
     this.isHelmetAudioRouteEnabled = true,
     this.isMeshBridgeEnabled = true,
     this.isFecRecoveryEnabled = true,
+    this.isLoudspeakerEnabled = false,
+    this.isCoRiderModeEnabled = false,
     this.isMuted = false,
     this.isOpenMic = true,
     this.tourName = 'My Tour',
@@ -121,6 +123,8 @@ class IntercomState {
   final bool isHelmetAudioRouteEnabled;
   final bool isMeshBridgeEnabled;
   final bool isFecRecoveryEnabled;
+  final bool isLoudspeakerEnabled;
+  final bool isCoRiderModeEnabled;
   final bool isMuted;
   final bool isOpenMic;
   final String tourName;
@@ -150,6 +154,8 @@ class IntercomState {
     bool? isHelmetAudioRouteEnabled,
     bool? isMeshBridgeEnabled,
     bool? isFecRecoveryEnabled,
+    bool? isLoudspeakerEnabled,
+    bool? isCoRiderModeEnabled,
     bool? isMuted,
     bool? isOpenMic,
     String? tourName,
@@ -176,6 +182,8 @@ class IntercomState {
           isHelmetAudioRouteEnabled ?? this.isHelmetAudioRouteEnabled,
       isMeshBridgeEnabled: isMeshBridgeEnabled ?? this.isMeshBridgeEnabled,
       isFecRecoveryEnabled: isFecRecoveryEnabled ?? this.isFecRecoveryEnabled,
+      isLoudspeakerEnabled: isLoudspeakerEnabled ?? this.isLoudspeakerEnabled,
+      isCoRiderModeEnabled: isCoRiderModeEnabled ?? this.isCoRiderModeEnabled,
       isMuted: isMuted ?? this.isMuted,
       isOpenMic: isOpenMic ?? this.isOpenMic,
       tourName: tourName ?? this.tourName,
@@ -221,6 +229,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   static const _prefHelmetAudio = 'intercom_helmet_audio_enabled';
   static const _prefMeshBridge = 'intercom_mesh_bridge_enabled';
   static const _prefFecRecovery = 'intercom_fec_recovery_enabled';
+  static const _prefLoudspeaker = 'intercom_loudspeaker_enabled';
+  static const _prefCoRiderMode = 'intercom_co_rider_mode_enabled';
 
   /// Generates a cryptographically random 6-character uppercase join code.
   static String generateJoinCode() {
@@ -256,6 +266,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         isHelmetAudioRouteEnabled: prefs.getBool(_prefHelmetAudio) ?? true,
         isMeshBridgeEnabled: prefs.getBool(_prefMeshBridge) ?? true,
         isFecRecoveryEnabled: prefs.getBool(_prefFecRecovery) ?? true,
+        isLoudspeakerEnabled: prefs.getBool(_prefLoudspeaker) ?? false,
+        isCoRiderModeEnabled: prefs.getBool(_prefCoRiderMode) ?? false,
       );
       await _syncAudioSettingsToTransport();
     } catch (_) {}
@@ -274,6 +286,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       );
       await prefs.setBool(_prefMeshBridge, state.isMeshBridgeEnabled);
       await prefs.setBool(_prefFecRecovery, state.isFecRecoveryEnabled);
+      await prefs.setBool(_prefLoudspeaker, state.isLoudspeakerEnabled);
+      await prefs.setBool(_prefCoRiderMode, state.isCoRiderModeEnabled);
     } catch (_) {}
   }
 
@@ -282,6 +296,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
         helmetAudioRouteEnabled: state.isHelmetAudioRouteEnabled,
         meshBridgeEnabled: state.isMeshBridgeEnabled,
         fecRecoveryEnabled: state.isFecRecoveryEnabled,
+        loudspeakerEnabled: state.isLoudspeakerEnabled,
+        coRiderModeEnabled: state.isCoRiderModeEnabled,
       );
 
   Future<void> _syncAudioSettingsToTransport() {
@@ -543,7 +559,51 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   Future<void> toggleHelmetAudioRoute(bool? value) async {
     HapticFeedback.selectionClick();
     final enabled = value ?? !state.isHelmetAudioRouteEnabled;
-    state = state.copyWith(isHelmetAudioRouteEnabled: enabled);
+    state = state.copyWith(
+      isHelmetAudioRouteEnabled: enabled,
+      isLoudspeakerEnabled: enabled ? false : state.isLoudspeakerEnabled,
+      isCoRiderModeEnabled: enabled ? false : state.isCoRiderModeEnabled,
+    );
+    await _syncAudioSettingsToTransport();
+    await _saveAudioPreferences();
+  }
+
+  Future<void> toggleLoudspeaker(bool? value) async {
+    HapticFeedback.selectionClick();
+    final enabled = value ?? !state.isLoudspeakerEnabled;
+    if (enabled) {
+      state = state.copyWith(
+        isLoudspeakerEnabled: true,
+        isHelmetAudioRouteEnabled: false,
+        isCoRiderModeEnabled: false,
+      );
+    } else {
+      state = state.copyWith(
+        isLoudspeakerEnabled: false,
+        isCoRiderModeEnabled: false,
+      );
+    }
+    await _syncAudioSettingsToTransport();
+    await _saveAudioPreferences();
+  }
+
+  Future<void> toggleCoRiderMode(bool? value) async {
+    HapticFeedback.selectionClick();
+    final enabled = value ?? !state.isCoRiderModeEnabled;
+    if (enabled) {
+      state = state.copyWith(
+        isCoRiderModeEnabled: true,
+        isLoudspeakerEnabled: true,
+        isHelmetAudioRouteEnabled: false,
+        isWindNoiseCancellationEnabled: true,
+        isOpenMic: false,
+      );
+      if (state.isTransmitting) {
+        await setTransmitting(false);
+      }
+    } else {
+      state = state.copyWith(isCoRiderModeEnabled: false);
+    }
     await _syncAudioSettingsToTransport();
     await _saveAudioPreferences();
   }

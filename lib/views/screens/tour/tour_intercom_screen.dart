@@ -141,16 +141,22 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen> {
           IntercomSmartToggles(
             windNoiseEnabled: intercomState.isWindNoiseCancellationEnabled,
             helmetAudioEnabled: intercomState.isHelmetAudioRouteEnabled,
+            loudspeakerEnabled: intercomState.isLoudspeakerEnabled,
+            coRiderModeEnabled: intercomState.isCoRiderModeEnabled,
             meshBridgeEnabled: intercomState.isMeshBridgeEnabled,
             fecRecoveryEnabled: intercomState.isFecRecoveryEnabled,
             onWindNoiseChanged: intercomNotifier.toggleWindNoiseCancellation,
             onHelmetAudioChanged: intercomNotifier.toggleHelmetAudioRoute,
+            onLoudspeakerChanged: intercomNotifier.toggleLoudspeaker,
+            onCoRiderModeChanged: intercomNotifier.toggleCoRiderMode,
             onMeshBridgeChanged: intercomNotifier.toggleMeshBridge,
             onFecRecoveryChanged: intercomNotifier.toggleFecRecovery,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Tip: press and hold a volume button for push-to-talk with gloves on.',
+            intercomState.isCoRiderModeEnabled
+                ? 'Co-rider tip: hold PTT or a volume button to talk — wind filter keeps highway noise down.'
+                : 'Tip: press and hold a volume button for push-to-talk with gloves on.',
             textAlign: TextAlign.center,
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textTertiary,

@@ -9,6 +9,7 @@ import 'package:nearby_connections/nearby_connections.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
+import 'intercom_audio_route_service.dart';
 import 'intercom_audio_settings.dart';
 
 class NearbyAudioPacket {
@@ -82,17 +83,23 @@ class NearbyAudioTransport {
   bool get isRunning => _isRunning;
 
   Future<void> updateAudioSettings(IntercomAudioSettings settings) async {
-    final helmetRouteChanged = _audioSettings.helmetAudioRouteEnabled !=
-        settings.helmetAudioRouteEnabled;
+    final micConfigChanged = _audioSettings.helmetAudioRouteEnabled !=
+            settings.helmetAudioRouteEnabled ||
+        _audioSettings.loudspeakerEnabled != settings.loudspeakerEnabled ||
+        _audioSettings.coRiderModeEnabled != settings.coRiderModeEnabled;
     _audioSettings = settings;
 
     if (!_fecRecoveryEnabled) {
       _fecPlaybackPrimed = true;
-    } else if (!_fecPlaybackPrimed && _audioQueue.length >= _fecMinBufferChunks) {
+    } else if (!_fecPlaybackPrimed &&
+        _audioQueue.length >= _fecMinBufferChunks) {
       _fecPlaybackPrimed = true;
     }
 
-    if (helmetRouteChanged && _isTransmitting) {
+    await _applyAudioRoute();
+    await _applyPlaybackVolume();
+
+    if (micConfigChanged && _isTransmitting) {
       await stopTransmitting();
       await startTransmitting();
     }
@@ -100,10 +107,31 @@ class NearbyAudioTransport {
     debugPrint('[NearbyAudioTransport] Audio settings updated: $settings');
   }
 
+  Future<void> _applyAudioRoute() async {
+    final useSpeakerphone =
+        (_loudspeakerEnabled || _coRiderModeEnabled) && !_helmetAudioRouteEnabled;
+    await IntercomAudioRouteService.instance
+        .setSpeakerphoneEnabled(useSpeakerphone);
+  }
+
+  Future<void> _applyPlaybackVolume() async {
+    if (_player == null) return;
+    try {
+      final volume = _loudspeakerEnabled || _coRiderModeEnabled ? 1.0 : 0.88;
+      await _player!.setVolume(volume);
+    } catch (e) {
+      debugPrint('[NearbyAudioTransport] Volume set warning: $e');
+    }
+  }
+
   bool get _windNoiseFilterEnabled => _audioSettings.windNoiseFilterEnabled;
   bool get _helmetAudioRouteEnabled => _audioSettings.helmetAudioRouteEnabled;
   bool get _meshBridgeEnabled => _audioSettings.meshBridgeEnabled;
   bool get _fecRecoveryEnabled => _audioSettings.fecRecoveryEnabled;
+  bool get _loudspeakerEnabled => _audioSettings.loudspeakerEnabled;
+  bool get _coRiderModeEnabled => _audioSettings.coRiderModeEnabled;
+
+  double get _noiseGateThreshold => _coRiderModeEnabled ? 140.0 : 300.0;
 
   static const int _fecMinBufferChunks = 2;
 
@@ -159,6 +187,7 @@ class NearbyAudioTransport {
       debugPrint('[NearbyAudioTransport] Host advertising error: $e');
     }
 
+    await _applyAudioRoute();
     _setupAudioPacketListener();
   }
 
@@ -183,6 +212,7 @@ class NearbyAudioTransport {
 
     await _beginRiderDiscovery();
     _scheduleDiscoveryRefresh();
+    await _applyAudioRoute();
     _setupAudioPacketListener();
   }
 
@@ -332,8 +362,8 @@ class NearbyAudioTransport {
       if (_player == null) {
         _player = FlutterSoundPlayer();
         await _player!.openPlayer();
-        await _player!.setVolume(1.0);
       }
+      await _applyPlaybackVolume();
       await _startPlayerStream();
     } catch (e) {
       debugPrint('[NearbyAudioTransport] Player init warning: $e');
@@ -461,6 +491,21 @@ class NearbyAudioTransport {
       );
     }
 
+    if (_loudspeakerEnabled || _coRiderModeEnabled) {
+      return const RecordConfig(
+        encoder: AudioEncoder.pcm16bits,
+        sampleRate: sampleRate,
+        numChannels: numChannels,
+        autoGain: true,
+        echoCancel: true,
+        noiseSuppress: true,
+        androidConfig: AndroidRecordConfig(
+          audioSource: AndroidAudioSource.voiceCommunication,
+          audioManagerMode: AudioManagerMode.modeInCommunication,
+        ),
+      );
+    }
+
     return const RecordConfig(
       encoder: AudioEncoder.pcm16bits,
       sampleRate: sampleRate,
@@ -492,9 +537,9 @@ class NearbyAudioTransport {
     }
     final double rms = math.sqrt(sumSquared / numSamples);
 
-    // Noise Gate: If energy is below ambient hiss threshold (~300), suppress background hiss
-    if (rms < 300) {
-      return Uint8List(0); // Noise Gate cuts transmission when silent
+    // Noise Gate: suppress wind/ambient when below threshold.
+    if (rms < _noiseGateThreshold) {
+      return Uint8List(0);
     }
 
     // 2. High-Pass Filter (removes low-frequency wind turbulence & engine drone < 150Hz)
@@ -558,6 +603,7 @@ class NearbyAudioTransport {
     _connectedEndpoints.clear();
     _endpointNames.clear();
     _connectionStateController.add(_connectedEndpoints);
+    await IntercomAudioRouteService.instance.setSpeakerphoneEnabled(false);
     debugPrint('[NearbyAudioTransport] Stopped Nearby mesh.');
   }
 

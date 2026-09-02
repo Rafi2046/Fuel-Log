@@ -15,8 +15,12 @@ class IntercomSmartToggles extends StatelessWidget {
     required this.helmetAudioEnabled,
     required this.meshBridgeEnabled,
     required this.fecRecoveryEnabled,
+    required this.loudspeakerEnabled,
+    required this.coRiderModeEnabled,
     required this.onWindNoiseChanged,
     required this.onHelmetAudioChanged,
+    required this.onLoudspeakerChanged,
+    required this.onCoRiderModeChanged,
     required this.onMeshBridgeChanged,
     required this.onFecRecoveryChanged,
   });
@@ -25,8 +29,12 @@ class IntercomSmartToggles extends StatelessWidget {
   final bool helmetAudioEnabled;
   final bool meshBridgeEnabled;
   final bool fecRecoveryEnabled;
+  final bool loudspeakerEnabled;
+  final bool coRiderModeEnabled;
   final ValueChanged<bool> onWindNoiseChanged;
   final ValueChanged<bool> onHelmetAudioChanged;
+  final ValueChanged<bool> onLoudspeakerChanged;
+  final ValueChanged<bool> onCoRiderModeChanged;
   final ValueChanged<bool> onMeshBridgeChanged;
   final ValueChanged<bool> onFecRecoveryChanged;
 
@@ -67,7 +75,27 @@ class IntercomSmartToggles extends StatelessWidget {
                 title: 'Helmet audio',
                 subtitle: 'Route through Bluetooth / Sena',
                 value: helmetAudioEnabled,
+                enabled: !coRiderModeEnabled,
                 onChanged: onHelmetAudioChanged,
+              ),
+              _InsetDivider(indent: _dividerIndent),
+              _SettingRow(
+                icon: Icons.volume_up_rounded,
+                title: 'Loudspeaker',
+                subtitle: coRiderModeEnabled
+                    ? 'On for co-rider mode'
+                    : 'Play through phone speaker',
+                value: loudspeakerEnabled || coRiderModeEnabled,
+                enabled: !coRiderModeEnabled,
+                onChanged: onLoudspeakerChanged,
+              ),
+              _InsetDivider(indent: _dividerIndent),
+              _SettingRow(
+                icon: Icons.two_wheeler_rounded,
+                title: 'Co-rider mode',
+                subtitle: 'Same bike — PTT + speaker for driver & pillion',
+                value: coRiderModeEnabled,
+                onChanged: onCoRiderModeChanged,
               ),
               _InsetDivider(indent: _dividerIndent),
               _SettingRow(
@@ -116,6 +144,7 @@ class _SettingRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final IconData icon;
@@ -123,8 +152,10 @@ class _SettingRow extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final bool enabled;
 
   void _handleTap() {
+    if (!enabled) return;
     HapticFeedback.selectionClick();
     onChanged(!value);
   }
@@ -134,47 +165,55 @@ class _SettingRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: _handleTap,
+        onTap: enabled ? _handleTap : null,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: value ? AppColors.primary : AppColors.textTertiary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.body.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      subtitle,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 11,
-                        color: AppColors.textTertiary,
-                        height: 1.25,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+        child: Opacity(
+          opacity: enabled ? 1 : 0.45,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: value && enabled
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
                 ),
-              ),
-              const SizedBox(width: 8),
-              _CompactSwitch(value: value, onChanged: onChanged),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 11,
+                          color: AppColors.textTertiary,
+                          height: 1.25,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _CompactSwitch(
+                  value: value,
+                  onChanged: enabled ? onChanged : null,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -189,7 +228,7 @@ class _CompactSwitch extends StatelessWidget {
   });
 
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -198,10 +237,12 @@ class _CompactSwitch extends StatelessWidget {
       child: CupertinoSwitch(
         value: value,
         activeTrackColor: AppColors.primary,
-        onChanged: (next) {
-          HapticFeedback.selectionClick();
-          onChanged(next);
-        },
+        onChanged: onChanged == null
+            ? null
+            : (next) {
+                HapticFeedback.selectionClick();
+                onChanged!(next);
+              },
       ),
     );
   }
