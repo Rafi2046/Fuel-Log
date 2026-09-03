@@ -228,6 +228,24 @@ class AppDatabase extends _$AppDatabase {
     return rows.length;
   }
 
+  Future<bool> updateVehicleData({
+    required int id,
+    required String name,
+    String? model,
+    String? brand,
+    double? capacity,
+  }) async {
+    final rows = await (update(vehicles)..where((t) => t.id.equals(id))).write(
+      VehiclesCompanion(
+        name: Value(name),
+        model: Value(model == null || model.trim().isEmpty ? null : model.trim()),
+        brand: Value(brand == null || brand.trim().isEmpty ? null : brand.trim()),
+        capacity: capacity != null ? Value(capacity) : const Value.absent(),
+      ),
+    );
+    return rows > 0;
+  }
+
   /// Removes a vehicle and its associated reminders, fuel logs, service logs, trip logs, and documents.
   Future<void> deleteVehicle(int id) async {
     await (delete(eDocuments)..where((t) => t.vehicleId.equals(id))).go();

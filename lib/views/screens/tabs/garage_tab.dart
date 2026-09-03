@@ -6,12 +6,11 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
-import '../../../core/utils/vehicle_display.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_shimmer.dart';
-import '../../widgets/clean_glass_panel.dart';
 import '../vehicle_setup_screen.dart';
 import 'garage/confirm_delete_vehicle.dart';
+import 'garage/edit_vehicle_sheet.dart';
 import 'garage/widgets/garage_empty_state.dart';
 import 'garage/widgets/garage_slots_header.dart';
 import 'garage_vehicle_card.dart';
@@ -22,29 +21,6 @@ const int kMaxVehicles = 3;
 /// Garage tab listing vehicles with an Add Vehicle button.
 class GarageTab extends ConsumerWidget {
   const GarageTab({super.key});
-
-  /// Car vs bike icon from saved [Vehicle.type].
-  IconData _iconFor(Vehicle vehicle) => VehicleDisplay.iconFor(vehicle);
-
-  bool _isBike(Vehicle vehicle) => VehicleDisplay.isBike(vehicle);
-
-  String _typeLabel(Vehicle vehicle) =>
-      _isBike(vehicle) ? 'vehicleTypeBike'.tr() : 'vehicleTypeCar'.tr();
-
-  String _subtitle(Vehicle vehicle) {
-    final parts = <String>[
-      _typeLabel(vehicle),
-      if (vehicle.model != null && vehicle.model!.trim().isNotEmpty)
-        vehicle.model!.trim(),
-      _odometerLabel(vehicle.startOdo),
-    ];
-    return parts.join(' • ');
-  }
-
-  String _odometerLabel(double km) {
-    final formatted = NumberFormat('#,###').format(km.round());
-    return '$formatted km';
-  }
 
   Future<void> _onAddPressed(BuildContext context, int count) async {
     if (count >= kMaxVehicles) {
@@ -67,6 +43,13 @@ class GarageTab extends ConsumerWidget {
     await deleteVehicleWithConfirmation(context, ref, vehicle);
   }
 
+  Future<void> _onEditPressed(
+    BuildContext context,
+    Vehicle vehicle,
+  ) async {
+    await EditVehicleSheet.show(context, vehicle);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
@@ -80,6 +63,7 @@ class GarageTab extends ConsumerWidget {
     }
 
     final vehicles = vehiclesAsync.valueOrNull ?? [];
+    final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
     final isEmpty = vehicles.isEmpty;
 
     return AppRefreshIndicator(
@@ -100,46 +84,45 @@ class GarageTab extends ConsumerWidget {
               onAddPressed: () => _onAddPressed(context, 0),
             )
           else ...[
-            CleanGlassPanel(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Column(
-                children: [
-                  for (var i = 0; i < vehicles.length; i++)
-                    Dismissible(
-                      key: ValueKey('vehicle_${vehicles[i].id}'),
-                      direction: DismissDirection.endToStart,
-                      confirmDismiss: (_) async {
-                        await _confirmDelete(context, ref, vehicles[i]);
-                        return false;
-                      },
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: AppSpacing.md),
-                        color: AppColors.error.withValues(alpha: 0.12),
-                        child: const Icon(
-                          Icons.delete_outline_rounded,
-                          color: AppColors.error,
-                          size: 20,
-                        ),
-                      ),
-                      child: GarageVehicleCard(
-                        name: vehicles[i].name,
-                        subtitle: _subtitle(vehicles[i]),
-                        fuelType: vehicles[i].fuelType,
-                        icon: _iconFor(vehicles[i]),
-                        embedded: true,
-                        showDivider: i < vehicles.length - 1,
-                        onDelete: () =>
-                            _confirmDelete(context, ref, vehicles[i]),
-                      ),
-                    ),
-                ],
+            for (var i = 0; i < vehicles.length; i++) ...[
+              Dismissible(
+                key: ValueKey('vehicle_${vehicles[i].id}'),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) async {
+                  await _confirmDelete(context, ref, vehicles[i]);
+                  return false;
+                },
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                    size: 24,
+                  ),
+                ),
+                child: GarageVehicleCard(
+                  vehicle: vehicles[i],
+                  isActive: vehicles[i].id == selectedVehicleId,
+                  onTap: () => _onEditPressed(context, vehicles[i]),
+                  onSetCurrent: () {
+                    ref
+                        .read(selectedVehicleIdProvider.notifier)
+                        .select(vehicles[i].id);
+                  },
+                  onDelete: () =>
+                      _confirmDelete(context, ref, vehicles[i]),
+                ),
               ),
-            ),
+              if (i < vehicles.length - 1) const SizedBox(height: 12),
+            ],
           ],
           if (!isEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             _GarageAddButton(
               label: 'addNewVehicle'.tr(),
               onPressed: vehicles.length >= kMaxVehicles

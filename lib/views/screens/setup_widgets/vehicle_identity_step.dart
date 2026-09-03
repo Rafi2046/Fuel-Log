@@ -15,12 +15,14 @@ class VehicleIdentityStep extends StatelessWidget {
     required this.onTypeChanged,
     required this.nameController,
     required this.modelController,
+    required this.registrationController,
   });
 
   final VehicleType selectedType;
   final ValueChanged<VehicleType> onTypeChanged;
   final TextEditingController nameController;
   final TextEditingController modelController;
+  final TextEditingController registrationController;
 
   @override
   Widget build(BuildContext context) {
@@ -122,10 +124,27 @@ class VehicleIdentityStep extends StatelessWidget {
                 ),
                 _IdentityInputRow(
                   label: 'Model (Optional)',
-                  hint: 'e.g., Toyota Axio, Yamaha R15',
+                  hint: selectedType == VehicleType.car
+                      ? 'e.g., Toyota Axio, Honda Civic'
+                      : 'e.g., Yamaha R15, Pulsar NS',
                   controller: modelController,
+                  icon: Icons.commute_rounded,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.border.withValues(alpha: 0.6),
+                  indent: 64,
+                ),
+                _IdentityInputRow(
+                  label: 'Registration No. (Optional)',
+                  hint: 'e.g., Dhaka Metro-HA 12-3456',
+                  controller: registrationController,
                   icon: Icons.badge_outlined,
                   textInputAction: TextInputAction.done,
+                  textCapitalization: TextCapitalization.characters,
                 ),
               ],
             ),
@@ -144,6 +163,7 @@ class _IdentityInputRow extends StatelessWidget {
     required this.controller,
     required this.icon,
     this.textInputAction = TextInputAction.next,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final String label;
@@ -151,6 +171,7 @@ class _IdentityInputRow extends StatelessWidget {
   final TextEditingController controller;
   final IconData icon;
   final TextInputAction textInputAction;
+  final TextCapitalization textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +212,7 @@ class _IdentityInputRow extends StatelessWidget {
                 TextField(
                   controller: controller,
                   textInputAction: textInputAction,
+                  textCapitalization: textCapitalization,
                   style: AppTextStyles.body.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,

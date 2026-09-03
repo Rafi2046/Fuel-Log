@@ -4,159 +4,375 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../widgets/clean_glass_panel.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/utils/vehicle_display.dart';
 
-/// Vehicle row for the garage list.
+/// Luxury automotive garage vehicle card with clean status and metrics.
 class GarageVehicleCard extends StatelessWidget {
   const GarageVehicleCard({
     super.key,
-    required this.name,
-    required this.subtitle,
-    required this.fuelType,
-    required this.icon,
+    required this.vehicle,
+    required this.isActive,
+    required this.onTap,
+    required this.onSetCurrent,
     required this.onDelete,
-    this.embedded = false,
-    this.showDivider = false,
   });
 
-  final String name;
-  final String subtitle;
-  final String fuelType;
-  final IconData icon;
+  final Vehicle vehicle;
+  final bool isActive;
+  final VoidCallback onTap;
+  final VoidCallback onSetCurrent;
   final VoidCallback onDelete;
-  final bool embedded;
-  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
-    final row = Padding(
-      padding: EdgeInsets.fromLTRB(
-        embedded ? 12 : AppSpacing.md,
-        embedded ? 11 : AppSpacing.md,
-        embedded ? 4 : AppSpacing.sm,
-        embedded ? 11 : AppSpacing.md,
+    final isBike = VehicleDisplay.isBike(vehicle);
+    final icon = VehicleDisplay.iconFor(vehicle);
+    final regNo = vehicle.brand?.trim();
+    final hasReg = regNo != null && regNo.isNotEmpty;
+    final modelText = vehicle.model?.trim();
+    final hasModel = modelText != null && modelText.isNotEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.55)
+              : AppColors.border,
+          width: isActive ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isActive
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.25),
+            blurRadius: isActive ? 16 : 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
-        children: [
-          _VehicleIconBadge(icon: icon),
-          const SizedBox(width: 12),
-          Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
+                // Top Header Row
                 Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.label.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                    // Vehicle Icon Badge
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : Colors.white.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isActive
+                              ? AppColors.primary.withValues(alpha: 0.35)
+                              : Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
+                      child: Icon(
+                        icon,
+                        color: isActive
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        size: 22,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    _FuelChip(label: fuelType),
+                    const SizedBox(width: 14),
+
+                    // Title & Model
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            vehicle.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.title.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            hasModel
+                                ? '${vehicle.type} • $modelText'
+                                : vehicle.type,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Active Badge or Select Button
+                    if (isActive)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.success.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: AppColors.success,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            const Text(
+                              'ACTIVE',
+                              style: TextStyle(
+                                color: AppColors.success,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: onSetCurrent,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.14),
+                            ),
+                          ),
+                          child: Text(
+                            'Select',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(width: 4),
+
+                    // 3-Dots Action Menu
+                    PopupMenuButton<String>(
+                      icon: const Icon(
+                        Icons.more_vert_rounded,
+                        color: AppColors.textTertiary,
+                        size: 20,
+                      ),
+                      color: AppColors.cardElevated,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        side: const BorderSide(color: AppColors.border),
+                      ),
+                      onSelected: (val) {
+                        if (val == 'edit') onTap();
+                        if (val == 'select') onSetCurrent();
+                        if (val == 'delete') onDelete();
+                      },
+                      itemBuilder: (context) => [
+                        if (!isActive)
+                          const PopupMenuItem(
+                            value: 'select',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  size: 18,
+                                  color: AppColors.success,
+                                ),
+                                SizedBox(width: 10),
+                                Text('Set as Active'),
+                              ],
+                            ),
+                          ),
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
+                              SizedBox(width: 10),
+                              Text('Edit Vehicle'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: AppColors.error,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Delete',
+                                style: TextStyle(color: AppColors.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textTertiary,
-                    fontSize: 11,
-                    height: 1.35,
-                  ),
+
+                const SizedBox(height: 12),
+
+                // Specs Chips Row
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _MetricChip(
+                      icon: Icons.speed_rounded,
+                      label:
+                          '${NumberFormat('#,###').format(vehicle.startOdo.round())} km',
+                    ),
+                    _MetricChip(
+                      icon: vehicle.isElectric
+                          ? Icons.ev_station_rounded
+                          : Icons.local_gas_station_rounded,
+                      label: vehicle.fuelType,
+                    ),
+                    if (vehicle.capacity > 0)
+                      _MetricChip(
+                        icon: vehicle.isElectric
+                            ? Icons.battery_charging_full_rounded
+                            : Icons.opacity_rounded,
+                        label:
+                            '${vehicle.capacity.toStringAsFixed(vehicle.capacity.truncateToDouble() == vehicle.capacity ? 0 : 1)} ${vehicle.isElectric ? 'kWh' : 'L'}',
+                      ),
+                  ],
                 ),
+
+                // License Plate Tag (if available)
+                if (hasReg) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isBike
+                              ? Icons.two_wheeler_outlined
+                              : Icons.directions_car_outlined,
+                          size: 13,
+                          color: AppColors.textTertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          regNo.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'delete'.tr(),
-            onPressed: onDelete,
-            visualDensity: VisualDensity.compact,
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: 19,
-              color: AppColors.textTertiary.withValues(alpha: 0.75),
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-
-    if (embedded) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          row,
-          if (showDivider)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Divider(
-                height: 1,
-                thickness: 1,
-                color: Colors.white.withValues(alpha: 0.06),
-              ),
-            ),
-        ],
-      );
-    }
-
-    return CleanGlassPanel(
-      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      child: row,
     );
   }
 }
 
-class _VehicleIconBadge extends StatelessWidget {
-  const _VehicleIconBadge({required this.icon});
+class _MetricChip extends StatelessWidget {
+  const _MetricChip({
+    required this.icon,
+    required this.label,
+  });
 
   final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Icon(icon, color: AppColors.primary, size: 21),
-    );
-  }
-}
-
-class _FuelChip extends StatelessWidget {
-  const _FuelChip({required this.label});
-
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: Colors.white.withValues(alpha: 0.035),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
-      child: Text(
-        label,
-        style: AppTextStyles.caption.copyWith(
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w600,
-          fontSize: 9,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 13,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -28,7 +28,9 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
   VehicleType _selectedType = VehicleType.car;
   final _nameController = TextEditingController();
   final _modelController = TextEditingController();
+  final _regNumberController = TextEditingController();
   final _odometerController = TextEditingController();
+  final _oilIntervalController = TextEditingController(text: '5000');
   final _capacityController = TextEditingController();
   String _selectedFuelType = 'Petrol';
 
@@ -37,7 +39,9 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
     _pageController.dispose();
     _nameController.dispose();
     _modelController.dispose();
+    _regNumberController.dispose();
     _odometerController.dispose();
+    _oilIntervalController.dispose();
     _capacityController.dispose();
     super.dispose();
   }
@@ -48,6 +52,11 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
       final options = FuelOptions.forVehicleType(type);
       if (!options.contains(_selectedFuelType)) {
         _selectedFuelType = options.first;
+      }
+      if (type == VehicleType.bike && _oilIntervalController.text == '5000') {
+        _oilIntervalController.text = '2000';
+      } else if (type == VehicleType.car && _oilIntervalController.text == '2000') {
+        _oilIntervalController.text = '5000';
       }
     });
   }
@@ -76,9 +85,12 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
   Future<void> _onSaveVehicle() async {
     final name = _nameController.text.trim();
     final model = _modelController.text.trim();
+    final regNo = _regNumberController.text.trim();
     final startOdo = double.tryParse(_odometerController.text.trim());
     final capacity = double.tryParse(_capacityController.text.trim());
     final isElectric = FuelOptions.isElectric(_selectedFuelType);
+    final oilInterval = double.tryParse(_oilIntervalController.text.trim()) ??
+        (_selectedType == VehicleType.bike ? 2000.0 : 5000.0);
 
     if (name.isEmpty) {
       _showMessage('Please enter a vehicle name.');
@@ -101,10 +113,12 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
           type: _selectedType == VehicleType.car ? 'Car' : 'Bike',
           name: name,
           model: model.isEmpty ? null : model,
+          brand: regNo.isEmpty ? null : regNo,
           startOdo: startOdo,
           capacity: capacity,
           fuelType: _selectedFuelType,
           isElectric: isElectric,
+          oilIntervalKm: isElectric ? null : oilInterval,
         );
 
     if (!mounted) return;
@@ -170,10 +184,12 @@ class _VehicleSetupScreenState extends ConsumerState<VehicleSetupScreen> {
                         onTypeChanged: _onTypeChanged,
                         nameController: _nameController,
                         modelController: _modelController,
+                        registrationController: _regNumberController,
                       ),
                       VehicleSpecsStep(
                         vehicleType: _selectedType,
                         odometerController: _odometerController,
+                        oilIntervalController: _oilIntervalController,
                         capacityController: _capacityController,
                         selectedFuelType: _selectedFuelType,
                         onFuelTypeChanged: _onFuelTypeChanged,

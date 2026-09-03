@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/database/app_database.dart';
 import '../core/services/active_vehicle_prefs.dart';
+import '../core/services/reminder_repository.dart';
+import '../models/reminder_model.dart';
 
 /// App-wide Drift database instance.
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -112,6 +114,7 @@ class VehicleViewModel extends StateNotifier<AsyncValue<void>> {
     required double capacity,
     required String fuelType,
     required bool isElectric,
+    double? oilIntervalKm,
   }) async {
     state = const AsyncLoading();
     try {
@@ -120,7 +123,7 @@ class VehicleViewModel extends StateNotifier<AsyncValue<void>> {
         state = const AsyncData(null);
         return false;
       }
-      await _db.insertVehicle(
+      final newId = await _db.insertVehicle(
         VehiclesCompanion.insert(
           type: type,
           name: name,
@@ -136,8 +139,55 @@ class VehicleViewModel extends StateNotifier<AsyncValue<void>> {
           isElectric: Value(isElectric),
         ),
       );
+
+      // Auto-register initial Engine Oil reminder for combustion vehicles
+      if (!isElectric && oilIntervalKm != null && oilIntervalKm > 0) {
+        final now = DateTime.now();
+        final isBike = type.toLowerCase() == 'bike';
+        await ReminderRepository.instance.addReminder(
+          ServiceReminder(
+            id: '${newId}_oil_${now.millisecondsSinceEpoch}',
+            vehicleId: newId,
+            title: isBike ? 'Engine Oil Change' : 'Engine Oil & Filter Change',
+            serviceType: ServiceType.engineOil,
+            lastServiceOdo: startOdo,
+            lastServiceDate: now,
+            intervalKm: oilIntervalKm,
+            intervalDays: isBike ? 60 : 180,
+            notes: isBike
+                ? 'Recommended oil: 10W-40 / 20W-50'
+                : 'Recommended oil: 5W-30 / 10W-40 with OEM filter',
+            isRecurring: true,
+          ),
+        );
+      }
+
       state = const AsyncData(null);
       return true;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      return false;
+    }
+  }
+
+  Future<bool> updateVehicle({
+    required int id,
+    required String name,
+    String? model,
+    String? brand,
+    double? capacity,
+  }) async {
+    state = const AsyncLoading();
+    try {
+      final success = await _db.updateVehicleData(
+        id: id,
+        name: name,
+        model: model,
+        brand: brand,
+        capacity: capacity,
+      );
+      state = const AsyncData(null);
+      return success;
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
       return false;

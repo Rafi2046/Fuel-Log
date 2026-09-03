@@ -13,6 +13,7 @@ class VehicleSpecsStep extends StatelessWidget {
     super.key,
     required this.vehicleType,
     required this.odometerController,
+    required this.oilIntervalController,
     required this.capacityController,
     required this.selectedFuelType,
     required this.onFuelTypeChanged,
@@ -20,6 +21,7 @@ class VehicleSpecsStep extends StatelessWidget {
 
   final VehicleType vehicleType;
   final TextEditingController odometerController;
+  final TextEditingController oilIntervalController;
   final TextEditingController capacityController;
   final String selectedFuelType;
   final ValueChanged<String?> onFuelTypeChanged;
@@ -92,6 +94,24 @@ class VehicleSpecsStep extends StatelessWidget {
                   textInputAction: TextInputAction.next,
                   unitBadge: 'KM',
                 ),
+                if (!isEV) ...[
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: AppColors.border.withValues(alpha: 0.6),
+                    indent: 64,
+                  ),
+                  _SpecsInputRow(
+                    label: 'Engine Oil Interval',
+                    hint: vehicleType == VehicleType.bike ? '2000' : '5000',
+                    controller: oilIntervalController,
+                    icon: Icons.water_drop_outlined,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textInputAction: TextInputAction.next,
+                    unitBadge: 'KM',
+                  ),
+                ],
                 Divider(
                   height: 1,
                   thickness: 1,
@@ -151,7 +171,9 @@ class VehicleSpecsStep extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Starting odometer and capacity calibrate your fuel economy, range calculations, and cost per km.',
+                    isEV
+                        ? 'Starting odometer and battery capacity calibrate energy economy and range per kWh.'
+                        : 'Starting odometer calibrates fuel economy, while oil interval sets up your first automatic maintenance alert.',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textSecondary,
                       fontSize: 12,
