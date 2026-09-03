@@ -177,6 +177,7 @@ class _HomeContent extends StatelessWidget {
             onTapCostPerKm: () {
               CostPerKmDetailSheet.show(
                 context,
+                vehicle: vehicle,
                 costPerKm: costPerKm,
                 totalFuelSpend: totalFuelSpend,
                 totalServiceSpend: totalServiceSpend,
