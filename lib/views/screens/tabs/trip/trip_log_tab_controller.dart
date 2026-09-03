@@ -461,62 +461,167 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     if (Platform.isAndroid) {
       return AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 2,
-        intervalDuration: const Duration(seconds: 1),
+        distanceFilter: 3,
+        intervalDuration: const Duration(seconds: 2),
+        forceLocationManager: false,
       );
     }
     if (Platform.isIOS) {
       return AppleSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 2,
+        distanceFilter: 3,
         activityType: ActivityType.automotiveNavigation,
         pauseLocationUpdatesAutomatically: false,
         showBackgroundLocationIndicator: true,
+        allowBackgroundLocationUpdates: true,
       );
     }
     return const LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 2,
+      distanceFilter: 3,
     );
+  }
+
+  // ── GPS Trip Tracking — Production-Grade Algorithm ─────────────────────
+
+  // Kalman-inspired position filter state.
+  double _kalmanLat = 0;
+  double _kalmanLng = 0;
+  double _kalmanVariance = 1e6; // starts uncertain
+  int _consecutiveRejects = 0;
+  int _acceptedSamples = 0;
+  double _maxSpeedSoFar = 0;
+
+  // Tuning constants.
+  static const _accuracyHardCap = 30.0; // reject anything worse than 30m
+  static const _minMovementM = 5.0; // minimum Haversine delta to count
+  static const _maxJumpM = 180.0; // reject teleports > 180m (~650 km/h)
+  static const _minSpeedMs = 1.2; // ~4.3 km/h — walking pace floor
+  static const _driftAnchorM = 25.0; // reset anchor without adding distance
+  static const _coldStartSamples = 3; // discard first N for GPS warm-up
+  static const _processNoisePerSec = 4.0; // m² per second of process noise
+
+  /// 1-D Kalman update for latitude or longitude (in meters).
+  double _kalman1D(double measured, double current, double measVariance) {
+    final gain = _kalmanVariance / (_kalmanVariance + measVariance);
+    final updated = current + gain * (measured - current);
+    _kalmanVariance = (1 - gain) * _kalmanVariance;
+    return updated;
+  }
+
+  void _kalmanPredict(double dtSec) {
+    _kalmanVariance += _processNoisePerSec * dtSec;
   }
 
   void _handleTripGpsPosition(Position position) {
     if (!mounted) return;
     if (!_isGeneralTripTracking && !_isNavigating) return;
-    if (position.accuracy > 40) return;
 
-    final currentLatLng = LatLng(position.latitude, position.longitude);
+    // ── Gate 1: hard accuracy reject ──
+    if (position.accuracy > _accuracyHardCap) {
+      _consecutiveRejects++;
+      // After many consecutive rejects, relax slightly to avoid total blackout.
+      if (_consecutiveRejects < 10 || position.accuracy > 50) return;
+    }
+    _consecutiveRejects = 0;
+
+    final rawLatLng = LatLng(position.latitude, position.longitude);
     final sampleTime = position.timestamp;
+    final measVariance = position.accuracy * position.accuracy;
 
+    // ── Gate 2: Kalman filter ──
+    LatLng filteredLatLng;
+    if (_lastGpsPoint == null || _kalmanVariance > 1e5) {
+      // Cold start — seed filter with this reading.
+      _kalmanLat = position.latitude;
+      _kalmanLng = position.longitude;
+      _kalmanVariance = measVariance;
+      filteredLatLng = rawLatLng;
+    } else {
+      final dtSec = _lastGpsAt != null
+          ? sampleTime.difference(_lastGpsAt!).inMilliseconds / 1000.0
+          : 1.0;
+      if (dtSec <= 0) return;
+
+      _kalmanPredict(dtSec);
+
+      // Reject measurements that are too far from prediction (chi² gate).
+      final innovLat = position.latitude - _kalmanLat;
+      final innovLng = position.longitude - _kalmanLng;
+      // Approximate meters from degree delta at this latitude.
+      final mPerDegLat = 111320.0;
+      final mPerDegLng =
+          111320.0 * cos(_kalmanLat * pi / 180.0);
+      final innovM = sqrt(
+        (innovLat * mPerDegLat) * (innovLat * mPerDegLat) +
+            (innovLng * mPerDegLng) * (innovLng * mPerDegLng),
+      );
+      final totalVariance = _kalmanVariance + measVariance;
+      final chiSq = (innovM * innovM) / totalVariance;
+
+      // 3-sigma gate (~99.7%) — reject wild outliers.
+      if (chiSq > 9.0 && _acceptedSamples > _coldStartSamples) {
+        // Don't update filter; discard this sample.
+        return;
+      }
+
+      _kalmanLat = _kalman1D(position.latitude, _kalmanLat, measVariance);
+      _kalmanLng = _kalman1D(position.longitude, _kalmanLng, measVariance);
+      filteredLatLng = LatLng(_kalmanLat, _kalmanLng);
+    }
+
+    _acceptedSamples++;
+
+    // ── Gate 3: distance + speed validation ──
     if (_lastGpsPoint != null && _lastGpsAt != null) {
       final deltaM = _distanceCalc.as(
         LengthUnit.Meter,
         _lastGpsPoint!,
-        currentLatLng,
+        filteredLatLng,
       );
       final elapsedSec =
           sampleTime.difference(_lastGpsAt!).inMilliseconds / 1000.0;
+
       if (elapsedSec > 0) {
+        // Prefer device-reported speed when valid (> 0 and not 0.0 fallback).
+        final deviceSpeedMs =
+            position.speed > 0.1 && position.speedAccuracy < 5.0
+                ? position.speed
+                : null;
         final impliedSpeedMs = deltaM / elapsedSec;
-        final deviceSpeedMs = position.speed >= 0 ? position.speed : null;
         final speedMs = deviceSpeedMs ?? impliedSpeedMs;
 
-        // Ignore GPS drift when barely moving; cap unrealistic jumps.
-        final moving = speedMs >= 0.8 && deltaM >= 4.0 && deltaM < 250.0;
-        final accurateEnough = position.accuracy <= 25 || speedMs >= 2.0;
+        // Track max observed speed for adaptive jump capping.
+        if (speedMs > _minSpeedMs && speedMs < 50) {
+          _maxSpeedSoFar = max(_maxSpeedSoFar, speedMs);
+        }
 
-        if (moving && accurateEnough) {
+        // Adaptive jump cap: max(180m, 3× maxSpeed × dt).
+        final adaptiveJumpCap =
+            max(_maxJumpM, _maxSpeedSoFar * 3.0 * elapsedSec);
+
+        final isMoving = speedMs >= _minSpeedMs &&
+            deltaM >= _minMovementM &&
+            deltaM < adaptiveJumpCap;
+        final isAccurate =
+            position.accuracy <= 20 || speedMs >= 3.0;
+
+        // Skip first few samples (GPS warm-up jitter).
+        final warmedUp = _acceptedSamples > _coldStartSamples;
+
+        if (isMoving && isAccurate && warmedUp) {
           _tripDistanceCoveredKm += deltaM / 1000.0;
-          _lastGpsPoint = currentLatLng;
-          _tripTrackPoints.add(currentLatLng);
-        } else if (deltaM >= 20.0) {
-          _lastGpsPoint = currentLatLng;
+          _lastGpsPoint = filteredLatLng;
+          _tripTrackPoints.add(filteredLatLng);
+        } else if (deltaM >= _driftAnchorM) {
+          // Stationary drift reset — move anchor without adding distance.
+          _lastGpsPoint = filteredLatLng;
         }
       }
     } else {
-      _lastGpsPoint = currentLatLng;
+      _lastGpsPoint = filteredLatLng;
       if (_tripTrackPoints.isEmpty) {
-        _tripTrackPoints.add(currentLatLng);
+        _tripTrackPoints.add(filteredLatLng);
       }
     }
     _lastGpsAt = sampleTime;
@@ -527,17 +632,20 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       destination: _navigatingStation?.name,
     );
 
+    // Update map / navigation state with filtered position.
+    final displayLatLng = filteredLatLng;
+
     if (_isNavigating && _navigatingStation != null) {
       final remainingMeters = _distanceCalc.as(
         LengthUnit.Meter,
-        currentLatLng,
+        displayLatLng,
         _navigatingStation!.location,
       );
       final speedMs = position.speed > 1.0 ? position.speed : 6.9;
       final remainingSeconds = (remainingMeters / speedMs).round();
 
       setState(() {
-        _userLocation = currentLatLng;
+        _userLocation = displayLatLng;
         if (_activeRoute != null) {
           _activeRoute = NavigationRouteResult(
             points: _activeRoute!.points,
@@ -552,13 +660,13 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
         _onArrivedAtStation(_navigatingStation!);
       }
     } else {
-      setState(() => _userLocation = currentLatLng);
+      setState(() => _userLocation = displayLatLng);
     }
 
     if (_isGeneralTripTracking || _isNavigating) {
       final z = _canMoveMap ? _mapController.camera.zoom : _mapZoom;
       _animatedMapMove(
-        currentLatLng,
+        displayLatLng,
         z,
         duration: const Duration(milliseconds: 140),
         curve: Curves.linear,
@@ -573,8 +681,14 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _tripStartLocation = _userLocation;
     _tripDuration = Duration.zero;
     _tripDistanceCoveredKm = 0.0;
-    _lastGpsPoint = _userLocation;
-    _lastGpsAt = DateTime.now();
+    _lastGpsPoint = null;
+    _lastGpsAt = null;
+    _kalmanLat = 0;
+    _kalmanLng = 0;
+    _kalmanVariance = 1e6;
+    _consecutiveRejects = 0;
+    _acceptedSamples = 0;
+    _maxSpeedSoFar = 0;
     _tripTrackPoints
       ..clear()
       ..add(_userLocation);
@@ -597,6 +711,12 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     _tripStartLocation = null;
     _tripStartedAt = null;
     _tripTrackPoints.clear();
+    _kalmanLat = 0;
+    _kalmanLng = 0;
+    _kalmanVariance = 1e6;
+    _consecutiveRejects = 0;
+    _acceptedSamples = 0;
+    _maxSpeedSoFar = 0;
   }
 
   Future<void> _openTripEntryWithGpsPrefill({
