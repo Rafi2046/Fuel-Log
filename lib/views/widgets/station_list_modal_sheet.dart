@@ -299,9 +299,6 @@ class _StationListRowItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dist = _getDist(station.distance);
-    final area = _getArea(station.distance);
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
@@ -371,18 +368,35 @@ class _StationListRowItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
 
-                      // Line 2: Distance First • Street Name (Never truncated!)
+                      // Line 2: ETA • drive distance • area
                       Row(
                         children: [
+                          if (station.formattedEta != null) ...[
+                            Text(
+                              station.formattedEta!,
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              ' • ',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                           Text(
-                            dist,
+                            station.formattedDistanceBadge,
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.primary,
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if (area.isNotEmpty && area != dist) ...[
+                          if (station.addressHint.isNotEmpty) ...[
                             Text(
                               ' • ',
                               style: AppTextStyles.caption.copyWith(
@@ -392,7 +406,7 @@ class _StationListRowItem extends StatelessWidget {
                             ),
                             Flexible(
                               child: Text(
-                                area,
+                                station.addressHint,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTextStyles.caption.copyWith(
@@ -478,19 +492,5 @@ class _StationListRowItem extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _getArea(String distanceStr) {
-    if (distanceStr.contains('•')) {
-      return distanceStr.split('•').first.trim();
-    }
-    return distanceStr;
-  }
-
-  static String _getDist(String distanceStr) {
-    if (distanceStr.contains('•')) {
-      return distanceStr.split('•').last.trim();
-    }
-    return distanceStr;
   }
 }

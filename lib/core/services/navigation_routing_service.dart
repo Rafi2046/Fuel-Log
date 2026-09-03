@@ -163,6 +163,65 @@ class NavigationRoutingService {
     );
   }
 
+  /// Batch road distances from [origin] to each destination via OSRM table API.
+  Future<List<DrivingDistanceResult?>> getDrivingDistancesTable({
+    required LatLng origin,
+    required List<LatLng> destinations,
+  }) async {
+    if (destinations.isEmpty) return const [];
+
+    final allPoints = [origin, ...destinations];
+    final coordPath = allPoints
+        .map((p) => '${p.longitude},${p.latitude}')
+        .join(';');
+
+    try {
+      final url = Uri.parse(
+        'https://router.project-osrm.org/table/v1/driving/'
+        '$coordPath?sources=0&annotations=distance,duration',
+      );
+
+      final response = await http.get(url).timeout(
+        const Duration(seconds: 8),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final distances =
+            (data['distances'] as List<dynamic>?)?.cast<List<dynamic>>();
+        final durations =
+            (data['durations'] as List<dynamic>?)?.cast<List<dynamic>>();
+
+        if (distances != null &&
+            durations != null &&
+            distances.isNotEmpty &&
+            distances.first.length >= destinations.length + 1) {
+          final row = distances.first;
+          final durRow = durations.first;
+          final results = <DrivingDistanceResult?>[];
+
+          for (var i = 0; i < destinations.length; i++) {
+            final dist = (row[i + 1] as num?)?.toDouble();
+            final dur = (durRow[i + 1] as num?)?.toDouble();
+            if (dist != null && dist > 0 && dur != null && dur > 0) {
+              results.add(
+                DrivingDistanceResult(
+                  distanceMeters: dist,
+                  durationSeconds: dur.round(),
+                ),
+              );
+            } else {
+              results.add(null);
+            }
+          }
+          return results;
+        }
+      }
+    } catch (_) {}
+
+    return List<DrivingDistanceResult?>.filled(destinations.length, null);
+  }
+
   /// Launches Google Maps / Apple Maps / Native GPS app for turn-by-turn voice directions
   Future<bool> launchExternalMaps({
     required LatLng destination,
@@ -196,4 +255,15 @@ class NavigationRoutingService {
 
     return false;
   }
+}
+
+/// Road distance + duration for one destination from a routing table lookup.
+class DrivingDistanceResult {
+  const DrivingDistanceResult({
+    required this.distanceMeters,
+    required this.durationSeconds,
+  });
+
+  final double distanceMeters;
+  final int durationSeconds;
 }

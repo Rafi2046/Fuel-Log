@@ -97,20 +97,35 @@ class StationCarouselCard extends StatelessWidget {
                         ],
                       ),
 
-                      // Middle row: Distance First • Area + Rating
+                      // Middle row: drive distance, ETA, area, rating
                       Row(
                         children: [
+                          if (station.formattedEta != null) ...[
+                            Text(
+                              station.formattedEta!,
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              ' • ',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 10.5,
+                              ),
+                            ),
+                          ],
                           Text(
-                            _getDist(station.distance),
+                            station.formattedDistanceBadge,
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w700,
                               fontSize: 11,
                             ),
                           ),
-                          if (_getArea(station.distance).isNotEmpty &&
-                              _getArea(station.distance) !=
-                                  _getDist(station.distance)) ...[
+                          if (station.addressHint.isNotEmpty) ...[
                             Text(
                               ' • ',
                               style: AppTextStyles.caption.copyWith(
@@ -120,7 +135,7 @@ class StationCarouselCard extends StatelessWidget {
                             ),
                             Flexible(
                               child: Text(
-                                _getArea(station.distance),
+                                station.addressHint,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTextStyles.caption.copyWith(
@@ -214,19 +229,5 @@ class StationCarouselCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _getArea(String distanceStr) {
-    if (distanceStr.contains('•')) {
-      return distanceStr.split('•').first.trim();
-    }
-    return distanceStr;
-  }
-
-  static String _getDist(String distanceStr) {
-    if (distanceStr.contains('•')) {
-      return distanceStr.split('•').last.trim();
-    }
-    return distanceStr;
   }
 }

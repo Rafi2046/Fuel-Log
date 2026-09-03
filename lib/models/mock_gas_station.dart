@@ -16,6 +16,12 @@ class MockGasStation {
   final String addressHint;
   /// Google Places photo resource name (user-contributed Maps photos).
   final String? googlePhotoResource;
+  /// Straight-line (air) distance from the user.
+  final double straightLineMeters;
+  /// Road driving distance from OSRM when available.
+  final double? drivingDistanceMeters;
+  /// Estimated driving time in seconds from OSRM when available.
+  final int? drivingDurationSeconds;
 
   const MockGasStation({
     required this.id,
@@ -28,7 +34,49 @@ class MockGasStation {
     this.stationInfo,
     this.addressHint = '',
     this.googlePhotoResource,
+    this.straightLineMeters = 0,
+    this.drivingDistanceMeters,
+    this.drivingDurationSeconds,
   });
+
+  /// Distance used for sorting — prefers road distance when known.
+  double get sortDistanceMeters =>
+      drivingDistanceMeters ?? straightLineMeters;
+
+  /// Primary distance label for UI (e.g. "4.1 km drive" or "1.1 km away").
+  String get formattedDistanceBadge {
+    if (drivingDistanceMeters != null && drivingDistanceMeters! > 0) {
+      return '${_formatMeters(drivingDistanceMeters!)} drive';
+    }
+    if (straightLineMeters > 0) {
+      return '${_formatMeters(straightLineMeters)} away';
+    }
+    return _extractDistanceFromLegacyString();
+  }
+
+  /// ETA label when road routing is available (e.g. "17 min").
+  String? get formattedEta {
+    final seconds = drivingDurationSeconds;
+    if (seconds == null || seconds <= 0) return null;
+    final mins = (seconds / 60).round();
+    if (mins < 1) return '1 min';
+    if (mins >= 60) {
+      final hours = mins ~/ 60;
+      final rem = mins % 60;
+      return rem == 0 ? '${hours}h' : '${hours}h ${rem}m';
+    }
+    return '$mins min';
+  }
+
+  static String _formatMeters(double meters) {
+    if (meters < 1000) return '${meters.round()} m';
+    return '${(meters / 1000).toStringAsFixed(1)} km';
+  }
+
+  String _extractDistanceFromLegacyString() {
+    if (!distance.contains('•')) return distance;
+    return distance.split('•').last.trim();
+  }
 
   bool get usesGooglePhoto =>
       googlePhotoResource != null && googlePhotoResource!.isNotEmpty;
@@ -44,6 +92,9 @@ class MockGasStation {
     StationInfo? stationInfo,
     String? addressHint,
     String? googlePhotoResource,
+    double? straightLineMeters,
+    double? drivingDistanceMeters,
+    int? drivingDurationSeconds,
   }) {
     return MockGasStation(
       id: id ?? this.id,
@@ -56,6 +107,11 @@ class MockGasStation {
       stationInfo: stationInfo ?? this.stationInfo,
       addressHint: addressHint ?? this.addressHint,
       googlePhotoResource: googlePhotoResource ?? this.googlePhotoResource,
+      straightLineMeters: straightLineMeters ?? this.straightLineMeters,
+      drivingDistanceMeters:
+          drivingDistanceMeters ?? this.drivingDistanceMeters,
+      drivingDurationSeconds:
+          drivingDurationSeconds ?? this.drivingDurationSeconds,
     );
   }
 

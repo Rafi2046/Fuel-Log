@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../models/mock_gas_station.dart';
 import 'bd_fuel_rate_service.dart';
 import 'google_places_service.dart';
+import 'navigation_routing_service.dart';
 import 'station_image_resolver.dart';
 
 class GasStationService {
@@ -89,9 +90,81 @@ class GasStationService {
         .take(_maxResults)
         .toList();
 
-    final result = _withDistancesFrom(center, withinRadius);
+    final withStraightLine = _withDistancesFrom(center, withinRadius);
+    final result = await _enrichWithDrivingDistances(center, withStraightLine);
     _stationCache[cacheKey] = (DateTime.now(), result);
     return result;
+  }
+
+  /// Fetches real road distances for the nearest stations (OSRM table API).
+  Future<List<MockGasStation>> _enrichWithDrivingDistances(
+    LatLng center,
+    List<MockGasStation> stations, {
+    int maxEnrich = 15,
+  }) async {
+    if (stations.isEmpty) return stations;
+
+    final enrichCount = stations.length < maxEnrich ? stations.length : maxEnrich;
+    final toEnrich = stations.take(enrichCount).toList();
+    final rest = stations.skip(enrichCount).toList();
+
+    final table = await NavigationRoutingService.instance.getDrivingDistancesTable(
+      origin: center,
+      destinations: toEnrich.map((s) => s.location).toList(),
+    );
+
+    final enriched = <MockGasStation>[];
+    for (var i = 0; i < toEnrich.length; i++) {
+      final station = toEnrich[i];
+      final driving = i < table.length ? table[i] : null;
+      enriched.add(
+        _stationWithDistanceLabels(
+          station,
+          straightMeters: station.straightLineMeters,
+          driving: driving,
+        ),
+      );
+    }
+
+    final enrichedRest = rest
+        .map(
+          (s) => _stationWithDistanceLabels(
+            s,
+            straightMeters: s.straightLineMeters,
+          ),
+        )
+        .toList();
+
+    final merged = [...enriched, ...enrichedRest]
+      ..sort((a, b) => a.sortDistanceMeters.compareTo(b.sortDistanceMeters));
+    return merged;
+  }
+
+  MockGasStation _stationWithDistanceLabels(
+    MockGasStation s, {
+    required double straightMeters,
+    DrivingDistanceResult? driving,
+  }) {
+    return MockGasStation(
+      id: s.id,
+      name: s.name,
+      distance: _formatDistanceLabel(
+        s.addressHint,
+        straightMeters,
+        drivingMeters: driving?.distanceMeters,
+        drivingSeconds: driving?.durationSeconds,
+      ),
+      fuelTypes: s.fuelTypes,
+      rating: s.rating,
+      location: s.location,
+      imageUrl: s.imageUrl,
+      stationInfo: s.stationInfo,
+      addressHint: s.addressHint,
+      googlePhotoResource: s.googlePhotoResource,
+      straightLineMeters: straightMeters,
+      drivingDistanceMeters: driving?.distanceMeters,
+      drivingDurationSeconds: driving?.durationSeconds,
+    );
   }
 
   List<MockGasStation> _withDistancesFrom(
@@ -102,25 +175,15 @@ class GasStationService {
         .map((s) {
           final distMeters =
               _distanceCalc.as(LengthUnit.Meter, center, s.location);
-          return MockGasStation(
-            id: s.id,
-            name: s.name,
-            distance: _formatDistanceLabel(s.addressHint, distMeters),
-            fuelTypes: s.fuelTypes,
-            rating: s.rating,
-            location: s.location,
-            imageUrl: s.imageUrl,
-            stationInfo: s.stationInfo,
-            addressHint: s.addressHint,
-            googlePhotoResource: s.googlePhotoResource,
+          return _stationWithDistanceLabels(
+            s,
+            straightMeters: distMeters,
           );
         })
         .toList()
-      ..sort((a, b) {
-        final distA = _distanceCalc.as(LengthUnit.Meter, center, a.location);
-        final distB = _distanceCalc.as(LengthUnit.Meter, center, b.location);
-        return distA.compareTo(distB);
-      });
+      ..sort(
+        (a, b) => a.sortDistanceMeters.compareTo(b.sortDistanceMeters),
+      );
   }
 
   Future<List<MockGasStation>> _fetchLiveStations(
@@ -393,12 +456,29 @@ out center tags 60;
     return list;
   }
 
-  String _formatDistanceLabel(String area, double distMeters) {
-    final distStr = distMeters < 1000
-        ? '${distMeters.round()} m'
-        : '${(distMeters / 1000).toStringAsFixed(1)} km';
+  String _formatDistanceLabel(
+    String area,
+    double straightMeters, {
+    double? drivingMeters,
+    int? drivingSeconds,
+  }) {
     final place = area.trim().isEmpty ? 'Fuel Point' : area.trim();
-    return '$place • $distStr';
+    if (drivingMeters != null && drivingMeters > 0) {
+      final distDisplay = drivingMeters < 1000
+          ? '${drivingMeters.round()} m'
+          : '${(drivingMeters / 1000).toStringAsFixed(1)} km';
+      if (drivingSeconds != null && drivingSeconds > 0) {
+        final mins = (drivingSeconds / 60).round();
+        final eta = mins < 1 ? '1 min' : '$mins min';
+        return '$place • $eta • $distDisplay drive';
+      }
+      return '$place • $distDisplay drive';
+    }
+
+    final distStr = straightMeters < 1000
+        ? '${straightMeters.round()} m'
+        : '${(straightMeters / 1000).toStringAsFixed(1)} km';
+    return '$place • $distStr away';
   }
 
   bool _isDuplicate(MockGasStation candidate, List<MockGasStation> existing) {
