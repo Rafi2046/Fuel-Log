@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 
@@ -217,9 +218,14 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      body: Stack(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: const Color(0xFF121212),
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: Stack(
         fit: StackFit.expand,
         children: [
           // Layer 1: Solid Base Background
@@ -456,6 +462,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
         ],
+      ),
       ),
     );
   }

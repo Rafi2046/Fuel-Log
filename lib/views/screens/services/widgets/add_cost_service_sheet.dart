@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../reminders/reminders_screen.dart';
@@ -28,13 +29,19 @@ class AddCostServiceSheet extends ConsumerStatefulWidget {
     required int vehicleId,
     required double currentOdometer,
   }) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        systemNavigationBarColor: AppColors.card,
+        systemNavigationBarIconBrightness:
+            AppColors.isDark ? Brightness.light : Brightness.dark,
+      ),
+    );
+
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.appBar,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      useSafeArea: false,
+      backgroundColor: Colors.transparent,
       builder: (_) => AddCostServiceSheet(
         vehicleId: vehicleId,
         currentOdometer: currentOdometer,

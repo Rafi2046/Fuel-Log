@@ -40,6 +40,15 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Color(0xFF121212),
+      systemNavigationBarColor: Color(0xFF121212),
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
+
   runApp(
     EasyLocalization(
       supportedLocales: supportedAppLocales,
@@ -104,7 +113,7 @@ class FuelLogApp extends ConsumerWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlay.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarColor: AppColors.card,
         systemNavigationBarIconBrightness: brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,

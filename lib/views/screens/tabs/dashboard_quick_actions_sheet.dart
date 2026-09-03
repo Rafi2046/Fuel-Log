@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -21,9 +22,18 @@ Future<void> showDashboardQuickActionsSheet(
   VoidCallback? onRecordTrip,
   VoidCallback? onExploreStations,
 }) {
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle(
+      systemNavigationBarColor: AppColors.card,
+      systemNavigationBarIconBrightness:
+          AppColors.isDark ? Brightness.light : Brightness.dark,
+    ),
+  );
+
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: false,
     backgroundColor: Colors.transparent,
     builder: (context) => _DashboardQuickActionsSheet(
       onRecordTrip: onRecordTrip,
@@ -43,6 +53,8 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -57,7 +69,7 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
               AppSpacing.md,
               AppSpacing.md,
               AppSpacing.md,
-              MediaQuery.viewPaddingOf(context).bottom + AppSpacing.sm,
+              bottomPad + AppSpacing.sm,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

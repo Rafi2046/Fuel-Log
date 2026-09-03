@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,9 +63,15 @@ class _AppStartupGateState extends ConsumerState<AppStartupGate> {
 
     // Wait silently while loading
     if (onboardingSeenAsync.isLoading || vehiclesAsync.isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF121212),
-        body: SizedBox.expand(),
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: const Color(0xFF121212),
+        ),
+        child: const Scaffold(
+          backgroundColor: Color(0xFF121212),
+          body: SizedBox.expand(),
+        ),
       );
     }
 

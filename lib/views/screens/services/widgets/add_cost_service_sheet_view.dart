@@ -4,22 +4,25 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          SafeArea(
-            top: false,
+          Material(
+            color: AppColors.card,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPad + 16),
               child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               // 1. Drag Handle
               Center(
                 child: Container(
@@ -345,10 +348,10 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                 onPrimary: _submit,
                 primaryColor: const Color(0xFF2ECC71),
               ),
-            ],
-          ),
-        ),
-      ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
