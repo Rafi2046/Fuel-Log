@@ -30,6 +30,18 @@ class IntercomHeaderSection extends StatelessWidget {
     Color(0xFFEC4899),
   ];
 
+  String get _displayTourTitle {
+    final raw = state.tourName.trim();
+    final code = state.channelCode.trim().toUpperCase();
+    if (raw.isEmpty ||
+        raw.toUpperCase() == 'TOUR' ||
+        raw.toUpperCase() == 'TOUR $code' ||
+        raw.toUpperCase() == code) {
+      return 'Live Intercom';
+    }
+    return raw;
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = _SessionStatus.fromState(state);
@@ -55,84 +67,79 @@ class IntercomHeaderSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          state.tourName,
-                          style: AppTextStyles.title.copyWith(fontSize: 17),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Tour code',
-                          style: AppTextStyles.caption.copyWith(fontSize: 11),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _formatCode(state.channelCode),
-                              style: GoogleFonts.firaCode(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                                letterSpacing: 3,
-                              ),
-                            ),
-                            if (onInvite != null) ...[
-                              const SizedBox(width: AppSpacing.sm),
-                              InkWell(
-                                onTap: onInvite,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                    border: Border.all(
-                                      color: AppColors.primary.withValues(alpha: 0.35),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.qr_code_rounded,
-                                        size: 13,
-                                        color: AppColors.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Show QR',
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
+                    child: Text(
+                      _displayTourTitle,
+                      style: AppTextStyles.title.copyWith(fontSize: 17),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.sm),
                   _LiveBadge(
                     count: state.onlineCount,
                     isAlone: isAlone,
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tour code',
+                style: AppTextStyles.caption.copyWith(fontSize: 11),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _formatCode(state.channelCode),
+                      style: GoogleFonts.firaCode(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 2.5,
+                      ),
+                    ),
+                  ),
+                  if (onInvite != null)
+                    InkWell(
+                      onTap: onInvite,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.qr_code_rounded,
+                              size: 13,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Show QR',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -146,8 +153,8 @@ class IntercomHeaderSection extends StatelessWidget {
                       children: [
                         Text(
                           isAlone
-                              ? 'Waiting for riders'
-                              : '$remoteCount rider${remoteCount == 1 ? '' : 's'} joined',
+                              ? 'Waiting for members'
+                              : '$remoteCount member${remoteCount == 1 ? '' : 's'} joined',
                           style: AppTextStyles.label.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,

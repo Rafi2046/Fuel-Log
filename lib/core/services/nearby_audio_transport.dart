@@ -62,6 +62,18 @@ class NearbyAudioTransport {
   String _riderDiscoveryName = '';
   String? _connectingEndpointId;
   Timer? _discoveryRefreshTimer;
+  final Set<String> _mutedPeerNames = {};
+
+  void toggleMutePeer(String peerNameOrId) {
+    if (_mutedPeerNames.contains(peerNameOrId)) {
+      _mutedPeerNames.remove(peerNameOrId);
+    } else {
+      _mutedPeerNames.add(peerNameOrId);
+    }
+    debugPrint('[NearbyAudioTransport] Mute state for "$peerNameOrId": ${_mutedPeerNames.contains(peerNameOrId)}');
+  }
+
+  bool isPeerMuted(String peerNameOrId) => _mutedPeerNames.contains(peerNameOrId);
 
   // Thread-safe FIFO Queue to prevent native AudioTrack SIGSEGV crash
   final List<Uint8List> _audioQueue = [];
@@ -370,13 +382,18 @@ class NearbyAudioTransport {
 
           // Frame sanity check: 16-bit PCM must have an even number of bytes and reasonable length
           if (rawBytes.length >= 64 && rawBytes.length % 2 == 0) {
-            _incomingAudioController.add(
-              NearbyAudioPacket(
-                fromEndpointId: endpointId,
-                fromName: _endpointNames[endpointId] ?? endpointId,
-                bytes: rawBytes,
-              ),
-            );
+            final senderName = _endpointNames[endpointId] ?? endpointId;
+            final isSenderMuted = _mutedPeerNames.contains(senderName) || _mutedPeerNames.contains(endpointId);
+
+            if (!isSenderMuted) {
+              _incomingAudioController.add(
+                NearbyAudioPacket(
+                  fromEndpointId: endpointId,
+                  fromName: senderName,
+                  bytes: rawBytes,
+                ),
+              );
+            }
 
             // Host multi-rider relay when mesh bridge is enabled.
             if (_meshBridgeEnabled && _isHost && _connectedEndpoints.length > 1) {
@@ -397,11 +414,16 @@ class NearbyAudioTransport {
 
   void _broadcastRosterToPeers() {
     if (!_isHost || _connectedEndpoints.isEmpty) return;
-    final names = _connectedEndpoints.map((id) => _endpointNames[id] ?? 'Rider').toList();
-    final rosterStr = 'CTRL:ROSTER:Host|${names.join('|')}';
-    final bytes = Uint8List.fromList(utf8.encode(rosterStr));
-    for (final id in _connectedEndpoints) {
-      unawaited(Nearby().sendBytesPayload(id, bytes));
+    for (final targetId in _connectedEndpoints) {
+      final otherRidersForThisPeer = _connectedEndpoints
+          .where((id) => id != targetId)
+          .map((id) => _endpointNames[id] ?? 'Rider')
+          .toList();
+      final rosterStr = otherRidersForThisPeer.isEmpty
+          ? 'CTRL:ROSTER:Host'
+          : 'CTRL:ROSTER:Host|${otherRidersForThisPeer.join('|')}';
+      final bytes = Uint8List.fromList(utf8.encode(rosterStr));
+      unawaited(Nearby().sendBytesPayload(targetId, bytes));
     }
   }
 
@@ -688,6 +710,7 @@ class NearbyAudioTransport {
     _fecPlaybackPrimed = false;
     _prevInputSample = 0;
     _prevOutputSample = 0;
+    _mutedPeerNames.clear();
 
     try {
       await Nearby().stopAdvertising().timeout(const Duration(seconds: 2), onTimeout: () {});

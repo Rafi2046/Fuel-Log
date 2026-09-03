@@ -25,6 +25,7 @@ class IntercomMember {
     this.isCurrentUser = false,
     this.isSpeaking = false,
     this.isOnline = true,
+    this.isMuted = false,
     this.batteryPercent = 85,
     this.latencyMs = 12,
   });
@@ -35,12 +36,14 @@ class IntercomMember {
   final bool isCurrentUser;
   final bool isSpeaking;
   final bool isOnline;
+  final bool isMuted;
   final int batteryPercent;
   final int latencyMs;
 
   IntercomMember copyWith({
     bool? isSpeaking,
     bool? isOnline,
+    bool? isMuted,
     int? batteryPercent,
     int? latencyMs,
   }) {
@@ -51,6 +54,7 @@ class IntercomMember {
       isCurrentUser: isCurrentUser,
       isSpeaking: isSpeaking ?? this.isSpeaking,
       isOnline: isOnline ?? this.isOnline,
+      isMuted: isMuted ?? this.isMuted,
       batteryPercent: batteryPercent ?? this.batteryPercent,
       latencyMs: latencyMs ?? this.latencyMs,
     );
@@ -683,6 +687,33 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       }
     }
     await _syncBackgroundSession();
+  }
+
+  Future<void> toggleMuteMember(String memberId) async {
+    HapticFeedback.selectionClick();
+    final member = state.members.firstWhere(
+      (m) => m.id == memberId,
+      orElse: () => const IntercomMember(id: '', name: '', initials: ''),
+    );
+    if (member.id.isEmpty) return;
+
+    if (member.isCurrentUser) {
+      await toggleMute();
+      return;
+    }
+
+    final newMuted = !member.isMuted;
+    _transport.toggleMutePeer(member.name);
+    _transport.toggleMutePeer(member.id);
+
+    final updatedMembers = state.members.map((m) {
+      if (m.id == memberId) {
+        return m.copyWith(isMuted: newMuted);
+      }
+      return m;
+    }).toList();
+
+    state = state.copyWith(members: updatedMembers);
   }
 
   Future<void> toggleOpenMicMode([bool? value]) async {
