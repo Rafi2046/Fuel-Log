@@ -54,20 +54,25 @@ class MileageLogScreen extends ConsumerWidget {
 
           final logs = logsAsync.valueOrNull ?? [];
           if (logs.isEmpty || processedEntries.isEmpty) {
-            return AppRefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(vehicleLogsProvider);
-                await Future.delayed(const Duration(milliseconds: 400));
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.25,
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return AppRefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(vehicleLogsProvider);
+                    await Future.delayed(const Duration(milliseconds: 400));
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: constraints.maxHeight,
+                      width: constraints.maxWidth,
+                      child: const Center(
+                        child: MileageEmptyState(),
+                      ),
+                    ),
                   ),
-                  MileageEmptyState(),
-                ],
-              ),
+                );
+              },
             );
           }
 

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 
-/// Shared dark fill / border tokens for modal sheet form fields.
+/// Shared fill / border tokens for modal sheet form fields (theme-aware).
 abstract final class SheetFieldStyle {
-  static const fill = Color(0xFF1E1E2A);
-  static const border = Color(0xFF2E2E3E);
+  static Color get fill => AppColors.inputFill;
+  static Color get border => AppColors.border;
   static final radius = BorderRadius.circular(12);
 
   static InputDecoration decoration({
@@ -35,11 +35,11 @@ abstract final class SheetFieldStyle {
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: radius,
-        borderSide: const BorderSide(color: border),
+        borderSide: BorderSide(color: border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: radius,
-        borderSide: const BorderSide(color: border),
+        borderSide: BorderSide(color: border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: radius,

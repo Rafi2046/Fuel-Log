@@ -31,6 +31,8 @@ class AppPrimaryButton extends StatelessWidget {
     final height = compact
         ? AppSpacing.buttonHeightCompact
         : AppSpacing.buttonHeight;
+    // Always white on brand orange — independent of light/dark textPrimary.
+    const onPrimary = Colors.white;
 
     return Opacity(
       opacity: enabled ? 1 : 0.5,
@@ -47,25 +49,28 @@ class AppPrimaryButton extends StatelessWidget {
             boxShadow: enabled && !compact ? AppShadows.floating : null,
           ),
           child: isLoading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
-                    color: AppColors.textPrimary,
+                    color: onPrimary,
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(label, style: AppTextStyles.button),
+                    Text(
+                      label,
+                      style: AppTextStyles.button.copyWith(color: onPrimary),
+                    ),
                     if (icon != null) ...[
                       SizedBox(width: AppSpacing.sm),
                       Icon(
                         icon,
                         size: 20,
-                        color: AppColors.textPrimary,
+                        color: onPrimary,
                       ),
                     ],
                   ],

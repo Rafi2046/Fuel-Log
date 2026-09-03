@@ -29,7 +29,7 @@ class SheetActionBar extends StatelessWidget {
             child: OutlinedButton(
               onPressed: onCancel ?? () => Navigator.of(context).pop(),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Color(0xFF2E2E3E)),
+                side: BorderSide(color: AppColors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

@@ -7,9 +7,14 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -21,7 +26,7 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF333348),
+                    color: AppColors.borderStrong,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -90,11 +95,11 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                         },
                         selectedColor:
                             const Color(0xFF2ECC71).withValues(alpha: 0.18),
-                        backgroundColor: Color(0xFF1E1E2A),
+                        backgroundColor: AppColors.inputFill,
                         side: BorderSide(
                           color: isSelected
                               ? Color(0xFF2ECC71)
-                              : Color(0xFF2E2E3E),
+                              : AppColors.border,
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
@@ -147,11 +152,11 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                         },
                         selectedColor:
                             AppColors.primary.withValues(alpha: 0.2),
-                        backgroundColor: Color(0xFF1E1E2A),
+                        backgroundColor: AppColors.inputFill,
                         side: BorderSide(
                           color: isSelected
                               ? AppColors.primary
-                              : Color(0xFF2E2E3E),
+                              : AppColors.border,
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
@@ -180,7 +185,7 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                       : null,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Color(0xFF1E1E2A),
+                    fillColor: AppColors.inputFill,
                     hintText: 'e.g. Engine Flush, Wiper Blade Replacement...',
                     hintStyle: TextStyle(
                         color: AppColors.textTertiary, fontSize: 13),
@@ -188,11 +193,11 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                         horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -235,7 +240,7 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                   prefixStyle: TextStyle(
                       color: AppColors.primary, fontWeight: FontWeight.bold),
                   filled: true,
-                  fillColor: Color(0xFF1E1E2A),
+                  fillColor: AppColors.inputFill,
                   hintText: 'e.g. 2500',
                   hintStyle: TextStyle(
                       color: AppColors.textTertiary, fontSize: 13),
@@ -243,11 +248,11 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                       horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Color(0xFF2E2E3E)),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -285,7 +290,7 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                             suffixStyle: TextStyle(
                                 color: AppColors.textTertiary, fontSize: 12),
                             filled: true,
-                            fillColor: Color(0xFF1E1E2A),
+                            fillColor: AppColors.inputFill,
                             hintText: 'e.g. 5000',
                             hintStyle: TextStyle(
                                 color: AppColors.textTertiary, fontSize: 13),
@@ -294,12 +299,12 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide:
-                                  const BorderSide(color: Color(0xFF2E2E3E)),
+                                  BorderSide(color: AppColors.border),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide:
-                                  const BorderSide(color: Color(0xFF2E2E3E)),
+                                  BorderSide(color: AppColors.border),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -343,6 +348,9 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
             ],
           ),
         ),
+      ),
+          ),
+        ],
       ),
     );
   }

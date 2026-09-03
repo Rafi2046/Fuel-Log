@@ -69,10 +69,10 @@ mixin _AddCostServiceSheetController on ConsumerState<AddCostServiceSheet> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
               primary: AppColors.primary,
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1E2A),
+              surface: AppColors.surface,
               onSurface: AppColors.textPrimary,
             ),
           ),

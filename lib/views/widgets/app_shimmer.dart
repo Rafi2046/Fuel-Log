@@ -3,20 +3,45 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 
-/// Reusable dark-theme shimmer effect controller & shader.
+/// Theme-aware shimmer effect controller & shader.
 class AppShimmer extends StatefulWidget {
   const AppShimmer({
     super.key,
     required this.child,
-    this.baseColor = const Color(0xFF16161E),
-    this.highlightColor = const Color(0xFF282836),
+    this.baseColor,
+    this.highlightColor,
     this.duration = const Duration(milliseconds: 1400),
   });
 
   final Widget child;
-  final Color baseColor;
-  final Color highlightColor;
+  final Color? baseColor;
+  final Color? highlightColor;
   final Duration duration;
+
+  static Color defaultBase(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? const Color(0xFF16161E) : const Color(0xFFE6E8EE);
+  }
+
+  static Color defaultHighlight(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? const Color(0xFF282836) : const Color(0xFFF5F6F8);
+  }
+
+  static Color bone(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? const Color(0xFF1E1E28) : const Color(0xFFD0D4DC);
+  }
+
+  static Color cardFill(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? const Color(0xFF15151D) : const Color(0xFFF0F1F5);
+  }
+
+  static Color cardBorder(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? const Color(0xFF242430) : const Color(0xFFE2E5EC);
+  }
 
   @override
   State<AppShimmer> createState() => _AppShimmerState();
@@ -41,6 +66,10 @@ class _AppShimmerState extends State<AppShimmer>
 
   @override
   Widget build(BuildContext context) {
+    final base = widget.baseColor ?? AppShimmer.defaultBase(context);
+    final highlight =
+        widget.highlightColor ?? AppShimmer.defaultHighlight(context);
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -51,9 +80,9 @@ class _AppShimmerState extends State<AppShimmer>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                widget.baseColor,
-                widget.highlightColor,
-                widget.baseColor,
+                base,
+                highlight,
+                base,
               ],
               stops: const [0.0, 0.5, 1.0],
               transform: _SlidingGradientTransform(
@@ -91,13 +120,13 @@ class ShimmerBox extends StatelessWidget {
     this.width,
     this.height,
     this.borderRadius = 8,
-    this.color = const Color(0xFF1E1E28),
+    this.color,
   });
 
   final double? width;
   final double? height;
   final double borderRadius;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +134,7 @@ class ShimmerBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: color,
+        color: color ?? AppShimmer.bone(context),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );
@@ -116,11 +145,11 @@ class ShimmerCircle extends StatelessWidget {
   const ShimmerCircle({
     super.key,
     required this.size,
-    this.color = const Color(0xFF1E1E28),
+    this.color,
   });
 
   final double size;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +157,7 @@ class ShimmerCircle extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: color,
+        color: color ?? AppShimmer.bone(context),
         shape: BoxShape.circle,
       ),
     );
@@ -152,10 +181,10 @@ class ShimmerCard extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: const Color(0xFF15151D),
+        color: AppShimmer.cardFill(context),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: const Color(0xFF242430),
+          color: AppShimmer.cardBorder(context),
           width: 1,
         ),
       ),
@@ -177,9 +206,10 @@ class AppRefreshIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RefreshIndicator(
       color: AppColors.primary,
-      backgroundColor: const Color(0xFF1A1A24),
+      backgroundColor: isDark ? const Color(0xFF1A1A24) : Colors.white,
       strokeWidth: 2.5,
       displacement: 36,
       onRefresh: onRefresh,

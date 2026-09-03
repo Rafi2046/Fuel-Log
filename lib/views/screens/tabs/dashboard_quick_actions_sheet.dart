@@ -8,7 +8,6 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
-import '../../widgets/clean_glass_panel.dart';
 import '../mileage/mileage_log_screen.dart';
 import '../refueling_form_screen.dart';
 import '../reports/reports_screen.dart';
@@ -44,172 +43,163 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        0,
-        AppSpacing.sm,
-        bottomInset + AppSpacing.sm,
-      ),
-      child: CleanGlassPanel(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-          bottom: Radius.circular(AppSpacing.radiusXl),
-        ),
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.sm,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Material(
+          color: AppColors.card,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusXl),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              MediaQuery.viewPaddingOf(context).bottom + AppSpacing.sm,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'quickActions'.tr(),
-                    style: AppTextStyles.title.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'quickActions'.tr(),
+                  style: AppTextStyles.title.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _ActionTile(
-                    icon: LucideIcons.fuel,
-                    accent: true,
-                    title: 'actionRefueling'.tr(),
-                    subtitle: 'actionRefuelingSubtitle'.tr(),
-                    onTap: () {
-                      final nav = Navigator.of(context);
-                      nav.pop();
-                      Future.microtask(() {
-                        nav.push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const RefuelingFormScreen(),
-                          ),
-                        );
-                      });
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.radio,
-                    accent: true,
-                    title: 'Tour Intercom (PTT)',
-                    subtitle: 'Walkie-talkie mode • Hardware volume key voice',
-                    onTap: () {
-                      final nav = Navigator.of(context);
-                      nav.pop();
-                      Future.microtask(() {
-                        nav.push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const TourLobbyScreen(),
-                          ),
-                        );
-                      });
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.mapPin,
-                    title: 'Gas Stations & Prices',
-                    subtitle:
-                        'Live Bangladesh fuel rates, nearby pumps & map',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onExploreStations?.call();
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.gauge,
-                    title: 'Mileage Log',
-                    subtitle: 'View average consumption & distance stats',
-                    onTap: () {
-                      final nav = Navigator.of(context);
-                      nav.pop();
-                      Future.microtask(() {
-                        nav.push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const MileageLogScreen(),
-                          ),
-                        );
-                      });
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.route,
-                    title: 'actionRecordTrip'.tr(),
-                    subtitle: 'actionRecordTripSubtitle'.tr(),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onRecordTrip?.call();
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.wrench,
-                    title: 'actionAddCost'.tr(),
-                    subtitle: 'actionAddCostSubtitle'.tr(),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      final vehicle =
-                          ref.read(activeVehicleProvider).valueOrNull;
-                      if (vehicle == null) return;
-                      final logs =
-                          ref.read(vehicleLogsProvider).valueOrNull ?? [];
-                      final currentOdo = logs.isNotEmpty
-                          ? logs.first.odometer
-                          : vehicle.startOdo;
-                      AddCostServiceSheet.show(
-                        context,
-                        vehicleId: vehicle.id,
-                        currentOdometer: currentOdo,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _ActionTile(
+                  icon: LucideIcons.fuel,
+                  accent: true,
+                  title: 'actionRefueling'.tr(),
+                  subtitle: 'actionRefuelingSubtitle'.tr(),
+                  onTap: () {
+                    final nav = Navigator.of(context);
+                    nav.pop();
+                    Future.microtask(() {
+                      nav.push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const RefuelingFormScreen(),
+                        ),
                       );
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.shieldCheck,
-                    title: 'servicesHubTitle'.tr(),
-                    subtitle: 'servicesHubSubtitle'.tr(),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      ServicesScreen.open(context);
-                    },
-                  ),
-                  _sheetDivider(),
-                  _ActionTile(
-                    icon: LucideIcons.fileText,
-                    title: 'Create Report',
-                    subtitle: 'Generate CSV & text history report',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      ReportsScreen.open(context);
-                    },
-                  ),
-                ],
-              ),
+                    });
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.radio,
+                  accent: true,
+                  title: 'Tour Intercom (PTT)',
+                  subtitle: 'Walkie-talkie mode • Hardware volume key voice',
+                  onTap: () {
+                    final nav = Navigator.of(context);
+                    nav.pop();
+                    Future.microtask(() {
+                      nav.push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const TourLobbyScreen(),
+                        ),
+                      );
+                    });
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.mapPin,
+                  title: 'Gas Stations & Prices',
+                  subtitle:
+                      'Live Bangladesh fuel rates, nearby pumps & map',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onExploreStations?.call();
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.gauge,
+                  title: 'Mileage Log',
+                  subtitle: 'View average consumption & distance stats',
+                  onTap: () {
+                    final nav = Navigator.of(context);
+                    nav.pop();
+                    Future.microtask(() {
+                      nav.push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const MileageLogScreen(),
+                        ),
+                      );
+                    });
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.route,
+                  title: 'actionRecordTrip'.tr(),
+                  subtitle: 'actionRecordTripSubtitle'.tr(),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onRecordTrip?.call();
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.wrench,
+                  title: 'actionAddCost'.tr(),
+                  subtitle: 'actionAddCostSubtitle'.tr(),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    final vehicle =
+                        ref.read(activeVehicleProvider).valueOrNull;
+                    if (vehicle == null) return;
+                    final logs =
+                        ref.read(vehicleLogsProvider).valueOrNull ?? [];
+                    final currentOdo = logs.isNotEmpty
+                        ? logs.first.odometer
+                        : vehicle.startOdo;
+                    AddCostServiceSheet.show(
+                      context,
+                      vehicleId: vehicle.id,
+                      currentOdometer: currentOdo,
+                    );
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.shieldCheck,
+                  title: 'servicesHubTitle'.tr(),
+                  subtitle: 'servicesHubSubtitle'.tr(),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    ServicesScreen.open(context);
+                  },
+                ),
+                _sheetDivider(),
+                _ActionTile(
+                  icon: LucideIcons.fileText,
+                  title: 'Create Report',
+                  subtitle: 'Generate CSV & text history report',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    ReportsScreen.open(context);
+                  },
+                ),
+              ],
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -276,7 +266,8 @@ class _ActionTile extends StatelessWidget {
                       title,
                       style: AppTextStyles.body.copyWith(
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 2),
@@ -284,7 +275,7 @@ class _ActionTile extends StatelessWidget {
                       subtitle,
                       style: AppTextStyles.caption.copyWith(
                         fontSize: 11.5,
-                        color: AppColors.textTertiary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],

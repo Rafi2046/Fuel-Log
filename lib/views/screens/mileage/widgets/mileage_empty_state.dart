@@ -7,37 +7,38 @@ import '../../refueling_form_screen.dart';
 
 /// Premium, sleek empty state for Mileage Log with visual process preview cards.
 class MileageEmptyState extends StatelessWidget {
-  MileageEmptyState({super.key});
+  const MileageEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        child: Container(
-          constraints: BoxConstraints(maxWidth: 400),
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.xl,
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            width: 1,
           ),
-          decoration: BoxDecoration(
-            color: AppColors.cardElevated,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: AppColors.isDark ? 0.3 : 0.08,
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
               // Sleek Icon Badge with Glow
               Container(
                 width: 64,
@@ -155,7 +156,6 @@ class MileageEmptyState extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }
