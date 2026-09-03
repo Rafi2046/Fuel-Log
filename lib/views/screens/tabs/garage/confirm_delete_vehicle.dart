@@ -66,7 +66,7 @@ Future<bool> deleteVehicleWithConfirmation(
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
                   Expanded(
@@ -74,7 +74,7 @@ Future<bool> deleteVehicleWithConfirmation(
                       onPressed: () => Navigator.of(context).pop(false),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
-                        side: const BorderSide(color: AppColors.borderStrong),
+                        side: BorderSide(color: AppColors.borderStrong),
                         padding: const EdgeInsets.symmetric(
                           vertical: AppSpacing.sm + 4,
                         ),
@@ -86,7 +86,7 @@ Future<bool> deleteVehicleWithConfirmation(
                       child: Text('cancel'.tr()),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: FilledButton(
                       onPressed: () => Navigator.of(context).pop(true),

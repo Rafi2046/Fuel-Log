@@ -81,10 +81,10 @@ class ServiceLogDetailSheet extends ConsumerWidget {
       return const Color(0xFF3498DB);
     }
     if (lower.contains('tax') || lower.contains('document')) {
-      return const Color(0xFF9B59B6);
+      return Color(0xFF9B59B6);
     }
-    if (lower.contains('wash')) return const Color(0xFF00CEC9);
-    if (lower.contains('parts')) return const Color(0xFFF39C12);
+    if (lower.contains('wash')) return Color(0xFF00CEC9);
+    if (lower.contains('parts')) return Color(0xFFF39C12);
     return AppColors.primary;
   }
 
@@ -92,10 +92,10 @@ class ServiceLogDetailSheet extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF161622),
+        backgroundColor: AppColors.appBar,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFF262638)),
+          side: BorderSide(color: AppColors.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -108,13 +108,13 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                   color: AppColors.error.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.delete_outline_rounded,
                   color: AppColors.error,
                   size: 26,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               Text(
                 'Delete Service Log?',
                 style: GoogleFonts.inter(
@@ -123,11 +123,11 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 'Are you sure you want to delete "${log.title}"?',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary,
                 ),
@@ -139,12 +139,12 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(ctx).pop(false),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF2E2E3E)),
+                        side: BorderSide(color: Color(0xFF2E2E3E)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
@@ -183,7 +183,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('logDeleted'.tr()),
-            backgroundColor: const Color(0xFF1E1E2C),
+            backgroundColor: AppColors.control,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -274,7 +274,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             log.title,
                             style: GoogleFonts.inter(
@@ -284,10 +284,10 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                             ),
                           ),
                           if (vehicleName != null) ...[
-                            const SizedBox(height: 2),
+                            SizedBox(height: 2),
                             Text(
                               vehicleName!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
                               ),
@@ -301,13 +301,13 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF2ECC71),
+                        color: Color(0xFF2ECC71),
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 Divider(color: AppColors.border.withValues(alpha: 0.5)),
                 const SizedBox(height: AppSpacing.sm),
 
@@ -366,7 +366,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({
+  _DetailRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -379,33 +379,33 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
+        color: AppColors.appBar,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF242434)),
+        border: Border.all(color: Color(0xFF242434)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 16, color: AppColors.textSecondary),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     color: AppColors.textTertiary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,

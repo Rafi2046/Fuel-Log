@@ -65,7 +65,7 @@ class MileageLogScreen extends ConsumerWidget {
                   SizedBox(
                     height: MediaQuery.sizeOf(context).height * 0.25,
                   ),
-                  const MileageEmptyState(),
+                  MileageEmptyState(),
                 ],
               ),
             );

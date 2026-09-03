@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 
-/// Compact leading icon for list cards — vertically centered in rows.
+/// Compact leading icon for list cards — theme-aware fill/icon contrast.
 class ListLeadIcon extends StatelessWidget {
   const ListLeadIcon({
     super.key,
@@ -20,16 +21,16 @@ class ListLeadIcon extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2A),
+        color: AppColors.control,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         border: Border.all(
-          color: const Color(0xFF2A2A3C),
+          color: AppColors.controlBorder,
           width: 1,
         ),
       ),
       child: Icon(
         icon,
-        color: const Color(0xFFA1A1AA),
+        color: AppColors.textSecondary,
         size: iconSize,
       ),
     );

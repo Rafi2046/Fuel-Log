@@ -27,7 +27,7 @@ class StationListCard extends StatelessWidget {
     final priceStr = '৳${station.primaryPrice.toStringAsFixed(2)}';
 
     return Container(
-      margin: const EdgeInsets.symmetric(
+      margin: EdgeInsets.symmetric(
         horizontal: AppSpacing.screenPadding,
         vertical: 3,
       ),
@@ -82,18 +82,18 @@ class StationListCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       Row(
                         children: [
                           Text(
                             station.formattedDistance,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Icon(
                             station.isUserUpvoted
                                 ? Icons.thumb_up_alt_rounded
@@ -103,7 +103,7 @@ class StationListCard extends StatelessWidget {
                                 ? AppColors.primary
                                 : AppColors.textTertiary,
                           ),
-                          const SizedBox(width: 3),
+                          SizedBox(width: 3),
                           Text(
                             '${station.upvotes}',
                             style: TextStyle(
@@ -143,10 +143,10 @@ class StationListCard extends StatelessWidget {
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: 1),
+                    SizedBox(height: 1),
                     Text(
                       station.latestUpdateRelative,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textTertiary,
                         fontSize: 10,
                       ),
@@ -154,11 +154,11 @@ class StationListCard extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(width: 2),
+                SizedBox(width: 2),
 
                 // 4. 3-Dot Options Menu
                 PopupMenuButton<String>(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.more_vert_rounded,
                     color: AppColors.textTertiary,
                     size: 18,
@@ -167,7 +167,7 @@ class StationListCard extends StatelessWidget {
                   elevation: 8,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    side: const BorderSide(color: AppColors.border),
+                    side: BorderSide(color: AppColors.border),
                   ),
                   onSelected: (val) {
                     if (val == 'details') {
@@ -179,7 +179,7 @@ class StationListCard extends StatelessWidget {
                     }
                   },
                   itemBuilder: (ctx) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'details',
                       child: Row(
                         children: [
@@ -191,7 +191,7 @@ class StationListCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'map',
                       child: Row(
                         children: [

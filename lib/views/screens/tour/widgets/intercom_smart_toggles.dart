@@ -46,7 +46,7 @@ class IntercomSmartToggles extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: AppSpacing.sm),
+          padding: EdgeInsets.only(left: 4, bottom: AppSpacing.sm),
           child: Text(
             'Audio',
             style: AppTextStyles.caption.copyWith(
@@ -110,7 +110,7 @@ class IntercomSmartToggles extends StatelessWidget {
 }
 
 class _InsetDivider extends StatelessWidget {
-  const _InsetDivider({required this.indent});
+  _InsetDivider({required this.indent});
 
   final double indent;
 
@@ -153,7 +153,7 @@ class _SettingRow extends StatelessWidget {
         onTap: _handleTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
+          padding: EdgeInsets.fromLTRB(14, 11, 12, 11),
           child: Row(
             children: [
               Icon(
@@ -161,7 +161,7 @@ class _SettingRow extends StatelessWidget {
                 size: 18,
                 color: value ? AppColors.primary : AppColors.textTertiary,
               ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +174,7 @@ class _SettingRow extends StatelessWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 1),
+                      SizedBox(height: 1),
                       Text(
                         subtitle,
                         style: AppTextStyles.caption.copyWith(

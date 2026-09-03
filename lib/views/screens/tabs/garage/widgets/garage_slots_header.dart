@@ -57,7 +57,7 @@ class GarageSlotsHeader extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'garageSlotsUsed'.tr(
                         namedArgs: {'used': '$used', 'max': '$max'},

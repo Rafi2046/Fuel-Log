@@ -76,7 +76,7 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             isDense: dense,
             contentPadding: dense
-                ? const EdgeInsets.symmetric(horizontal: 8, vertical: 10)
+                ? EdgeInsets.symmetric(horizontal: 8, vertical: 10)
                 : null,
             prefixIcon: prefixIcon == null
                 ? null

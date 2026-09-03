@@ -6,10 +6,28 @@ import 'app_colors.dart';
 import 'app_spacing.dart';
 import 'app_text_styles.dart';
 
-/// App-wide [ThemeData] matched to the premium dark fuel UI.
+/// App-wide [ThemeData] for dark and light fuel UI.
 abstract final class AppThemes {
-  static ThemeData get dark {
-    final base = ThemeData.dark(useMaterial3: true);
+  static ThemeData get dark => _build(Brightness.dark);
+
+  static ThemeData get light => _build(Brightness.light);
+
+  static ThemeData _build(Brightness brightness) {
+    final previous = AppColors.brightness;
+    AppColors.setBrightness(brightness);
+    try {
+      return _buildWithActivePalette(brightness);
+    } finally {
+      AppColors.setBrightness(previous);
+    }
+  }
+
+  static ThemeData _buildWithActivePalette(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+
+    final base = isDark
+        ? ThemeData.dark(useMaterial3: true)
+        : ThemeData.light(useMaterial3: true);
     final textTheme =
         GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
       bodyColor: AppColors.textPrimary,
@@ -19,16 +37,18 @@ abstract final class AppThemes {
     final fieldRadius = BorderRadius.circular(AppSpacing.radiusMd);
 
     return base.copyWith(
+      brightness: brightness,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme(
+        brightness: brightness,
         primary: AppColors.primary,
+        onPrimary: Colors.white,
         secondary: AppColors.secondary,
+        onSecondary: Colors.white,
         surface: AppColors.surface,
-        error: AppColors.error,
-        onPrimary: AppColors.textPrimary,
-        onSecondary: AppColors.textPrimary,
         onSurface: AppColors.textPrimary,
-        onError: AppColors.textPrimary,
+        error: AppColors.error,
+        onError: Colors.white,
       ),
       textTheme: textTheme.copyWith(
         displayLarge: AppTextStyles.display,
@@ -41,13 +61,14 @@ abstract final class AppThemes {
         bodySmall: AppTextStyles.caption,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF161622),
+        backgroundColor: AppColors.appBar,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        systemOverlayStyle:
+            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.w700,
@@ -87,16 +108,16 @@ abstract final class AppThemes {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
+          minimumSize: Size.fromHeight(AppSpacing.buttonHeight),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
-          textStyle: AppTextStyles.button,
+          textStyle: AppTextStyles.button.copyWith(color: Colors.white),
         ),
       ),
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: AppColors.divider,
         thickness: 1,
         space: 1,
@@ -108,6 +129,14 @@ abstract final class AppThemes {
         ),
         behavior: SnackBarBehavior.floating,
         actionTextColor: AppColors.primary,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.card,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.card,
+        surfaceTintColor: Colors.transparent,
       ),
     );
   }

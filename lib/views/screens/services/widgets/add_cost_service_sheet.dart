@@ -14,7 +14,7 @@ part 'add_cost_service_sheet_view.dart';
 
 /// Modal bottom sheet for adding non-fuel vehicle costs and maintenance services
 class AddCostServiceSheet extends ConsumerStatefulWidget {
-  const AddCostServiceSheet({
+  AddCostServiceSheet({
     super.key,
     required this.vehicleId,
     required this.currentOdometer,
@@ -31,7 +31,7 @@ class AddCostServiceSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF161622),
+      backgroundColor: AppColors.appBar,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

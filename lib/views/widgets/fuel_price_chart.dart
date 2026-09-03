@@ -166,7 +166,7 @@ class _SinglePriceChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: safeMaxY / 2,
               getDrawingHorizontalLine: (_) => FlLine(
-                color: Colors.white.withValues(alpha: 0.04),
+                color: AppColors.wash,
                 strokeWidth: 1,
               ),
             ),
@@ -188,10 +188,10 @@ class _SinglePriceChart extends StatelessWidget {
                   interval: 0.5,
                   getTitlesWidget: (value, _) {
                     if ((value - 0.5).abs() > 0.01) {
-                      return const SizedBox.shrink();
+                      return SizedBox.shrink();
                     }
                     return Padding(
-                      padding: const EdgeInsets.only(top: 6),
+                      padding: EdgeInsets.only(top: 6),
                       child: Text(
                         FuelPriceChart._dayMonth.format(point.date),
                         style: AppTextStyles.caption.copyWith(
@@ -313,7 +313,7 @@ class _PriceTrendChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: (safeMaxY - safeMinY) / 3,
               getDrawingHorizontalLine: (_) => FlLine(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.wash,
                 strokeWidth: 1,
               ),
             ),
@@ -343,7 +343,7 @@ class _PriceTrendChart extends StatelessWidget {
                   interval: (safeMaxY - safeMinY) / 2,
                   getTitlesWidget: (value, _) {
                     if (value <= safeMinY || value >= safeMaxY) {
-                      return const SizedBox.shrink();
+                      return SizedBox.shrink();
                     }
                     return Text(
                       '৳${value.toStringAsFixed(0)}',
@@ -368,9 +368,9 @@ class _PriceTrendChart extends StatelessWidget {
                     final show = i == 0 ||
                         i == series.length - 1 ||
                         i % labelStep == 0;
-                    if (!show) return const SizedBox.shrink();
+                    if (!show) return SizedBox.shrink();
                     return Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: 4),
                       child: MetricChartLayout.axisDateLabel(
                         FuelPriceChart._axisLabel(series, i),
                         color: AppColors.textSecondary,
@@ -448,7 +448,7 @@ class _PriceTrendChart extends StatelessWidget {
               ),
             ],
           ),
-          duration: const Duration(milliseconds: 360),
+          duration: Duration(milliseconds: 360),
           curve: Curves.easeOutCubic,
         ),
         Positioned(
@@ -485,9 +485,9 @@ class _PriceChartEmpty extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             'chartNeedMoreLogs'.tr(),
             textAlign: TextAlign.center,

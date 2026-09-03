@@ -89,7 +89,7 @@ class IntercomHeaderSection extends StatelessWidget {
                 'Tour code',
                 style: AppTextStyles.caption.copyWith(fontSize: 11),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Row(
                 children: [
                   Expanded(
@@ -142,8 +142,8 @@ class IntercomHeaderSection extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              const Divider(color: AppColors.divider, height: 1),
+              SizedBox(height: AppSpacing.md),
+              Divider(color: AppColors.divider, height: 1),
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
@@ -282,7 +282,7 @@ class _RiderListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.sm,
       ),
@@ -315,7 +315,7 @@ class _RiderListTile extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               _displayName,
@@ -368,7 +368,7 @@ class _SessionActionBar extends StatelessWidget {
               onPressed: onInvite!,
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
         ],
         if (onMuteToggle != null) ...[
           Expanded(
@@ -403,23 +403,24 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
-    this.foregroundColor = AppColors.textPrimary,
+    this.foregroundColor,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
-  final Color foregroundColor;
+  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) {
+    final fg = foregroundColor ?? AppColors.textPrimary;
     return SizedBox(
       height: AppSpacing.buttonHeightCompact,
       child: OutlinedButton.icon(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: foregroundColor,
-          side: const BorderSide(color: AppColors.border),
+          foregroundColor: fg,
+          side: BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
@@ -431,7 +432,7 @@ class _ActionButton extends StatelessWidget {
           style: AppTextStyles.label.copyWith(
             fontWeight: FontWeight.w600,
             fontSize: 13,
-            color: foregroundColor,
+            color: fg,
           ),
         ),
       ),

@@ -7,16 +7,16 @@ import '../../refueling_form_screen.dart';
 
 /// Premium, sleek empty state for Mileage Log with visual process preview cards.
 class MileageEmptyState extends StatelessWidget {
-  const MileageEmptyState({super.key});
+  MileageEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.symmetric(
+          constraints: BoxConstraints(maxWidth: 400),
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.xl,
           ),
@@ -71,7 +71,7 @@ class MileageEmptyState extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: AppSpacing.xs),
 
               Text(
                 'Log at least 2 full refuelings to calculate average mileage, distance driven, and cost per km.',
@@ -82,11 +82,11 @@ class MileageEmptyState extends StatelessWidget {
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
 
               // How it works preview card (Visual Step Guide)
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: AppColors.card,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -161,7 +161,7 @@ class MileageEmptyState extends StatelessWidget {
 }
 
 class _StepItem extends StatelessWidget {
-  const _StepItem({
+  _StepItem({
     required this.step,
     required this.title,
     required this.subtitle,
@@ -177,7 +177,7 @@ class _StepItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -188,7 +188,7 @@ class _StepItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, size: 14, color: AppColors.primary),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     title,
@@ -203,7 +203,7 @@ class _StepItem extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Text(
               subtitle,
               style: AppTextStyles.caption.copyWith(

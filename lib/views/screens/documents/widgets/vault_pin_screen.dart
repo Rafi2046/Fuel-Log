@@ -301,13 +301,13 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.shieldCheck,
                 size: 32,
                 color: Color(0xFF10B981),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
 
             // Title & Subtitle
             Text(
@@ -340,17 +340,17 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
               children: List.generate(4, (index) {
                 final isFilled = index < _enteredPin.length;
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  duration: Duration(milliseconds: 150),
+                  margin: EdgeInsets.symmetric(horizontal: 10),
                   width: 16,
                   height: 16,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isFilled
                         ? (_errorMessage != null
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF10B981))
-                        : const Color(0xFF262638),
+                            ? Color(0xFFEF4444)
+                            : Color(0xFF10B981))
+                        : AppColors.hairline,
                     border: Border.all(
                       color: isFilled
                           ? (_errorMessage != null
@@ -427,15 +427,15 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
       child: InkWell(
         onTap: () => _onKeyPress(key),
         borderRadius: BorderRadius.circular(36),
-        splashColor: const Color(0xFF3B82F6).withValues(alpha: 0.2),
-        highlightColor: const Color(0xFF262638),
+        splashColor: Color(0xFF3B82F6).withValues(alpha: 0.2),
+        highlightColor: AppColors.hairline,
         child: Container(
           width: 72,
           height: 72,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF161622),
-            border: Border.all(color: const Color(0xFF262638), width: 1),
+            color: AppColors.appBar,
+            border: Border.all(color: AppColors.hairline, width: 1),
           ),
           alignment: Alignment.center,
           child: Text(

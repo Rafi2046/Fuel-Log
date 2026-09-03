@@ -55,7 +55,7 @@ class _ChartFullscreenPageState extends State<ChartFullscreenPage> {
 
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations(const [
+    SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -69,7 +69,7 @@ class _ChartFullscreenPageState extends State<ChartFullscreenPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             AppSpacing.md,
             AppSpacing.sm,
             AppSpacing.md,
@@ -81,7 +81,7 @@ class _ChartFullscreenPageState extends State<ChartFullscreenPage> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded),
                     color: AppColors.textPrimary,
                     tooltip: 'close'.tr(),
                     onPressed: () => Navigator.of(context).pop(),
@@ -96,10 +96,10 @@ class _ChartFullscreenPageState extends State<ChartFullscreenPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48),
+                  SizedBox(width: 48),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: Container(
                   width: double.infinity,

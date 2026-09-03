@@ -97,10 +97,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF161622),
+        backgroundColor: AppColors.appBar,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFF262638)),
+          side: BorderSide(color: AppColors.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -122,7 +122,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                       size: 22,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +137,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                         ),
                         Text(
                           reminder.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
@@ -149,8 +149,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Service Cost (Optional):',
                 style: TextStyle(
                   fontSize: 12.5,
@@ -158,26 +158,26 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               TextField(
                 controller: costController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
                 decoration: InputDecoration(
                   prefixText: '৳ ',
-                  prefixStyle: const TextStyle(
+                  prefixStyle: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                   hintText: 'e.g. 2500',
-                  hintStyle: const TextStyle(color: AppColors.textTertiary),
+                  hintStyle: TextStyle(color: AppColors.textTertiary),
                   filled: true,
                   fillColor: const Color(0xFF1E1E2A),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                    borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -186,12 +186,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide:
-                        const BorderSide(color: AppColors.primary, width: 1.5),
+                        BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 'Workshop / Notes (Optional):',
                 style: TextStyle(
                   fontSize: 12.5,
@@ -199,20 +199,20 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               TextField(
                 controller: notesController,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'e.g. Navana Toyota, Gulshan',
-                  hintStyle: const TextStyle(color: AppColors.textTertiary),
+                  hintStyle: TextStyle(color: AppColors.textTertiary),
                   filled: true,
                   fillColor: const Color(0xFF1E1E2A),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                    borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -232,12 +232,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(ctx).pop(),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF2E2E3E)),
+                        side: BorderSide(color: Color(0xFF2E2E3E)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
@@ -260,7 +260,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            backgroundColor: const Color(0xFF1E1E2C),
+                            backgroundColor: AppColors.control,
                             content: Text(
                               '✅ ${reminder.title} marked completed!',
                               style: const TextStyle(color: Colors.white),
@@ -341,7 +341,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppAppBar(
-        leading: const AppBackButton(),
+        leading: AppBackButton(),
         titleWidget: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -362,15 +362,15 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                     Container(
                       width: 5,
                       height: 5,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    SizedBox(width: 5),
                     Text(
                       vehicle.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
@@ -391,16 +391,16 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 
           // 2. Styled Segmented Tab Bar
           Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.screenPadding,
               vertical: 8,
             ),
             child: Container(
               height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF161622),
+                color: AppColors.appBar,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF262638)),
+                border: Border.all(color: AppColors.hairline),
               ),
               child: TabBar(
                 controller: _tabController,
@@ -411,7 +411,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                labelPadding: EdgeInsets.symmetric(horizontal: 4),
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.textSecondary,
                 labelStyle: GoogleFonts.inter(
@@ -541,26 +541,26 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
       healthTitle = '${state.overdueCount} Overdue Schedule';
       healthIcon = LucideIcons.triangleAlert;
     } else if (hasDueSoon) {
-      healthColor = const Color(0xFFF59E0B);
+      healthColor = Color(0xFFF59E0B);
       healthTitle = '${state.dueSoonCount} Service Due Soon';
       healthIcon = LucideIcons.bellRing;
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(
+      margin: EdgeInsets.symmetric(
         horizontal: AppSpacing.screenPadding,
         vertical: 4,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
+        color: AppColors.appBar,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: hasOverdue
-              ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+              ? Color(0xFFEF4444).withValues(alpha: 0.3)
               : hasDueSoon
-                  ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
-                  : const Color(0xFF262638),
+                  ? Color(0xFFF59E0B).withValues(alpha: 0.3)
+                  : AppColors.hairline,
         ),
       ),
       child: Row(
@@ -592,10 +592,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   '${state.activeReminders.length} Schedules • $logCount Records',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
@@ -616,11 +616,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                 style: GoogleFonts.inter(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF2ECC71),
+                  color: Color(0xFF2ECC71),
                 ),
               ),
-              const SizedBox(height: 2),
-              const Text(
+              SizedBox(height: 2),
+              Text(
                 'Total Spend',
                 style: TextStyle(
                   fontSize: 10,
@@ -672,7 +672,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       'No Maintenance Schedules Set',
                       style: GoogleFonts.inter(
@@ -681,8 +681,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
+                    SizedBox(height: 6),
+                    Text(
                       'Set service reminders for engine oil, filters, brake pads, and tire rotation.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -790,23 +790,23 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
             children: categories.map((cat) {
               final isSelected = _selectedCategoryFilter == cat;
               return Padding(
-                padding: const EdgeInsets.only(right: 6),
+                padding: EdgeInsets.only(right: 6),
                 child: ChoiceChip(
                   label: Text(cat),
                   selected: isSelected,
                   onSelected: (val) {
                     if (val) setState(() => _selectedCategoryFilter = cat);
                   },
-                  selectedColor: const Color(0xFF2ECC71).withValues(alpha: 0.2),
-                  backgroundColor: const Color(0xFF161622),
+                  selectedColor: Color(0xFF2ECC71).withValues(alpha: 0.2),
+                  backgroundColor: AppColors.appBar,
                   side: BorderSide(
                     color: isSelected
-                        ? const Color(0xFF2ECC71)
-                        : const Color(0xFF262638),
+                        ? Color(0xFF2ECC71)
+                        : AppColors.hairline,
                   ),
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? const Color(0xFF2ECC71)
+                        ? Color(0xFF2ECC71)
                         : AppColors.textSecondary,
                     fontSize: 11.5,
                     fontWeight:
@@ -821,7 +821,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 
         // Filter Summary Info
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
             vertical: 4,
           ),
@@ -830,7 +830,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
             children: [
               Text(
                 '${filteredLogs.length} Records Found',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textTertiary,
                   fontWeight: FontWeight.w500,
@@ -863,16 +863,16 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                       ),
                       Center(
                         child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          padding: EdgeInsets.all(AppSpacing.lg),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.receipt_long_rounded,
                                 size: 38,
                                 color: AppColors.textTertiary,
                               ),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12),
                               Text(
                                 'No Service Logs Found',
                                 style: GoogleFonts.inter(
@@ -881,8 +881,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                                   color: AppColors.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              const Text(
+                              SizedBox(height: 4),
+                              Text(
                                 'Tap + to log your maintenance or repair expense.',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -935,7 +935,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('logDeleted'.tr()),
-                              backgroundColor: const Color(0xFF1E1E2C),
+                              backgroundColor: AppColors.control,
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
@@ -948,12 +948,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                           ),
                           borderRadius: BorderRadius.circular(14),
                           child: Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF161622),
+                              color: AppColors.appBar,
                               borderRadius: BorderRadius.circular(14),
                               border:
-                                  Border.all(color: const Color(0xFF262638)),
+                                  Border.all(color: AppColors.hairline),
                             ),
                             child: Row(
                               children: [
@@ -983,20 +983,20 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 2),
+                                      SizedBox(height: 2),
                                       Text(
                                         '${AppDateFormats.formatLogDate(log.date)} ${log.odometer != null ? '• ${log.odometer!.toStringAsFixed(0)} km' : ''}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 11,
                                           color: AppColors.textTertiary,
                                         ),
                                       ),
                                       if (log.note != null &&
                                           log.note!.isNotEmpty) ...[
-                                        const SizedBox(height: 2),
+                                        SizedBox(height: 2),
                                         Text(
                                           log.note!,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 10.5,
                                             color: AppColors.textSecondary,
                                             fontStyle: FontStyle.italic,
@@ -1040,16 +1040,16 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
     if (logs.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.analytics_outlined,
                 size: 40,
                 color: AppColors.textTertiary,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 'No Expense Analytics Yet',
                 style: GoogleFonts.inter(
@@ -1058,8 +1058,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 4),
+              Text(
                 'Log services and repairs to view category cost distribution.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1115,27 +1115,27 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
           ],
         ),
 
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
 
         // Category Breakdown Card
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF161622),
+            color: AppColors.appBar,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF262638)),
+            border: Border.all(color: AppColors.hairline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.donut_small_rounded,
                     size: 18,
                     color: AppColors.primary,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     'Category Spending Breakdown',
                     style: GoogleFonts.inter(
@@ -1171,10 +1171,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               Text(
                                 cat,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
@@ -1198,7 +1198,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                         child: LinearProgressIndicator(
                           value: pct,
                           minHeight: 6,
-                          backgroundColor: const Color(0xFF242434),
+                          backgroundColor: Color(0xFF242434),
                           valueColor: AlwaysStoppedAnimation<Color>(catColor),
                         ),
                       ),
@@ -1210,15 +1210,15 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
           ),
         ),
 
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
 
         // Recent High Expenses
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF161622),
+            color: AppColors.appBar,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF262638)),
+            border: Border.all(color: AppColors.hairline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1245,11 +1245,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
                         size: 15,
                         color: _getCategoryColor(log.category),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           log.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w500,
@@ -1279,7 +1279,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({
+  _MetricCard({
     required this.label,
     required this.value,
     required this.icon,
@@ -1294,17 +1294,17 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
+        color: AppColors.appBar,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF262638)),
+        border: Border.all(color: AppColors.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: accent),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             value,
             style: GoogleFonts.inter(
@@ -1313,10 +1313,10 @@ class _MetricCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,

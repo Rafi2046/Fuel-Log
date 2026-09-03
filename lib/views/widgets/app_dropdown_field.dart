@@ -29,13 +29,13 @@ class AppDropdownField<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: AppTextStyles.label),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<T>(
           initialValue: value,
           items: items,
           onChanged: onChanged,
           dropdownColor: AppColors.cardElevated,
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
             color: AppColors.textSecondary,
           ),

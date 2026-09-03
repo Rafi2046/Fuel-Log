@@ -35,9 +35,9 @@ class TripDefaultFabs extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF18181F).withValues(alpha: 0.94),
+              color: AppColors.mapOverlay,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF2E2E38)),
+              border: Border.all(color: AppColors.mapOverlayBorder),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.4),
@@ -68,9 +68,9 @@ class TripDefaultFabs extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF18181F).withValues(alpha: 0.94),
+                color: AppColors.mapOverlay,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF2E2E38)),
+                border: Border.all(color: AppColors.mapOverlayBorder),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.4),
@@ -102,7 +102,7 @@ class TripDefaultFabs extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF18181F).withValues(alpha: 0.94),
+                color: AppColors.mapOverlay,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.4),

@@ -107,7 +107,7 @@ class GarageVehicleCard extends StatelessWidget {
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             hasModel
                                 ? '${vehicle.type} • $modelText'
@@ -187,11 +187,11 @@ class GarageVehicleCard extends StatelessWidget {
                         ),
                       ),
 
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
 
                     // 3-Dots Action Menu
                     PopupMenuButton<String>(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.more_vert_rounded,
                         color: AppColors.textTertiary,
                         size: 20,
@@ -200,7 +200,7 @@ class GarageVehicleCard extends StatelessWidget {
                       elevation: 8,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                        side: const BorderSide(color: AppColors.border),
+                        side: BorderSide(color: AppColors.border),
                       ),
                       onSelected: (val) {
                         if (val == 'edit') onTap();
@@ -223,7 +223,7 @@ class GarageVehicleCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'edit',
                           child: Row(
                             children: [
@@ -313,10 +313,10 @@ class GarageVehicleCard extends StatelessWidget {
                           size: 13,
                           color: AppColors.textTertiary,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           regNo.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'monospace',
                             color: AppColors.textSecondary,
                             fontSize: 11,
@@ -349,7 +349,7 @@ class _MetricChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.035),
         borderRadius: BorderRadius.circular(6),
@@ -363,7 +363,7 @@ class _MetricChip extends StatelessWidget {
             size: 13,
             color: AppColors.textTertiary,
           ),
-          const SizedBox(width: 5),
+          SizedBox(width: 5),
           Text(
             label,
             style: AppTextStyles.caption.copyWith(

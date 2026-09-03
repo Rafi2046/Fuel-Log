@@ -76,16 +76,16 @@ class HomeServicesCard extends ConsumerWidget {
             height: 36,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E2A),
+              color: AppColors.control,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               border: Border.all(
-                color: const Color(0xFF2A2A3C),
+                color: AppColors.controlBorder,
                 width: 1,
               ),
             ),
             child: Icon(
               statusIcon,
-              color: const Color(0xFFA1A1AA),
+              color: AppColors.textTertiary,
               size: 17,
             ),
           ),
@@ -119,7 +119,7 @@ class HomeServicesCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   statusSubtitle,
                   style: AppTextStyles.caption.copyWith(
@@ -158,7 +158,7 @@ class HomeServicesCard extends ConsumerWidget {
           const Icon(
             LucideIcons.chevronRight,
             size: 16,
-            color: Color(0xFF71717A),
+            color: AppColors.textTertiary,
           ),
         ],
       ),

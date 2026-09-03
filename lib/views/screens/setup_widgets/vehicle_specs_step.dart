@@ -52,7 +52,7 @@ class VehicleSpecsStep extends StatelessWidget {
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             isEV
                 ? 'Odometer and battery details for analytics.'
@@ -62,7 +62,7 @@ class VehicleSpecsStep extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // Grouped Specs Container
           Text(
@@ -74,7 +74,7 @@ class VehicleSpecsStep extends StatelessWidget {
               letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Container(
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -168,7 +168,7 @@ class VehicleSpecsStep extends StatelessWidget {
                   size: 18,
                   color: AppColors.primary,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     isEV
@@ -215,7 +215,7 @@ class _SpecsInputRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
           Container(
@@ -232,7 +232,7 @@ class _SpecsInputRow extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +276,7 @@ class _SpecsInputRow extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -316,7 +316,7 @@ class _SpecsDropdownRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
         children: [
           Container(
@@ -333,7 +333,7 @@ class _SpecsDropdownRow extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +354,7 @@ class _SpecsDropdownRow extends StatelessWidget {
                     isDense: true,
                     dropdownColor: AppColors.cardElevated,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: AppColors.textSecondary,
                       size: 20,

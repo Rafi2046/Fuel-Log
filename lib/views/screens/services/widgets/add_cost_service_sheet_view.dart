@@ -37,13 +37,13 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                       color: const Color(0xFF2ECC71).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.build_circle_rounded,
                       color: Color(0xFF2ECC71),
                       size: 22,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Text(
                     'Add Cost / Service',
                     style: GoogleFonts.inter(
@@ -55,10 +55,10 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                 ],
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               // 3. Category Selector Chips
-              const Text(
+              Text(
                 'Expense Category',
                 style: TextStyle(
                   fontSize: 13,
@@ -74,13 +74,13 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                     final catId = cat['id'] as String;
                     final isSelected = _selectedCategory == catId;
                     return Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: EdgeInsets.only(right: 8),
                       child: ChoiceChip(
                         avatar: Icon(
                           cat['icon'] as IconData,
                           size: 15,
                           color: isSelected
-                              ? const Color(0xFF2ECC71)
+                              ? Color(0xFF2ECC71)
                               : AppColors.textTertiary,
                         ),
                         label: Text(cat['label'] as String),
@@ -90,15 +90,15 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                         },
                         selectedColor:
                             const Color(0xFF2ECC71).withValues(alpha: 0.18),
-                        backgroundColor: const Color(0xFF1E1E2A),
+                        backgroundColor: Color(0xFF1E1E2A),
                         side: BorderSide(
                           color: isSelected
-                              ? const Color(0xFF2ECC71)
-                              : const Color(0xFF2E2E3E),
+                              ? Color(0xFF2ECC71)
+                              : Color(0xFF2E2E3E),
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
-                              ? const Color(0xFF2ECC71)
+                              ? Color(0xFF2ECC71)
                               : AppColors.textPrimary,
                           fontSize: 12,
                           fontWeight:
@@ -111,10 +111,10 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // 4. Title Presets
-              const Text(
+              Text(
                 'Service / Item Title',
                 style: TextStyle(
                   fontSize: 13,
@@ -147,11 +147,11 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                         },
                         selectedColor:
                             AppColors.primary.withValues(alpha: 0.2),
-                        backgroundColor: const Color(0xFF1E1E2A),
+                        backgroundColor: Color(0xFF1E1E2A),
                         side: BorderSide(
                           color: isSelected
                               ? AppColors.primary
-                              : const Color(0xFF2E2E3E),
+                              : Color(0xFF2E2E3E),
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
@@ -170,25 +170,25 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
 
               // Custom Title TextField
               if (_isCustomTitle) ...[
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 TextFormField(
                   controller: _titleController,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppColors.textPrimary, fontSize: 14),
                   validator: (val) => val == null || val.trim().isEmpty
                       ? 'Please enter custom title'
                       : null,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFF1E1E2A),
+                    fillColor: Color(0xFF1E1E2A),
                     hintText: 'e.g. Engine Flush, Wiper Blade Replacement...',
-                    hintStyle: const TextStyle(
+                    hintStyle: TextStyle(
                         color: AppColors.textTertiary, fontSize: 13),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -196,17 +196,17 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
+                      borderSide: BorderSide(
                           color: AppColors.primary, width: 1.5),
                     ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // 5. Cost Input Field
-              const Text(
+              Text(
                 'Total Cost (৳) *',
                 style: TextStyle(
                   fontSize: 13,
@@ -214,11 +214,11 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               TextFormField(
                 controller: _costController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppColors.textPrimary, fontSize: 14),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -232,18 +232,18 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                 },
                 decoration: InputDecoration(
                   prefixText: '৳ ',
-                  prefixStyle: const TextStyle(
+                  prefixStyle: TextStyle(
                       color: AppColors.primary, fontWeight: FontWeight.bold),
                   filled: true,
-                  fillColor: const Color(0xFF1E1E2A),
+                  fillColor: Color(0xFF1E1E2A),
                   hintText: 'e.g. 2500',
-                  hintStyle: const TextStyle(
+                  hintStyle: TextStyle(
                       color: AppColors.textTertiary, fontSize: 13),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                    borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -266,7 +266,7 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Odometer (km)',
                           style: TextStyle(
                             fontSize: 13,
@@ -274,20 +274,20 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         TextFormField(
                           controller: _odoController,
                           keyboardType: TextInputType.number,
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: AppColors.textPrimary, fontSize: 14),
                           decoration: InputDecoration(
                             suffixText: 'km',
-                            suffixStyle: const TextStyle(
+                            suffixStyle: TextStyle(
                                 color: AppColors.textTertiary, fontSize: 12),
                             filled: true,
-                            fillColor: const Color(0xFF1E1E2A),
+                            fillColor: Color(0xFF1E1E2A),
                             hintText: 'e.g. 5000',
-                            hintStyle: const TextStyle(
+                            hintStyle: TextStyle(
                                 color: AppColors.textTertiary, fontSize: 13),
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 12),

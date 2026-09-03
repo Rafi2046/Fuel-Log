@@ -42,7 +42,7 @@ class VehicleIdentityStep extends StatelessWidget {
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Choose vehicle type and set basic identity.',
             style: AppTextStyles.bodySecondary.copyWith(
@@ -50,7 +50,7 @@ class VehicleIdentityStep extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // Section 1: Type Selection
           Text(
@@ -86,7 +86,7 @@ class VehicleIdentityStep extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // Section 2: Identity Form (Grouped Luxury Card)
           Text(
@@ -98,7 +98,7 @@ class VehicleIdentityStep extends StatelessWidget {
               letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Container(
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -176,7 +176,7 @@ class _IdentityInputRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
           Container(
@@ -193,7 +193,7 @@ class _IdentityInputRow extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

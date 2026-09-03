@@ -6,7 +6,7 @@ import '../../core/constants/app_text_styles.dart';
 
 /// Compact segmented control for 2–3 options (car/bike, km/mi, L/gal).
 class AppSegmentedControl<T> extends StatelessWidget {
-  const AppSegmentedControl({
+  AppSegmentedControl({
     super.key,
     required this.values,
     required this.labels,
@@ -22,7 +22,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xs),
+      padding: EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -71,7 +71,7 @@ class _Segment extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
               label,
               textAlign: TextAlign.center,

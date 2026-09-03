@@ -121,14 +121,14 @@ class _MetricCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 14,
-                color: const Color(0xFF94A3B8),
+                color: AppColors.textSecondary,
               ),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
                   label,
                   style: GoogleFonts.inter(
-                    color: const Color(0xFF94A3B8),
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -138,7 +138,7 @@ class _MetricCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             value,
             style: GoogleFonts.inter(
@@ -194,15 +194,15 @@ class HomeVehicleVitalsCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF71717A),
+                  color: AppColors.textSecondary,
                   letterSpacing: 0.8,
                 ),
               ),
               const Spacer(),
-              const Icon(
+              Icon(
                 LucideIcons.chevronRight,
                 size: 14,
-                color: Color(0xFF71717A),
+                color: AppColors.textTertiary,
               ),
             ],
           ),
@@ -213,7 +213,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 14),
+                    padding: EdgeInsets.only(right: 14),
                     child: _VitalItem(
                       label: 'totalDistance'.tr(),
                       value: totalDistance > 0
@@ -224,7 +224,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
                 ),
                 Container(
                   width: 1,
-                  color: const Color(0xFF262638),
+                  color: AppColors.hairline,
                 ),
                 Expanded(
                   child: Padding(
@@ -243,12 +243,12 @@ class HomeVehicleVitalsCard extends StatelessWidget {
               ],
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(
               height: 1,
               thickness: 1,
-              color: Color(0xFF262638),
+              color: AppColors.hairline,
             ),
           ),
           IntrinsicHeight(
@@ -257,7 +257,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 14),
+                    padding: EdgeInsets.only(right: 14),
                     child: _VitalItem(
                       label: 'lastRefill'.tr(),
                       value: recentLog != null
@@ -268,7 +268,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
                 ),
                 Container(
                   width: 1,
-                  color: const Color(0xFF262638),
+                  color: AppColors.hairline,
                 ),
                 Expanded(
                   child: Padding(
@@ -312,14 +312,14 @@ class _VitalItem extends StatelessWidget {
           label,
           style: GoogleFonts.inter(
             fontSize: 11.5,
-            color: const Color(0xFF94A3B8),
+            color: AppColors.textTertiary,
             fontWeight: FontWeight.w500,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: alignRight ? TextAlign.end : TextAlign.start,
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           value,
           style: GoogleFonts.inter(

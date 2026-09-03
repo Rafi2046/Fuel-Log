@@ -93,7 +93,7 @@ class _TacticalPttButtonState extends State<TacticalPttButton>
 
     return CleanGlassPanel(
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.md,
         AppSpacing.lg,
         AppSpacing.md,
@@ -196,13 +196,13 @@ class _TacticalPttButtonState extends State<TacticalPttButton>
             style: AppTextStyles.title.copyWith(fontSize: 16),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             _subtitle,
             style: AppTextStyles.caption,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -255,8 +255,8 @@ class _ModeChip extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        duration: Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.cardElevated : Colors.transparent,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),

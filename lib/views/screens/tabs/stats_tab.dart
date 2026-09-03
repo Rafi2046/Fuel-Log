@@ -29,13 +29,13 @@ class StatsTab extends ConsumerWidget {
     final serviceLogs = serviceLogsAsync.valueOrNull ?? [];
 
     if (logsAsync.isLoading && !logsAsync.hasValue) {
-      return const StatsTabSkeleton();
+      return StatsTabSkeleton();
     }
     if (logsAsync.hasError && !logsAsync.hasValue) {
       return Center(
         child: Text(
           'errorPrefix'.tr(namedArgs: {'error': '${logsAsync.error}'}),
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
       );
     }
@@ -107,7 +107,7 @@ class StatsTab extends ConsumerWidget {
 }
 
 class _StatsActionTile extends StatelessWidget {
-  const _StatsActionTile({
+  _StatsActionTile({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -120,24 +120,24 @@ class _StatsActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF161622),
+      color: AppColors.appBar,
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: Container(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.md,
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: const Color(0xFF262638)),
+            border: Border.all(color: AppColors.hairline),
           ),
           child: Row(
             children: [
               Icon(icon, size: 20, color: AppColors.primary),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   label,
@@ -149,7 +149,7 @@ class _StatsActionTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
                 color: AppColors.textTertiary,

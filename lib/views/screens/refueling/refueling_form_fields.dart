@@ -93,7 +93,7 @@ class RefuelingFormFields extends StatelessWidget {
         // Sleek Thin Vehicle Info Bar
         CleanGlassPanel(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
               Icon(
@@ -114,7 +114,7 @@ class RefuelingFormFields extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       '${vehicle.fuelType} • ${vehicle.capacity.toStringAsFixed(0)} ${isEV ? "kWh" : "L"}',
                       style: AppTextStyles.caption.copyWith(
@@ -126,7 +126,7 @@ class RefuelingFormFields extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.border.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -195,22 +195,22 @@ class RefuelingFormFields extends StatelessWidget {
           onAfterLevelChanged: onAfterLevelChanged,
           isEV: isEV,
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         // Section 4: Fuel station (optional)
         AppCard(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_gas_station_outlined,
                     color: AppColors.textTertiary,
                     size: 15,
                   ),
-                  const SizedBox(width: 5),
+                  SizedBox(width: 5),
                   Text(
                     'refuelStationOptional'.tr(),
                     style: AppTextStyles.caption.copyWith(
@@ -233,22 +233,22 @@ class RefuelingFormFields extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         // Section 5: Optional Note
         AppCard(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.edit_note_rounded,
                     color: AppColors.textTertiary,
                     size: 15,
                   ),
-                  const SizedBox(width: 5),
+                  SizedBox(width: 5),
                   Text(
                     'refuelNotesOptional'.tr(),
                     style: AppTextStyles.caption.copyWith(

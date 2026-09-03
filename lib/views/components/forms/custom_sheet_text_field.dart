@@ -44,7 +44,7 @@ class CustomSheetTextField extends StatelessWidget {
       validator: validator,
       maxLines: maxLines,
       onChanged: onChanged,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+      style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
       decoration: SheetFieldStyle.decoration(
         hintText: hintText,
         labelText: labelText,
@@ -61,7 +61,7 @@ class CustomSheetTextField extends StatelessWidget {
       children: [
         Text(
           label!,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,

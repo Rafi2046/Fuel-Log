@@ -65,11 +65,11 @@ mixin _AddCostServiceSheetController on ConsumerState<AddCostServiceSheet> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: now.add(const Duration(days: 365)),
+      lastDate: now.add(Duration(days: 365)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Color(0xFF1E1E2A),
@@ -120,7 +120,7 @@ mixin _AddCostServiceSheetController on ConsumerState<AddCostServiceSheet> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF1E1E2C),
+        backgroundColor: AppColors.control,
         content: Text(
           '✅ Added "$rawTitle" (৳${cost.toStringAsFixed(0)})',
           style: const TextStyle(color: Colors.white),

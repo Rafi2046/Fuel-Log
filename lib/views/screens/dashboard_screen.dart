@@ -66,10 +66,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF161622),
+        backgroundColor: AppColors.appBar,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF262638)),
+          side: BorderSide(color: AppColors.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -82,13 +82,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.power_settings_new_rounded,
                   color: AppColors.primary,
                   size: 28,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               Text(
                 'Exit App?',
                 style: GoogleFonts.inter(
@@ -97,8 +97,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
+              SizedBox(height: 6),
+              Text(
                 'Are you sure you want to exit Fuel-Log?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -115,12 +115,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(ctx).pop(false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF2E2E3E)),
+                          side: BorderSide(color: Color(0xFF2E2E3E)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Cancel',
                           style: TextStyle(
                             color: AppColors.textSecondary,

@@ -68,7 +68,7 @@ class IntercomRoleStatusCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Text(
             tips.headline,
             style: AppTextStyles.label.copyWith(
@@ -76,7 +76,7 @@ class IntercomRoleStatusCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             tips.body,
             style: AppTextStyles.caption.copyWith(

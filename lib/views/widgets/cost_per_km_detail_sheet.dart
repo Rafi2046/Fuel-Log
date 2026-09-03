@@ -128,7 +128,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                     color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                           letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Row(
                         children: [
                           if (vehicle != null) ...[
@@ -151,7 +151,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                               size: 13,
                               color: AppColors.textTertiary,
                             ),
-                            const SizedBox(width: 5),
+                            SizedBox(width: 5),
                             Text(
                               '${vehicle!.name} • ${vehicle!.fuelType}',
                               style: GoogleFonts.inter(
@@ -271,7 +271,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                           letterSpacing: -0.8,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         '/ km',
                         style: GoogleFonts.inter(
@@ -450,8 +450,8 @@ class CostPerKmDetailSheet extends StatelessWidget {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    icon: const Icon(LucideIcons.fuel, size: 16),
-                    label: const Text(
+                    icon: Icon(LucideIcons.fuel, size: 16),
+                    label: Text(
                       'Add Fuel Log',
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
@@ -473,11 +473,11 @@ class CostPerKmDetailSheet extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: OutlinedButton.icon(
-                    icon: const Icon(LucideIcons.wrench, size: 16),
-                    label: const Text(
+                    icon: Icon(LucideIcons.wrench, size: 16),
+                    label: Text(
                       'Add Service',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
@@ -507,7 +507,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
 
             // Secondary link to view history
             Center(
@@ -582,14 +582,14 @@ class _MetricTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: const Color(0xFF94A3B8),
+                    color: Color(0xFF94A3B8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             value,
             style: GoogleFonts.inter(

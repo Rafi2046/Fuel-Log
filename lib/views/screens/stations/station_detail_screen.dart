@@ -57,7 +57,7 @@ class StationDetailScreen extends ConsumerWidget {
         ),
       ),
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        padding: EdgeInsets.all(AppSpacing.screenPadding),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +72,7 @@ class StationDetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             Text(
               'Report Station Information',
               style: GoogleFonts.inter(
@@ -81,25 +81,25 @@ class StationDetailScreen extends ConsumerWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'Help keep pump info up to date for ${station.displayName}.',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.md),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: AppColors.primaryMuted,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: const Icon(Icons.local_gas_station_rounded, color: AppColors.primary, size: 20),
+                child: Icon(Icons.local_gas_station_rounded, color: AppColors.primary, size: 20),
               ),
-              title: const Text('Update Fuel Rates', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-              subtitle: const Text('Submit latest pump prices', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
-              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+              title: Text('Update Fuel Rates', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+              subtitle: Text('Submit latest pump prices', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+              trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
               onTap: () {
                 Navigator.of(ctx).pop();
                 if (station.prices.isNotEmpty) {
@@ -114,16 +114,16 @@ class StationDetailScreen extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: AppColors.primaryMuted,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: const Icon(Icons.directions_rounded, color: AppColors.primary, size: 20),
+                child: Icon(Icons.directions_rounded, color: AppColors.primary, size: 20),
               ),
-              title: const Text('Directions / Open Map', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-              subtitle: const Text('Open in navigation', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
-              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+              title: Text('Directions / Open Map', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+              subtitle: Text('Open in navigation', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+              trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
               onTap: () {
                 Navigator.of(ctx).pop();
                 _openGoogleMaps(station);
@@ -146,7 +146,7 @@ class StationDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppAppBar(
-        leading: const AppBackButton(),
+        leading: AppBackButton(),
         titleWidget: Text(
           currentStation.name,
           style: GoogleFonts.inter(
@@ -161,7 +161,7 @@ class StationDetailScreen extends ConsumerWidget {
           IconButton(
             icon: Icon(
               currentStation.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: currentStation.isFavorite ? const Color(0xFFFBBF24) : AppColors.textSecondary,
+              color: currentStation.isFavorite ? Color(0xFFFBBF24) : AppColors.textSecondary,
               size: 22,
             ),
             onPressed: () {
@@ -215,7 +215,7 @@ class StationDetailScreen extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,12 +229,12 @@ class StationDetailScreen extends ConsumerWidget {
                           letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       Text(
                         currentStation.address.isNotEmpty
                             ? currentStation.address
                             : 'Nearby Fuel Station',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
@@ -265,7 +265,7 @@ class StationDetailScreen extends ConsumerWidget {
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(
                             Icons.edit_note_rounded,
                             size: 15,
@@ -335,7 +335,7 @@ class StationDetailScreen extends ConsumerWidget {
                                 : AppColors.textSecondary,
                             size: 14,
                           ),
-                          const SizedBox(width: 5),
+                          SizedBox(width: 5),
                           Text(
                             '${currentStation.upvotes}',
                             style: TextStyle(
@@ -354,7 +354,7 @@ class StationDetailScreen extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
 
             // ── AVAILABLE FUEL TYPES (Minimalist Chips) ───────────────────────
             Text(
@@ -366,10 +366,10 @@ class StationDetailScreen extends ConsumerWidget {
                 color: AppColors.textTertiary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             FuelTypeBadges(categories: currentStation.availableCategories),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // ── GAS PRICES SECTION ────────────────────────────────────────────
             Text(
@@ -381,16 +381,16 @@ class StationDetailScreen extends ConsumerWidget {
                 color: AppColors.textTertiary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
             if (currentStation.prices.isEmpty)
               Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: AppColors.card,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'No price records available yet.',
                     style: TextStyle(color: AppColors.textSecondary),

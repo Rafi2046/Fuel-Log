@@ -103,7 +103,7 @@ class AppSelectableCard extends StatelessWidget {
                                   color: AppColors.primary
                                       .withValues(alpha: 0.35),
                                   blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  offset: Offset(0, 2),
                                 ),
                               ]
                             : null,
@@ -116,7 +116,7 @@ class AppSelectableCard extends StatelessWidget {
                             : AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Text(
                       title,
                       style: AppTextStyles.title.copyWith(
@@ -129,7 +129,7 @@ class AppSelectableCard extends StatelessWidget {
                       ),
                     ),
                     if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         subtitle!,
                         style: AppTextStyles.caption.copyWith(

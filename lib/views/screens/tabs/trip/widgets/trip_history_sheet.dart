@@ -12,7 +12,7 @@ Future<void> showTripHistoryModalSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0xFF141419),
+    backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppSpacing.radiusXl),
@@ -42,7 +42,7 @@ class TripHistorySheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF33333F),
+                  color: AppColors.borderStrong,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                 ),
               ),
@@ -81,15 +81,15 @@ class TripHistorySheet extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded),
                     color: AppColors.textSecondary,
                   ),
                 ],
               ),
             ),
 
-            const Divider(
-              color: Color(0xFF22222B),
+            Divider(
+              color: AppColors.divider,
               height: 1,
               thickness: 1,
             ),

@@ -14,6 +14,7 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/trip_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
+import '../../../viewmodels/theme_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../documents/e_document_vault_screen.dart';
@@ -42,6 +43,108 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       default:
         return 'languageEnglish'.tr();
     }
+  }
+
+  String _themeModeLabel(ThemeMode mode) => switch (mode) {
+        ThemeMode.light => 'themeLight'.tr(),
+        ThemeMode.dark => 'themeDark'.tr(),
+        ThemeMode.system => 'themeSystem'.tr(),
+      };
+
+  Future<void> _pickThemeMode(WidgetRef ref) async {
+    final current = ref.read(themeModeProvider);
+    final selected = await showModalBottomSheet<ThemeMode>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusXl),
+          ),
+          child: CleanGlassPanel(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppSpacing.radiusXl),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.sm,
+                  AppSpacing.screenPadding,
+                  AppSpacing.md,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'appearance'.tr(),
+                      style: AppTextStyles.title.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    for (final mode in ThemeMode.values) ...[
+                      ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                        leading: Icon(
+                          switch (mode) {
+                            ThemeMode.light => LucideIcons.sun,
+                            ThemeMode.dark => LucideIcons.moon,
+                            ThemeMode.system => LucideIcons.smartphone,
+                          },
+                          size: 20,
+                          color: mode == current
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
+                        title: Text(
+                          _themeModeLabel(mode),
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: mode == current
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: mode == current
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                        trailing: mode == current
+                            ? const Icon(
+                                LucideIcons.check,
+                                size: 18,
+                                color: AppColors.primary,
+                              )
+                            : null,
+                        onTap: () => Navigator.pop(sheetContext, mode),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (selected == null) return;
+    await ref.read(themeModeProvider.notifier).setMode(selected);
   }
 
   Future<void> _pickLanguage() async {
@@ -167,7 +270,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           backgroundColor: AppColors.cardElevated,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(color: AppColors.border),
           ),
           title: Row(
             children: [
@@ -191,10 +294,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 'This will replace your current data with the selected backup:',
                 style: AppTextStyles.bodySecondary,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -366,6 +469,13 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               onTap: _pickLanguage,
             ),
             _SettingsTile(
+              icon: LucideIcons.sunMoon,
+              title: 'appearance'.tr(),
+              subtitle: 'appearanceSubtitle'.tr(),
+              valueText: _themeModeLabel(ref.watch(themeModeProvider)),
+              onTap: () => _pickThemeMode(ref),
+            ),
+            _SettingsTile(
               icon: LucideIcons.cloudSun,
               title: 'weatherTipsAlerts'.tr(),
               subtitle: 'weatherTipsAlertsSubtitle'.tr(),
@@ -382,7 +492,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xl),
+        SizedBox(height: AppSpacing.xl),
         Center(
           child: Column(
             children: [
@@ -391,7 +501,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 size: 22,
                 color: AppColors.textTertiary.withValues(alpha: 0.7),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 'FuelSync · v1.0.0',
                 style: AppTextStyles.caption.copyWith(
@@ -400,7 +510,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   fontSize: 12,
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 '100% On-Device & Private',
                 style: AppTextStyles.caption.copyWith(
@@ -432,7 +542,7 @@ class _SettingsGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title.toUpperCase(),
             style: AppTextStyles.caption.copyWith(
@@ -494,7 +604,7 @@ class _SettingsTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           child: Row(
             children: [
               Icon(
@@ -502,7 +612,7 @@ class _SettingsTile extends StatelessWidget {
                 size: 20,
                 color: AppColors.textSecondary,
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,7 +626,7 @@ class _SettingsTile extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: AppTextStyles.caption.copyWith(
@@ -535,12 +645,12 @@ class _SettingsTile extends StatelessWidget {
                     color: AppColors.textTertiary,
                   ),
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
               ],
               if (trailing != null)
                 trailing!
               else if (onTap != null)
-                const Icon(
+                Icon(
                   LucideIcons.chevronRight,
                   size: 16,
                   color: AppColors.textTertiary,

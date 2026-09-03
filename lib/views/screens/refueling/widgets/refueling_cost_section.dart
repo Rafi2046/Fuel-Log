@@ -39,7 +39,7 @@ class RefuelingCostSection extends StatelessWidget {
     final unitSuffix = isEV ? 'kwhUnit'.tr() : 'literUnit'.tr();
 
     return AppCard(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -52,7 +52,7 @@ class RefuelingCostSection extends StatelessWidget {
                 color: AppColors.textTertiary,
                 size: 15,
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: 5),
               Text(
                 'refuelFuelExpenseSection'.tr(),
                 style: AppTextStyles.caption.copyWith(
@@ -61,7 +61,7 @@ class RefuelingCostSection extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               if (onScanReceipt != null)
                 Material(
                   color: AppColors.border.withValues(alpha: 0.35),
@@ -70,7 +70,7 @@ class RefuelingCostSection extends StatelessWidget {
                     onTap: isScanning ? null : onScanReceipt,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,
                       ),
@@ -83,7 +83,7 @@ class RefuelingCostSection extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (isScanning)
-                            const SizedBox(
+                            SizedBox(
                               width: 12,
                               height: 12,
                               child: CircularProgressIndicator(
@@ -92,12 +92,12 @@ class RefuelingCostSection extends StatelessWidget {
                               ),
                             )
                           else
-                            const Icon(
+                            Icon(
                               Icons.document_scanner_outlined,
                               size: 14,
                               color: AppColors.textSecondary,
                             ),
-                          const SizedBox(width: 5),
+                          SizedBox(width: 5),
                           Text(
                             isScanning ? 'refuelScanning'.tr() : 'refuelScanReceipt'.tr(),
                             style: AppTextStyles.caption.copyWith(

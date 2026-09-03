@@ -41,7 +41,7 @@ class MetricSinglePointHero extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Flexible(
             child: Text(
               unit,

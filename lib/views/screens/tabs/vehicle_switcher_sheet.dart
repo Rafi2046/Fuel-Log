@@ -55,7 +55,7 @@ class VehicleSwitcherSheet extends ConsumerWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
         child: ClipRRect(
           borderRadius: _sheetRadius,
           child: DecoratedBox(
@@ -99,7 +99,7 @@ class VehicleSwitcherSheet extends ConsumerWidget {
                         fontSize: 15,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'switchVehicleDeleteHint'.tr(),
                       style: AppTextStyles.caption.copyWith(
@@ -244,7 +244,7 @@ class _VehicleRow extends StatelessWidget {
                     icon: VehicleDisplay.iconFor(vehicle),
                     selected: selected,
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,7 +260,7 @@ class _VehicleRow extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Text(
                           _subtitle,
                           style: AppTextStyles.caption.copyWith(
@@ -279,11 +279,11 @@ class _VehicleRow extends StatelessWidget {
                     Container(
                       width: 20,
                       height: 20,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.check_rounded,
                         size: 13,
                         color: AppColors.textPrimary,
@@ -347,7 +347,7 @@ class _ManageGarageRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+          padding: EdgeInsets.fromLTRB(4, 6, 4, 2),
           child: Row(
             children: [
               Container(
@@ -357,13 +357,13 @@ class _ManageGarageRow extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.garage_rounded,
                   size: 17,
                   color: AppColors.textTertiary,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'manageGarage'.tr(),

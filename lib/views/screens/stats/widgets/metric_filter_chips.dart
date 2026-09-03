@@ -44,18 +44,18 @@ class MetricPeriodMenu extends StatelessWidget {
           .toList(),
       child: CleanGlassPanel(
         borderRadius: radius,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 148),
+        constraints: BoxConstraints(maxWidth: 148),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.calendar_today_outlined,
               size: 14,
               color: AppColors.textTertiary,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Flexible(
               child: Text(
                 label,
@@ -68,8 +68,8 @@ class MetricPeriodMenu extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 2),
-            const Icon(
+            SizedBox(width: 2),
+            Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 16,
               color: AppColors.textTertiary,
@@ -159,16 +159,16 @@ class _MetricSegmentCell extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+            padding: EdgeInsets.symmetric(vertical: 9, horizontal: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   icon,
                   size: 15,
-                  color: selected ? AppColors.primary : AppColors.textTertiary,
+                  color: selected ? AppColors.primary : AppColors.textSecondary,
                 ),
-                const SizedBox(width: 5),
+                SizedBox(width: 5),
                 Flexible(
                   child: Text(
                     label,

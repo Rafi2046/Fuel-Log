@@ -37,7 +37,7 @@ class RefuelingOdometerSection extends StatelessWidget {
         : '0 ${'km'.tr()}';
 
     return AppCard(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,12 +47,12 @@ class RefuelingOdometerSection extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.speed_rounded,
                       color: AppColors.textTertiary,
                       size: 15,
                     ),
-                    const SizedBox(width: 5),
+                    SizedBox(width: 5),
                     Flexible(
                       child: Text(
                         'refuelOdometerSection'.tr(),
@@ -67,9 +67,9 @@ class RefuelingOdometerSection extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.border.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -78,12 +78,12 @@ class RefuelingOdometerSection extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.history_rounded,
                       size: 10,
                       color: AppColors.textTertiary,
                     ),
-                    const SizedBox(width: 3),
+                    SizedBox(width: 3),
                     Text(
                       'refuelLastOdometer'.tr(namedArgs: {'reading': lastOdoStr}),
                       style: AppTextStyles.caption.copyWith(
@@ -135,7 +135,7 @@ class RefuelingOdometerSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'refuelTripHelper'.tr(),
             style: AppTextStyles.caption.copyWith(

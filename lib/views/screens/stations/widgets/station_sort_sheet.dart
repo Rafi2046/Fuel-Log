@@ -20,7 +20,7 @@ Future<void> showStationSortSheet(
     ),
     builder: (ctx) => SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.screenPadding,
           vertical: AppSpacing.md,
         ),
@@ -38,7 +38,7 @@ Future<void> showStationSortSheet(
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             Text(
               'Sort & Filter Stations',
               style: GoogleFonts.inter(
@@ -99,7 +99,7 @@ Widget _sortTile(
   return ListTile(
     contentPadding: EdgeInsets.zero,
     leading: Container(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: isSelected ? AppColors.primaryMuted : AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

@@ -131,7 +131,7 @@ class _FuelLogDetailSheetState extends ConsumerState<FuelLogDetailSheet> {
                   child: Container(
                     width: 36,
                     height: 4,
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    margin: EdgeInsets.only(bottom: AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: AppColors.border,
                       borderRadius: BorderRadius.circular(2),
@@ -243,7 +243,7 @@ class _PumpField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -274,11 +274,11 @@ class _PumpField extends StatelessWidget {
                   color: AppColors.textTertiary,
                 ),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
+                contentPadding: EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 9,
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.local_gas_station_outlined,
                   color: AppColors.textTertiary,
                   size: 16,
@@ -305,7 +305,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

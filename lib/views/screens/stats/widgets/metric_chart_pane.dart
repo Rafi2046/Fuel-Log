@@ -169,7 +169,7 @@ class _MetricChartPaneState extends State<MetricChartPane> {
             AppColors.card.withValues(alpha: 0.92),
           ],
         ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.washBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.22),
@@ -229,7 +229,7 @@ class _MetricChartPaneState extends State<MetricChartPane> {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.wash,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       child: SingleChildScrollView(
@@ -308,7 +308,7 @@ class MetricChartTab extends StatelessWidget {
         onTap: onTap,
         borderRadius: radius,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             borderRadius: radius,
             border: Border.all(
@@ -320,7 +320,7 @@ class MetricChartTab extends StatelessWidget {
           child: Text(
             label,
             style: AppTextStyles.label.copyWith(
-              color: selected ? AppColors.textPrimary : AppColors.textTertiary,
+              color: selected ? AppColors.textPrimary : AppColors.textSecondary,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               fontSize: 12,
             ),

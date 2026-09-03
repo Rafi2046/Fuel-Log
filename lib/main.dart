@@ -10,10 +10,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
+import 'core/constants/app_colors.dart';
 import 'core/constants/app_locales.dart';
 import 'core/constants/app_themes.dart';
 import 'core/services/bd_fuel_rate_service.dart';
 import 'core/utils/notification_service.dart';
+import 'viewmodels/theme_viewmodel.dart';
 import 'views/screens/app_startup_gate.dart';
 
 Future<void> main() async {
@@ -37,8 +39,6 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
   runApp(
     EasyLocalization(
@@ -87,20 +87,49 @@ Future<void> _bootstrapServices() async {
   }
 }
 
-class FuelLogApp extends StatelessWidget {
+class FuelLogApp extends ConsumerWidget {
   const FuelLogApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FuelSync',
-      debugShowCheckedModeBanner: false,
-      theme: AppThemes.dark,
-      themeMode: ThemeMode.dark,
-      locale: context.locale,
-      supportedLocales: context.supportedLocales,
-      localizationsDelegates: context.localizationDelegates,
-      home: const AppStartupGate(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+    final platformBrightness = ref.watch(platformBrightnessProvider);
+    syncAppColorsPalette(themeMode, platformBrightness);
+    final brightness = resolveAppBrightness(themeMode, platformBrightness);
+
+    final overlay = brightness == Brightness.dark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlay.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarIconBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: MaterialApp(
+        title: 'FuelSync',
+        debugShowCheckedModeBanner: false,
+        theme: AppThemes.light,
+        darkTheme: AppThemes.dark,
+        themeMode: themeMode,
+        locale: context.locale,
+        supportedLocales: context.supportedLocales,
+        localizationsDelegates: context.localizationDelegates,
+        builder: (context, child) {
+          // AppColors is static — keep it on the *active* MaterialApp theme and
+          // remount the subtree so glass cards/icons never stay one mode behind.
+          final active = Theme.of(context).brightness;
+          AppColors.setBrightness(active);
+          return KeyedSubtree(
+            key: ValueKey(active),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+        home: const AppStartupGate(),
+      ),
     );
   }
 }

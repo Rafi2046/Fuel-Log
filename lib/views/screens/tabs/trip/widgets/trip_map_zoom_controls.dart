@@ -25,9 +25,9 @@ class TripMapZoomControls extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF18181F).withValues(alpha: 0.94),
+            color: AppColors.mapOverlay,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF2E2E38)),
+            border: Border.all(color: AppColors.mapOverlayBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.35),
@@ -41,34 +41,34 @@ class TripMapZoomControls extends StatelessWidget {
             children: [
               InkWell(
                 onTap: onZoomIn,
-                borderRadius: const BorderRadius.vertical(
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(9),
                   child: Icon(
                     LucideIcons.plus,
                     size: 17,
-                    color: AppColors.textPrimary,
+                    color: AppColors.onMapOverlay,
                   ),
                 ),
               ),
               Container(
                 width: 22,
                 height: 1,
-                color: const Color(0xFF2E2E38),
+                color: AppColors.mapOverlayBorder,
               ),
               InkWell(
                 onTap: onZoomOut,
-                borderRadius: const BorderRadius.vertical(
+                borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(12),
                 ),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(9),
                   child: Icon(
                     LucideIcons.minus,
                     size: 17,
-                    color: AppColors.textPrimary,
+                    color: AppColors.onMapOverlay,
                   ),
                 ),
               ),
@@ -79,26 +79,26 @@ class TripMapZoomControls extends StatelessWidget {
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF18181F).withValues(alpha: 0.94),
+              color: AppColors.mapOverlay,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF2E2E38)),
+              border: Border.all(color: AppColors.mapOverlayBorder),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.35),
                   blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
             child: InkWell(
               onTap: onResetNorth,
               borderRadius: BorderRadius.circular(20),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(9),
                 child: Icon(
                   LucideIcons.compass,
                   size: 17,
-                  color: AppColors.textPrimary,
+                  color: AppColors.onMapOverlay,
                 ),
               ),
             ),
@@ -107,9 +107,9 @@ class TripMapZoomControls extends StatelessWidget {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF18181F).withValues(alpha: 0.94),
+            color: AppColors.mapOverlay,
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF2E2E38)),
+            border: Border.all(color: AppColors.mapOverlayBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.35),

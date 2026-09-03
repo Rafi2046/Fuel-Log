@@ -26,11 +26,11 @@ class AppBackButton extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E2C),
+              color: AppColors.control,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF2A2A3E)),
+              border: Border.all(color: AppColors.controlBorder),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 15,
               color: AppColors.textPrimary,
@@ -84,7 +84,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     Widget? effectiveLeading = leading;
     if (effectiveLeading == null && automaticallyImplyLeading && canPop) {
-      effectiveLeading = const AppBackButton();
+      effectiveLeading = AppBackButton();
     }
 
     return AppBar(
@@ -96,7 +96,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: centerTitle,
       toolbarHeight: toolbarHeight,
       titleSpacing: titleSpacing,
-      backgroundColor: backgroundColor ?? const Color(0xFF161622),
+      backgroundColor: backgroundColor ?? AppColors.appBar,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -108,10 +108,10 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       bottom: bottom ??
           PreferredSize(
-            preferredSize: const Size.fromHeight(_dividerHeight),
+            preferredSize: Size.fromHeight(_dividerHeight),
             child: Container(
               height: _dividerHeight,
-              color: const Color(0xFF262638),
+              color: AppColors.appBarDivider,
             ),
           ),
     );

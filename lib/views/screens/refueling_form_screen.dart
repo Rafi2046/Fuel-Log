@@ -290,21 +290,21 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 36,
                     height: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
+                    margin: EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: AppColors.border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.camera_alt_outlined,
                       color: AppColors.textSecondary,
                     ),
@@ -312,7 +312,7 @@ class _RefuelingFormScreenState extends ConsumerState<RefuelingFormScreen> {
                     onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
                   ),
                   ListTile(
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.photo_library_outlined,
                       color: AppColors.textSecondary,
                     ),

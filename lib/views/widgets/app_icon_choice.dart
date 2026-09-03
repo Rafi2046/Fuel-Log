@@ -79,9 +79,9 @@ class _ChoiceItem extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
-            shape: const CircleBorder(),
+            shape: CircleBorder(),
             child: InkWell(
-              customBorder: const CircleBorder(),
+              customBorder: CircleBorder(),
               onTap: onTap,
               child: Icon(
                 icon,
@@ -91,7 +91,7 @@ class _ChoiceItem extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         Text(
           label,
           style: AppTextStyles.caption.copyWith(

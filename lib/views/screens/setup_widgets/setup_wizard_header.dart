@@ -46,7 +46,7 @@ class SetupWizardHeader extends StatelessWidget {
                   child: IconButton(
                     padding: EdgeInsets.zero,
                     iconSize: 18,
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded),
                     color: AppColors.textPrimary,
                     onPressed: showBackButton
                         ? () {
@@ -64,7 +64,7 @@ class SetupWizardHeader extends StatelessWidget {
 
               // Step indicator pill badge
               Container(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
                 ),

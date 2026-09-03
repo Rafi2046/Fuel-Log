@@ -67,7 +67,7 @@ class TripMapChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF18181F).withValues(alpha: 0.94),
+      color: AppColors.mapOverlay,
       elevation: 4,
       shadowColor: Colors.black.withValues(alpha: 0.35),
       borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
@@ -85,7 +85,7 @@ class TripMapChip extends StatelessWidget {
             border: Border.all(
               color: isActive
                   ? AppColors.primary
-                  : const Color(0xFF2E2E38),
+                  : AppColors.mapOverlayBorder,
               width: isActive ? 1.4 : 1.0,
             ),
           ),
@@ -107,14 +107,14 @@ class TripMapChip extends StatelessWidget {
                   size: 15,
                   color: AppColors.primary,
                 ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textPrimary,
+                    color: AppColors.onMapOverlay,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

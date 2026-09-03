@@ -48,13 +48,13 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF161622),
+        backgroundColor: AppColors.appBar,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF262638)),
+          side: BorderSide(color: AppColors.hairline),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,27 +67,27 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 'Reset cycle for "${reminder.title}" at current odometer: ${currentOdo.toStringAsFixed(0)} km.',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary,
                   height: 1.35,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               TextField(
                 controller: costController,
                 keyboardType: TextInputType.number,
                 style:
-                    const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                    TextStyle(color: AppColors.textPrimary, fontSize: 14),
                 decoration: InputDecoration(
                   prefixText: '৳ ',
-                  prefixStyle: const TextStyle(
+                  prefixStyle: TextStyle(
                       color: AppColors.primary, fontWeight: FontWeight.bold),
                   labelText: 'Service Cost (Optional)',
-                  labelStyle: const TextStyle(
+                  labelStyle: TextStyle(
                       color: AppColors.textTertiary, fontSize: 13),
                   filled: true,
                   fillColor: const Color(0xFF1E1E2A),
@@ -95,7 +95,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                    borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -117,12 +117,12 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(ctx).pop(),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF2E2E3E)),
+                          side: BorderSide(color: Color(0xFF2E2E3E)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Cancel',
                           style: TextStyle(
                             color: AppColors.textSecondary,
@@ -151,7 +151,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                           Navigator.of(ctx).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              backgroundColor: const Color(0xFF1E1E2C),
+                              backgroundColor: AppColors.control,
                               content: Text(
                                 '✅ ${reminder.title} reset successfully!',
                                 style: const TextStyle(color: Colors.white),
@@ -216,7 +216,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppAppBar(
-        leading: const AppBackButton(),
+        leading: AppBackButton(),
         titleWidget: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -237,15 +237,15 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                     Container(
                       width: 5,
                       height: 5,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    SizedBox(width: 5),
                     Text(
                       vehicle.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
@@ -303,16 +303,16 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                     onTap: () => setState(() => _selectedTabIndex = 0),
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      padding: EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
                         color: _selectedTabIndex == 0
                             ? AppColors.primary.withValues(alpha: 0.18)
-                            : const Color(0xFF161622),
+                            : AppColors.appBar,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _selectedTabIndex == 0
                               ? AppColors.primary
-                              : const Color(0xFF262638),
+                              : AppColors.hairline,
                         ),
                       ),
                       child: Center(
@@ -336,16 +336,16 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                     onTap: () => setState(() => _selectedTabIndex = 1),
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      padding: EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
                         color: _selectedTabIndex == 1
-                            ? const Color(0xFF2ECC71).withValues(alpha: 0.18)
-                            : const Color(0xFF161622),
+                            ? Color(0xFF2ECC71).withValues(alpha: 0.18)
+                            : AppColors.appBar,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _selectedTabIndex == 1
-                              ? const Color(0xFF2ECC71)
-                              : const Color(0xFF262638),
+                              ? Color(0xFF2ECC71)
+                              : AppColors.hairline,
                         ),
                       ),
                       child: Center(
@@ -353,7 +353,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                           'Cost & Service History',
                           style: TextStyle(
                             color: _selectedTabIndex == 1
-                                ? const Color(0xFF2ECC71)
+                                ? Color(0xFF2ECC71)
                                 : AppColors.textSecondary,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -422,16 +422,16 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
 
           if (state.reminders.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.screenPadding,
                 vertical: 24,
               ),
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161622),
+                  color: AppColors.appBar,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF262638)),
+                  border: Border.all(color: AppColors.hairline),
                 ),
                 child: Column(
                   children: [
@@ -447,7 +447,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                         size: 32,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
                       'All Scheduled Maintenance Up-to-Date',
                       style: GoogleFonts.inter(
@@ -456,8 +456,8 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
+                    SizedBox(height: 6),
+                    Text(
                       'Tap the + icon at top right to add a custom maintenance interval for engine oil, coolant, battery, etc.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -521,12 +521,12 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     if (logsAsync.isLoading && !logsAsync.hasValue) {
-      return const ServicesSkeleton();
+      return ServicesSkeleton();
     }
     if (logsAsync.hasError && !logsAsync.hasValue) {
       return Center(
         child: Text('Error: ${logsAsync.error}',
-            style: const TextStyle(color: AppColors.textSecondary)),
+            style: TextStyle(color: AppColors.textSecondary)),
       );
     }
 
@@ -561,7 +561,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                         size: 36,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     Text(
                       'No Cost & Service Records Yet',
                       style: GoogleFonts.inter(
@@ -570,8 +570,8 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
+                    SizedBox(height: 6),
+                    Text(
                       'Tap + at the top or quick actions to record parking fees, tolls, car wash, or service bills.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -625,7 +625,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                         size: 19,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,10 +640,10 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             '${dateFormat.format(item.date)} ${item.odometer != null ? '• ${item.odometer!.toStringAsFixed(0)} km' : ''}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               color: AppColors.textTertiary,
                             ),
@@ -651,10 +651,10 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (item.note != null && item.note!.isNotEmpty) ...[
-                            const SizedBox(height: 2),
+                            SizedBox(height: 2),
                             Text(
                               item.note!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 color: AppColors.textSecondary,
                                 fontStyle: FontStyle.italic,
@@ -675,22 +675,22 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF2ECC71),
+                            color: Color(0xFF2ECC71),
                           ),
                         ),
                         PopupMenuButton<String>(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.more_vert_rounded,
                             color: AppColors.textTertiary,
                             size: 16,
                           ),
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                          constraints: BoxConstraints(),
                           color: AppColors.cardElevated,
                           elevation: 8,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: AppColors.border),
+                            side: BorderSide(color: AppColors.border),
                           ),
                           onSelected: (val) {
                             if (val == 'delete') {

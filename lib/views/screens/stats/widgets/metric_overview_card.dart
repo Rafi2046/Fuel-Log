@@ -32,7 +32,7 @@ class MetricOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CleanGlassPanel(
       borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      padding: EdgeInsets.fromLTRB(14, 12, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -41,7 +41,7 @@ class MetricOverviewCard extends StatelessWidget {
               Text(
                 'metricKpiThisPeriod'.tr(),
                 style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textTertiary,
+                  color: AppColors.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -59,7 +59,7 @@ class MetricOverviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+          Container(height: 1, color: AppColors.washDivider),
           const SizedBox(height: 12),
           MetricKpiRow(
             costPerKm: costPerKm,

@@ -70,20 +70,20 @@ class TripListView extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF18181F),
+                        color: AppColors.control,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF2E2E38),
+                          color: AppColors.mapOverlayBorder,
                           width: 1,
                         ),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.route,
                         size: 32,
                         color: AppColors.textTertiary,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     Text(
                       'No trips recorded yet. Start exploring.',
                       textAlign: TextAlign.center,
@@ -136,9 +136,9 @@ class TripListView extends ConsumerWidget {
                 await ref.read(tripLogProvider.notifier).deleteTrip(trip.id);
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text('Trip deleted'),
-                    backgroundColor: Color(0xFF1E1E2C),
+                    backgroundColor: AppColors.control,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );

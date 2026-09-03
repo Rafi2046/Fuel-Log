@@ -78,12 +78,12 @@ class DocumentCard extends StatelessWidget {
                       ),
                     ),
                     if (photoCount > 0) ...[
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF262638),
+                          color: AppColors.hairline,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(

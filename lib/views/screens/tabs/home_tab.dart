@@ -309,7 +309,7 @@ class _HomeContent extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Text(
                           isEV
                               ? 'addFirstChargeSubtitle'.tr()
@@ -328,17 +328,17 @@ class _HomeContent extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2A),
+                      color: AppColors.control,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFF2A2A3C),
+                        color: AppColors.controlBorder,
                         width: 1,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       LucideIcons.plus,
                       size: 14,
-                      color: Color(0xFFA1A1AA),
+                      color: AppColors.textTertiary,
                     ),
                   ),
                 ],

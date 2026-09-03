@@ -112,7 +112,7 @@ class _AdvancedMetricExplorerScreenState
       customRange: _customRange,
     );
     final serviceLogs = AnalyticsPeriod.filterItems<ServiceLog>(
-      items: ref.watch(serviceLogsProvider).valueOrNull ?? const [],
+      items: ref.watch(serviceLogsProvider).valueOrNull ?? [],
       getDate: (l) => l.date,
       filter: _period,
       customRange: _customRange,
@@ -128,13 +128,13 @@ class _AdvancedMetricExplorerScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppAppBar(
-        leading: const AppBackButton(),
+        leading: AppBackButton(),
         title: 'metricExplorerTitle'.tr(),
         actions: [
           IconButton(
             tooltip: 'report'.tr(),
             onPressed: () => ReportsScreen.open(context),
-            icon: const Icon(Icons.description_outlined),
+            icon: Icon(Icons.description_outlined),
             color: AppColors.textSecondary,
           ),
         ],

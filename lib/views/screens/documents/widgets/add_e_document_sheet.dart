@@ -172,13 +172,13 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _expiryDate ?? DateTime.now().add(const Duration(days: 365)),
+      initialDate: _expiryDate ?? DateTime.now().add(Duration(days: 365)),
       firstDate: DateTime(2000),
       lastDate: DateTime(2050),
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: Color(0xFFFF7A50),
               surface: Color(0xFF1E1E2A),
               onSurface: AppColors.textPrimary,
@@ -311,12 +311,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF333348),
+                    color: Color(0xFF333348),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Header
               Text(
@@ -335,16 +335,16 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B1B24),
+                  color: Color(0xFF1B1B24),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: const Color(0xFF262638), width: 1),
+                  border: Border.all(color: AppColors.hairline, width: 1),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<EDocumentType>(
@@ -395,16 +395,16 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B1B24),
+                  color: Color(0xFF1B1B24),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: const Color(0xFF262638), width: 1),
+                  border: Border.all(color: AppColors.hairline, width: 1),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<int?>(
@@ -525,14 +525,14 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: _noExpiry
-                        ? const Color(0xFF121218)
-                        : const Color(0xFF1B1B24),
+                        ? Color(0xFF121218)
+                        : Color(0xFF1B1B24),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     border:
-                        Border.all(color: const Color(0xFF262638), width: 1),
+                        Border.all(color: AppColors.hairline, width: 1),
                   ),
                   child: Row(
                     children: [
@@ -556,7 +556,7 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                             color: _noExpiry || _expiryDate == null
-                                ? const Color(0xFF94A3B8)
+                                ? Color(0xFF94A3B8)
                                 : AppColors.textPrimary,
                           ),
                         ),
@@ -613,17 +613,17 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        duration: Duration(milliseconds: 150),
+        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFF7A50).withValues(alpha: 0.15)
-              : const Color(0xFF1B1B24),
+              ? Color(0xFFFF7A50).withValues(alpha: 0.15)
+              : Color(0xFF1B1B24),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFFF7A50).withValues(alpha: 0.4)
-                : const Color(0xFF262638),
+                ? Color(0xFFFF7A50).withValues(alpha: 0.4)
+                : AppColors.hairline,
             width: 1,
           ),
         ),
@@ -653,14 +653,14 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
         height: 110,
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1B1B24),
+          color: Color(0xFF1B1B24),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
             color: hasFile
-                ? const Color(0xFF10B981).withValues(alpha: 0.5)
-                : const Color(0xFF262638),
+                ? Color(0xFF10B981).withValues(alpha: 0.5)
+                : AppColors.hairline,
             width: 1.2,
           ),
         ),
@@ -668,12 +668,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.checkCircle2,
                     color: Color(0xFF10B981),
                     size: 24,
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     title,
                     style: GoogleFonts.inter(
@@ -700,10 +700,10 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                 children: [
                   Icon(
                     isFront ? LucideIcons.idCard : LucideIcons.rotateCcw,
-                    color: const Color(0xFFFF7A50),
+                    color: Color(0xFFFF7A50),
                     size: 22,
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     title,
                     style: GoogleFonts.inter(
@@ -736,12 +736,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
-          color: const Color(0xFF1B1B24),
+          color: Color(0xFF1B1B24),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: hasFile ? const Color(0xFFFF7A50) : const Color(0xFF262638),
+            color: hasFile ? Color(0xFFFF7A50) : AppColors.hairline,
             width: 1.2,
           ),
         ),
@@ -753,7 +753,7 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                     color: const Color(0xFFFF7A50),
                     size: 24,
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,12 +788,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
               )
             : Column(
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.uploadCloud,
                     color: Color(0xFFFF7A50),
                     size: 28,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Attach Camera Photo, Gallery, or PDF',
                     style: GoogleFonts.inter(

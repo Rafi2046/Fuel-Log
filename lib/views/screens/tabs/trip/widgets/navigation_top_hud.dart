@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/constants/app_colors.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 import '../../../../../models/mock_gas_station.dart';
@@ -21,7 +22,7 @@ class NavigationTopHud extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF14141C).withValues(alpha: 0.96),
+        color: AppColors.mapOverlay,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: const Color(0xFF00E5FF).withValues(alpha: 0.4),

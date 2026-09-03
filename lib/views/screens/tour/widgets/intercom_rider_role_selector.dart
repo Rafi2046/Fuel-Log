@@ -26,7 +26,7 @@ class IntercomRiderRoleSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: AppSpacing.sm),
+          padding: EdgeInsets.only(left: 4, bottom: AppSpacing.sm),
           child: Text(
             compact ? 'Your role' : 'How are you riding?',
             style: AppTextStyles.caption.copyWith(
@@ -130,7 +130,7 @@ class _RoleTile extends StatelessWidget {
                   color: selected ? AppColors.primary : AppColors.textTertiary,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +146,7 @@ class _RoleTile extends StatelessWidget {
                       ),
                     ),
                     if (!compact) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         role.subtitle,
                         style: AppTextStyles.caption.copyWith(

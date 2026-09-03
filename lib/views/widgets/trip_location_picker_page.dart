@@ -356,13 +356,13 @@ class _MapRoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF18181F).withValues(alpha: 0.94),
-      shape: const CircleBorder(),
+      color: Color(0xFF18181F).withValues(alpha: 0.94),
+      shape: CircleBorder(),
       child: InkWell(
-        customBorder: const CircleBorder(),
+        customBorder: CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(10),
           child: Icon(icon, size: 18, color: AppColors.textPrimary),
         ),
       ),

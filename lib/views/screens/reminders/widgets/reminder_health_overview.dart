@@ -59,7 +59,7 @@ class ReminderHealthOverview extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: score,
                   strokeWidth: 5.5,
-                  backgroundColor: const Color(0xFF22222D),
+                  backgroundColor: Color(0xFF22222D),
                   valueColor: AlwaysStoppedAnimation<Color>(healthColor),
                 ),
               ),
@@ -74,7 +74,7 @@ class ReminderHealthOverview extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
 
           // Details Column
           Expanded(
@@ -84,7 +84,7 @@ class ReminderHealthOverview extends StatelessWidget {
               children: [
                 Text(
                   vehicleName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -101,10 +101,10 @@ class ReminderHealthOverview extends StatelessWidget {
                     color: healthColor,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   'Current Odo: ${state.currentOdometer.toStringAsFixed(0)} km • ${state.activeReminders.length} tracked',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textTertiary,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,

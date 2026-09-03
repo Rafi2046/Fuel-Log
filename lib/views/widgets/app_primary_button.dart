@@ -47,7 +47,7 @@ class AppPrimaryButton extends StatelessWidget {
             boxShadow: enabled && !compact ? AppShadows.floating : null,
           ),
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
@@ -61,7 +61,7 @@ class AppPrimaryButton extends StatelessWidget {
                   children: [
                     Text(label, style: AppTextStyles.button),
                     if (icon != null) ...[
-                      const SizedBox(width: AppSpacing.sm),
+                      SizedBox(width: AppSpacing.sm),
                       Icon(
                         icon,
                         size: 20,

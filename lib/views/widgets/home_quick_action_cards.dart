@@ -78,17 +78,17 @@ class _ActionTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6.5),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E2A),
+              color: AppColors.control,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               border: Border.all(
-                color: const Color(0xFF2A2A3C),
+                color: AppColors.controlBorder,
                 width: 1,
               ),
             ),
             child: Icon(
               icon,
               size: 15,
-              color: const Color(0xFFA1A1AA),
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(width: 8),
@@ -129,7 +129,7 @@ class _ActionTile extends StatelessWidget {
                   subtitle,
                   style: GoogleFonts.inter(
                     fontSize: 10.5,
-                    color: const Color(0xFF94A3B8),
+                    color: AppColors.textTertiary,
                     fontWeight: FontWeight.w400,
                   ),
                   maxLines: 1,
@@ -139,10 +139,10 @@ class _ActionTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 3),
-          const Icon(
+          Icon(
             LucideIcons.plus,
             size: 13,
-            color: Color(0xFF71717A),
+            color: AppColors.textTertiary,
           ),
         ],
       ),

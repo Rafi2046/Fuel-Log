@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../core/constants/app_colors.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/app_formatters.dart';
@@ -400,16 +401,16 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: const Color(0xFF94A3B8),
+              color: Color(0xFF94A3B8),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1B1B24),
+              color: Color(0xFF1B1B24),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF262638)),
+              border: Border.all(color: AppColors.hairline),
             ),
             child: Column(
               children: report.serviceCategoryCosts.entries.map((e) {
@@ -463,18 +464,18 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         if (services.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1B1B24),
+              color: Color(0xFF1B1B24),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF262638)),
+              border: Border.all(color: AppColors.hairline),
             ),
             child: Column(
               children: [
@@ -488,7 +489,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   'No workshop service records logged yet.',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
-                    color: const Color(0xFF94A3B8),
+                    color: Color(0xFF94A3B8),
                   ),
                 ),
               ],
@@ -496,12 +497,12 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           )
         else
           ...services.map((s) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
+                margin: EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B1B24),
+                  color: Color(0xFF1B1B24),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF262638)),
+                  border: Border.all(color: AppColors.hairline),
                 ),
                 child: Row(
                   children: [
@@ -593,15 +594,15 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
 
         // Fuel Spend & Liters Summary Card
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1B1B24),
+            color: Color(0xFF1B1B24),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF262638)),
+            border: Border.all(color: AppColors.hairline),
           ),
           child: Column(
             children: [
@@ -610,17 +611,17 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 AppCurrency.format(report.totalFuelSpend),
                 highlight: true,
               ),
-              const Divider(color: Color(0xFF262638), height: 16),
+              Divider(color: AppColors.hairline, height: 16),
               _buildDetailItem(
                 'Total Volume Consumed',
                 '${report.totalLitres.toStringAsFixed(1)} Liters',
               ),
-              const Divider(color: Color(0xFF262638), height: 16),
+              Divider(color: AppColors.hairline, height: 16),
               _buildDetailItem(
                 'Total Fill-up Logs',
                 '${report.fuelLogCount} fill-ups',
               ),
-              const Divider(color: Color(0xFF262638), height: 16),
+              Divider(color: AppColors.hairline, height: 16),
               _buildDetailItem(
                 'Average Fuel Price',
                 '${AppCurrency.format(report.avgFuelPrice)} / L',
@@ -637,37 +638,37 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         if (fuels.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1B1B24),
+              color: Color(0xFF1B1B24),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF262638)),
+              border: Border.all(color: AppColors.hairline),
             ),
             child: Center(
               child: Text(
                 'No refueling records found in this range.',
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  color: const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
           )
         else
           ...fuels.map((f) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
+                margin: EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B1B24),
+                  color: Color(0xFF1B1B24),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF262638)),
+                  border: Border.all(color: AppColors.hairline),
                 ),
                 child: Row(
                   children: [
@@ -792,16 +793,16 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1B1B24),
+            color: Color(0xFF1B1B24),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF262638)),
+            border: Border.all(color: AppColors.hairline),
           ),
           child: Column(
             children: [
@@ -1061,14 +1062,14 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
     bool isHighlighted = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1B24),
+        color: Color(0xFF1B1B24),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isHighlighted
-              ? const Color(0xFFFF7A50).withValues(alpha: 0.35)
-              : const Color(0xFF262638),
+              ? Color(0xFFFF7A50).withValues(alpha: 0.35)
+              : AppColors.hairline,
           width: 1,
         ),
       ),
@@ -1106,39 +1107,39 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
         '${ReportPreviewSheet._dateFormat.format(report.endDate)}';
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1B24),
+        color: Color(0xFF1B1B24),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF262638)),
+        border: Border.all(color: AppColors.hairline),
       ),
       child: Column(
         children: [
           _buildDetailItem('Vehicle', '${report.vehicleName} (${report.licensePlate})'),
-          const Divider(color: Color(0xFF262638), height: 16),
+          Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem('Period', period),
-          const Divider(color: Color(0xFF262638), height: 16),
+          Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
             'Total Spend',
             AppCurrency.format(report.grandTotalSpend),
             highlight: true,
           ),
-          const Divider(color: Color(0xFF262638), height: 16),
+          Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
             'Fuel Expenses',
             '${AppCurrency.format(report.totalFuelSpend)} (${report.fuelLogCount} fill-ups)',
           ),
-          const Divider(color: Color(0xFF262638), height: 16),
+          Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
             'Service Expenses',
             '${AppCurrency.format(report.totalServiceSpend)} (${report.serviceLogCount} services)',
           ),
-          const Divider(color: Color(0xFF262638), height: 16),
+          Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
             'Total Distance',
             '${report.totalDistanceKm.toStringAsFixed(0)} km',
           ),
-          const Divider(color: Color(0xFF262638), height: 16),
+          Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
             'Average Efficiency',
             '${report.avgEfficiency.toStringAsFixed(1)} km/L',

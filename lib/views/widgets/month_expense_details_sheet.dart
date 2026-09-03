@@ -153,10 +153,10 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             '${combinedItems.length} total entries recorded',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
                             ),
@@ -165,7 +165,7 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded,
+                      icon: Icon(Icons.close_rounded,
                           size: 20, color: AppColors.textTertiary),
                       onPressed: () => Navigator.of(context).pop(),
                       padding: EdgeInsets.zero,
@@ -175,7 +175,7 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                 ),
               ),
 
-              const Divider(color: Color(0xFF26263A), height: 1),
+              Divider(color: Color(0xFF26263A), height: 1),
 
               // 2. Summary Breakdown Cards
               Padding(
@@ -203,12 +203,12 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Fuel Total',
                                     style: TextStyle(
                                       fontSize: 11,
@@ -217,7 +217,7 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                                   ),
                                   Text(
                                     AppCurrency.format(_totalFuelCost),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
@@ -253,12 +253,12 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Service/Costs',
                                     style: TextStyle(
                                       fontSize: 11,
@@ -267,7 +267,7 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                                   ),
                                   Text(
                                     AppCurrency.format(_totalServiceCost),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
@@ -302,7 +302,7 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Total Monthly Spending',
                         style: TextStyle(
                           fontSize: 12.5,
@@ -323,12 +323,12 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
 
               // 4. Dynamic Height Itemized List (Shrinks for 1-2 items, scrolls if many)
               Flexible(
                 child: combinedItems.isEmpty
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.symmetric(vertical: 20),
                         child: Text(
                           'No transactions recorded for this month.',
@@ -341,13 +341,13 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: combinedItems.map((item) {
                             return Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.all(11),
+                              margin: EdgeInsets.only(bottom: 8),
+                              padding: EdgeInsets.all(11),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1E1E2E),
+                                color: Color(0xFF1E1E2E),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: const Color(0xFF2A2A3E),
+                                  color: AppColors.controlBorder,
                                 ),
                               ),
                               child: Row(
@@ -381,10 +381,10 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 2),
+                                        SizedBox(height: 2),
                                         Text(
                                           item.subtitle,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
                                             color: AppColors.textTertiary,
                                           ),
@@ -420,12 +420,12 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF2E2E44)),
+                      side: BorderSide(color: Color(0xFF2E2E44)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Close',
                       style: TextStyle(
                         color: AppColors.textSecondary,

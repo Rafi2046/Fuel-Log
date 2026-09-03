@@ -359,7 +359,7 @@ class _HostTourTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -368,12 +368,12 @@ class _HostTourTab extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.podcasts_outlined,
                 size: 18,
                 color: AppColors.textSecondary,
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   'Nearby riders connect offline over Bluetooth and Wi‑Fi Direct. No mobile data needed.',
@@ -391,12 +391,12 @@ class _HostTourTab extends StatelessWidget {
           'Tour name',
           style: AppTextStyles.label.copyWith(fontSize: 12),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         TextField(
           controller: tourNameController,
           focusNode: tourNameFocus,
           style: AppTextStyles.body.copyWith(fontSize: 15),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             prefixIcon: Icon(
               Icons.two_wheeler_outlined,
               color: AppColors.textSecondary,
@@ -470,35 +470,35 @@ class _JoinTourTab extends StatelessWidget {
             onPressed: isLoading ? null : onScanQr,
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.border),
+              side: BorderSide(color: AppColors.border),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               ),
             ),
-            icon: const Icon(Icons.qr_code_scanner_outlined, size: 18),
+            icon: Icon(Icons.qr_code_scanner_outlined, size: 18),
             label: Text(
               'Scan host QR code',
               style: AppTextStyles.button.copyWith(fontSize: 14),
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         Row(
           children: [
-            const Expanded(child: Divider(color: AppColors.divider)),
+            Expanded(child: Divider(color: AppColors.divider)),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               child: Text(
                 'or enter code',
                 style: AppTextStyles.caption,
               ),
             ),
-            const Expanded(child: Divider(color: AppColors.divider)),
+            Expanded(child: Divider(color: AppColors.divider)),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -516,7 +516,7 @@ class _JoinTourTab extends StatelessWidget {
                 'Enter the 6-character code from your host',
                 style: AppTextStyles.caption,
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               TextField(
                 controller: joinCodeController,
                 focusNode: joinCodeFocus,
@@ -572,13 +572,13 @@ class _JoinTourTab extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _InfoItem {
-  const _InfoItem({required this.icon, required this.text});
+  _InfoItem({required this.icon, required this.text});
   final IconData icon;
   final String text;
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.title, required this.items});
+  _InfoCard({required this.title, required this.items});
 
   final String title;
   final List<_InfoItem> items;
@@ -586,7 +586,7 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -602,7 +602,7 @@ class _InfoCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           ...items.map((item) {
             final isLast = item == items.last;
             return Padding(
@@ -611,7 +611,7 @@ class _InfoCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(item.icon, size: 15, color: AppColors.textTertiary),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       item.text,
@@ -638,7 +638,7 @@ class _TourHowItWorksCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InfoCard(
       title: 'How it works',
-      items: const [
+      items: [
         _InfoItem(
           icon: Icons.add_circle_outline,
           text: 'Host creates a tour and shares the join code or QR.',
@@ -663,7 +663,7 @@ class _TourRequirementsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InfoCard(
       title: 'Before you start',
-      items: const [
+      items: [
         _InfoItem(
           icon: Icons.bluetooth_outlined,
           text: 'Turn on Bluetooth on every phone.',
@@ -705,7 +705,7 @@ class _RecentTourRejoinBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -739,7 +739,7 @@ class _RecentTourRejoinBanner extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           isHost ? 'Host' : 'Rider',
                           style: AppTextStyles.caption.copyWith(
@@ -756,25 +756,25 @@ class _RecentTourRejoinBanner extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.close_rounded,
                   size: 16,
                   color: AppColors.textTertiary,
                 ),
                 onPressed: onDismiss,
-                constraints: const BoxConstraints(maxWidth: 32, maxHeight: 32),
+                constraints: BoxConstraints(maxWidth: 32, maxHeight: 32),
                 padding: EdgeInsets.zero,
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           SizedBox(
             height: AppSpacing.buttonHeightCompact,
             child: OutlinedButton(
               onPressed: isLoading ? null : onRejoin,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
-                side: const BorderSide(color: AppColors.border),
+                side: BorderSide(color: AppColors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 ),

@@ -46,13 +46,13 @@ class StationImagePlaceholder extends StatelessWidget {
       );
     }
     if (fuels.contains('ev')) {
-      return const _PlaceholderStyle(
+      return _PlaceholderStyle(
         colors: [Color(0xFF1A2B3D), Color(0xFF0E1824)],
         icon: LucideIcons.zap,
         iconColor: Color(0xFF64B5F6),
       );
     }
-    return const _PlaceholderStyle(
+    return _PlaceholderStyle(
       colors: [Color(0xFF2A2418), Color(0xFF17140E)],
       icon: LucideIcons.fuel,
       iconColor: AppColors.textTertiary,

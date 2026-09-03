@@ -63,7 +63,7 @@ class MetricKpiRow extends StatelessWidget {
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.divider,
                 ),
               Expanded(child: cells[i]),
             ],
@@ -112,10 +112,11 @@ class MetricKpiCard extends StatelessWidget {
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(5),
+              padding: EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: (highlightValue ? AppColors.primary : AppColors.textTertiary)
-                    .withValues(alpha: 0.12),
+                color: highlightValue
+                    ? AppColors.primary.withValues(alpha: 0.12)
+                    : AppColors.control,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(
@@ -123,15 +124,15 @@ class MetricKpiCard extends StatelessWidget {
                 size: 12,
                 color: highlightValue
                     ? AppColors.primary
-                    : AppColors.textTertiary,
+                    : AppColors.textSecondary,
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Expanded(
               child: Text(
                 title,
                 style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textTertiary,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                   fontSize: 10,
                   height: 1.1,
@@ -142,7 +143,7 @@ class MetricKpiCard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           value,
           style: AppTextStyles.title.copyWith(
@@ -153,11 +154,11 @@ class MetricKpiCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Text(
           hint,
           style: AppTextStyles.caption.copyWith(
-            color: AppColors.textTertiary,
+            color: AppColors.textSecondary,
             fontSize: 9,
             height: 1.1,
           ),

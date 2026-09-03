@@ -157,7 +157,7 @@ class MileageLogTile extends ConsumerWidget {
                   ),
                   if (station != null && station.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 2),
+                      padding: EdgeInsets.only(top: 2),
                       child: Text(
                         station,
                         maxLines: 1,

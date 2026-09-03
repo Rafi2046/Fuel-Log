@@ -35,7 +35,7 @@ class AppToggleRow extends StatelessWidget {
               children: [
                 Text(title, style: AppTextStyles.body),
                 if (subtitle != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(height: AppSpacing.xs),
                   Text(subtitle!, style: AppTextStyles.caption),
                 ],
               ],

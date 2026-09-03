@@ -352,12 +352,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           children: tabs.map((tab) {
             final isSelected = _selectedCategory == tab.$1;
             return Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: EdgeInsets.only(right: 8),
               child: InkWell(
                 onTap: () => setState(() => _selectedCategory = tab.$1),
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
                   ),
@@ -439,7 +439,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               width: 1,
             ),
           ),
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -459,7 +459,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   item.icon,
                   size: 17,
                   color: isUrgent
-                      ? const Color(0xFFEF4444)
+                      ? Color(0xFFEF4444)
                       : AppColors.textPrimary,
                 ),
               ),
@@ -479,21 +479,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: isUrgent
-                                ? const Color(0xFFEF4444)
+                                ? Color(0xFFEF4444)
                                 : AppColors.textTertiary,
                             letterSpacing: 0.2,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Container(
                           width: 3,
                           height: 3,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.textTertiary,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           item.timeAgo,
                           style: GoogleFonts.inter(
@@ -507,7 +507,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           onTap: () =>
                               setState(() => _dismissedIds.add(item.id)),
                           borderRadius: BorderRadius.circular(10),
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.all(2),
                             child: Icon(
                               Icons.close_rounded,
@@ -518,7 +518,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    SizedBox(height: 5),
 
                     // Title
                     Text(
@@ -530,7 +530,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         height: 1.25,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
 
                     // Body
                     Text(
@@ -579,7 +579,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
+        padding: EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -593,13 +593,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   color: Colors.white.withValues(alpha: 0.08),
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.bellOff,
                 size: 24,
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             Text(
               'notificationsEmptyTitle'.tr(),
               style: GoogleFonts.inter(
@@ -608,7 +608,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'notificationsEmptySubtitle'.tr(),
               textAlign: TextAlign.center,

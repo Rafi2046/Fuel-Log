@@ -47,13 +47,13 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                       color: AppColors.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.notifications_active_rounded,
                       color: AppColors.primary,
                       size: 22,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Text(
                     'Add Maintenance Reminder',
                     style: GoogleFonts.inter(
@@ -65,10 +65,10 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                 ],
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               // Horizontal Tab Bar Choice Chips for Reminder Title
-              const Text(
+              Text(
                 'Reminder Title',
                 style: TextStyle(
                   fontSize: 13,
@@ -104,11 +104,11 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                           }
                         },
                         selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                        backgroundColor: const Color(0xFF1E1E2A),
+                        backgroundColor: Color(0xFF1E1E2A),
                         side: BorderSide(
                           color: isSelected
                               ? AppColors.primary
-                              : const Color(0xFF2E2E3E),
+                              : Color(0xFF2E2E3E),
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
@@ -127,23 +127,23 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
 
               // Conditionally show Custom Title TextField ONLY if 'Custom Title...' is selected
               if (_isCustomTitle) ...[
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 TextFormField(
                   controller: _titleController,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
                   validator: (val) =>
                       val == null || val.trim().isEmpty ? 'Please enter a custom title' : null,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFF1E1E2A),
+                    fillColor: Color(0xFF1E1E2A),
                     labelText: 'Custom Title Name',
-                    labelStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                    labelStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                     hintText: 'e.g. Transmission Fluid, Coolant Flush...',
-                    hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                    hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -165,13 +165,13 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                   children: [
                     Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(
+                      children: [
+                        const Icon(
                           Icons.oil_barrel_rounded,
                           color: AppColors.primary,
                           size: 16,
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Text(
                           'Oil Type',
                           style: TextStyle(
@@ -186,7 +186,7 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                       child: Text(
                         'Current Odo: ${currentOdo.toStringAsFixed(0)} km',
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           color: AppColors.textTertiary,
                           fontWeight: FontWeight.w500,
@@ -204,16 +204,16 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                           orElse: () => kReminderOilTypes.first,
                         )['label'] as String
                       : null,
-                  dropdownColor: const Color(0xFF1E1E2A),
-                  style: const TextStyle(
+                  dropdownColor: Color(0xFF1E1E2A),
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFF1E1E2A),
+                    fillColor: Color(0xFF1E1E2A),
                     hintText: 'Select oil type',
-                    hintStyle: const TextStyle(
+                    hintStyle: TextStyle(
                       color: AppColors.textTertiary,
                       fontSize: 13,
                     ),
@@ -257,8 +257,8 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
 
               // Target Odometer (km) - Conditionally hidden for Date-Only reminders (Tax Token, Insurance, etc.)
               if (!_isDateOnlyReminder) ...[
-                const SizedBox(height: 16),
-                const Text(
+                SizedBox(height: 16),
+                Text(
                   'Target Odometer (km)',
                   style: TextStyle(
                     fontSize: 13,
@@ -266,22 +266,22 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 TextFormField(
                   controller: _targetOdoController,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
                   decoration: InputDecoration(
                     suffixText: 'km',
-                    suffixStyle: const TextStyle(color: AppColors.textTertiary),
+                    suffixStyle: TextStyle(color: AppColors.textTertiary),
                     filled: true,
-                    fillColor: const Color(0xFF1E1E2A),
+                    fillColor: Color(0xFF1E1E2A),
                     hintText: 'e.g. 5000 (Optional)',
-                    hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                    hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: Color(0xFF2E2E3E)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -289,18 +289,18 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Target Date Picker
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Target Date',
                     style: TextStyle(
                       fontSize: 13,
@@ -355,7 +355,7 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                               color: _selectedTargetDate != null
                                   ? AppColors.textPrimary
                                   : _isDateOnlyReminder
-                                      ? const Color(0xFFEF4444)
+                                      ? Color(0xFFEF4444)
                                       : AppColors.textTertiary,
                               fontSize: 14,
                             ),
@@ -365,14 +365,14 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                       if (_selectedTargetDate != null)
                         GestureDetector(
                           onTap: () => setState(() => _selectedTargetDate = null),
-                          child: const Icon(
+                          child: Icon(
                             Icons.close_rounded,
                             color: AppColors.textTertiary,
                             size: 18,
                           ),
                         )
                       else
-                        const Icon(
+                        Icon(
                           Icons.chevron_right_rounded,
                           color: AppColors.textTertiary,
                           size: 20,

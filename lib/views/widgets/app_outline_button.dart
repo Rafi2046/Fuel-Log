@@ -44,7 +44,7 @@ class _AppOutlineButtonState extends State<AppOutlineButton> {
           child: Container(
             height: AppSpacing.buttonHeight,
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             decoration: BoxDecoration(
               borderRadius: radius,
               border: Border.all(color: AppColors.borderStrong, width: 1.2),

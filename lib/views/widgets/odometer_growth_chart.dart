@@ -134,7 +134,7 @@ class _SingleOdometerChart extends StatelessWidget {
                 drawVerticalLine: false,
                 horizontalInterval: (safeMaxY - safeMinY) / 2,
                 getDrawingHorizontalLine: (_) => FlLine(
-                  color: Colors.white.withValues(alpha: 0.04),
+                  color: AppColors.wash,
                   strokeWidth: 1,
                 ),
               ),
@@ -255,7 +255,7 @@ class _OdometerTrendChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: (safeMaxY - safeMinY) / 3,
               getDrawingHorizontalLine: (_) => FlLine(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.wash,
                 strokeWidth: 1,
               ),
             ),
@@ -274,7 +274,7 @@ class _OdometerTrendChart extends StatelessWidget {
                   interval: (safeMaxY - safeMinY) / 2,
                   getTitlesWidget: (value, _) {
                     if (value <= safeMinY || value >= safeMaxY) {
-                      return const SizedBox.shrink();
+                      return SizedBox.shrink();
                     }
                     return Text(
                       OdometerGrowthChart._formatOdo(value),
@@ -294,13 +294,13 @@ class _OdometerTrendChart extends StatelessWidget {
                   getTitlesWidget: (value, _) {
                     final i = value.round();
                     if (i < 0 || i >= logs.length) {
-                      return const SizedBox.shrink();
+                      return SizedBox.shrink();
                     }
                     final show =
                         i == 0 || i == logs.length - 1 || i % labelStep == 0;
-                    if (!show) return const SizedBox.shrink();
+                    if (!show) return SizedBox.shrink();
                     return Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: 4),
                       child: MetricChartLayout.axisDateLabel(
                         OdometerGrowthChart._axisLabel(logs, i),
                         color: AppColors.textSecondary,
@@ -418,9 +418,9 @@ class _OdometerChartEmpty extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             'chartNeedMoreLogs'.tr(),
             textAlign: TextAlign.center,

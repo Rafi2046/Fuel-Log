@@ -49,13 +49,13 @@ class MileageSummaryCard extends ConsumerWidget {
                   color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.speed_rounded,
                   color: AppColors.primary,
                   size: 14,
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
+              SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   'Average Mileage',
@@ -91,7 +91,7 @@ class MileageSummaryCard extends ConsumerWidget {
                   height: 1.1,
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
+              SizedBox(width: AppSpacing.xs),
               Text(
                 selectedUnit.label,
                 style: AppTextStyles.body.copyWith(
@@ -102,8 +102,8 @@ class MileageSummaryCard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          const Divider(color: AppColors.divider, height: 1),
+          SizedBox(height: AppSpacing.sm),
+          Divider(color: AppColors.divider, height: 1),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -145,7 +145,7 @@ class MileageSummaryCard extends ConsumerWidget {
 }
 
 class _UnitSegmentedControl extends StatelessWidget {
-  const _UnitSegmentedControl({
+  _UnitSegmentedControl({
     required this.selectedUnit,
     required this.onUnitChanged,
   });
@@ -192,7 +192,7 @@ class _UnitSegmentedControl extends StatelessWidget {
 }
 
 class _SubStatTile extends StatelessWidget {
-  const _SubStatTile({
+  _SubStatTile({
     required this.icon,
     required this.label,
     required this.value,
@@ -210,7 +210,7 @@ class _SubStatTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 11, color: AppColors.textTertiary),
-            const SizedBox(width: 2),
+            SizedBox(width: 2),
             Flexible(
               child: Text(
                 label,
@@ -224,7 +224,7 @@ class _SubStatTile extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(
           value,
           maxLines: 1,

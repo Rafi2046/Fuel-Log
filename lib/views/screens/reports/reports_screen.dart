@@ -168,7 +168,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     size: 19,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +183,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       Text(
                         'Share CSV & text reports',
                         style: AppTextStyles.caption.copyWith(
@@ -203,9 +203,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 8),
+            padding: EdgeInsets.only(left: 2, bottom: 8),
             child: Text(
               'SELECT REPORT',
               style: AppTextStyles.caption.copyWith(
@@ -276,9 +276,9 @@ class _DateFilterChip extends StatelessWidget {
                 size: 13,
                 color: active ? AppColors.primary : AppColors.textTertiary,
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: 5),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 96),
+                constraints: BoxConstraints(maxWidth: 96),
                 child: Text(
                   label,
                   style: AppTextStyles.caption.copyWith(

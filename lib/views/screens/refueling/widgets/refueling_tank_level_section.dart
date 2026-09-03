@@ -80,8 +80,8 @@ class RefuelingTankLevelSection extends StatelessWidget {
                             ),
                           ),
                           if (isFullTank) ...[
-                            const SizedBox(width: 4),
-                            const Icon(
+                            SizedBox(width: 4),
+                            Icon(
                               Icons.lock_outline_rounded,
                               size: 12,
                               color: AppColors.textTertiary,
@@ -89,7 +89,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 1),
+                      SizedBox(height: 1),
                       Text(
                         isFullTank
                             ? 'refuelSetupTankDisabled'.tr()
@@ -119,22 +119,22 @@ class RefuelingTankLevelSection extends StatelessWidget {
 
         // 3. Expanded Fuel Level Sliders & Capacity Summary (when Set Up Tank Level is ON)
         if (!isFullTank && isSetupTankLevel) ...[
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: Duration(milliseconds: 250),
             child: AppCard(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.tune_rounded,
                         color: AppColors.textTertiary,
                         size: 15,
                       ),
-                      const SizedBox(width: 5),
+                      SizedBox(width: 5),
                       Text(
                         'refuelFuelLevelSection'.tr(),
                         style: AppTextStyles.caption.copyWith(
@@ -145,7 +145,7 @@ class RefuelingTankLevelSection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // Fuel Level BEFORE Slider
                   _LevelSliderWidget(
@@ -167,13 +167,13 @@ class RefuelingTankLevelSection extends StatelessWidget {
                     },
                     activeColor: AppColors.primary,
                   ),
-                  const SizedBox(height: 10),
-                  const Divider(color: AppColors.divider, height: 1),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
+                  Divider(color: AppColors.divider, height: 1),
+                  SizedBox(height: 10),
 
                   // Responsive Overflow-Safe Estimation Grid
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.cardElevated,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -289,8 +289,8 @@ class _LevelSliderWidget extends StatelessWidget {
             return GestureDetector(
               onTap: () => onChanged(preset),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                duration: Duration(milliseconds: 150),
+                padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.textSecondary
@@ -347,7 +347,7 @@ class _EstimateStatTile extends StatelessWidget {
             color: AppColors.textTertiary,
           ),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(

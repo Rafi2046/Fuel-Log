@@ -92,7 +92,7 @@ class MetricMonthlyDistancePanel extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: safeMaxY / 3,
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: AppColors.wash,
                     strokeWidth: 1,
                   ),
                 ),
@@ -111,10 +111,10 @@ class MetricMonthlyDistancePanel extends StatelessWidget {
                       interval: safeMaxY / 2,
                       getTitlesWidget: (value, _) {
                         if (value <= 0 || value >= safeMaxY) {
-                          return const SizedBox.shrink();
+                          return SizedBox.shrink();
                         }
                         return Padding(
-                          padding: const EdgeInsets.only(right: 4),
+                          padding: EdgeInsets.only(right: 4),
                           child: Text(
                             _axisLabel(value),
                             style: AppTextStyles.caption.copyWith(
@@ -133,11 +133,11 @@ class MetricMonthlyDistancePanel extends StatelessWidget {
                       getTitlesWidget: (value, _) {
                         final i = value.toInt();
                         if (i < 0 || i >= months.length) {
-                          return const SizedBox.shrink();
+                          return SizedBox.shrink();
                         }
                         final m = months[i];
                         return Padding(
-                          padding: const EdgeInsets.only(top: 6),
+                          padding: EdgeInsets.only(top: 6),
                           child: Text(
                             m.shortLabel,
                             style: AppTextStyles.caption.copyWith(
@@ -161,7 +161,7 @@ class MetricMonthlyDistancePanel extends StatelessWidget {
                     fitInsideVertically: true,
                     getTooltipColor: (_) => AppColors.cardElevated,
                     tooltipBorder: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: AppColors.washBorder,
                     ),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final m = months[group.x];
@@ -244,9 +244,9 @@ class _MonthKmRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: AppColors.wash,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          border: Border.all(color: AppColors.washDivider),
         ),
         child: Row(
           children: [

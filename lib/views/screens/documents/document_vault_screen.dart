@@ -135,16 +135,16 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: const Center(
+        body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F17),
+      backgroundColor: Color(0xFF0F0F17),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F0F17),
+        backgroundColor: Color(0xFF0F0F17),
         elevation: 0,
         title: Text(
           'documentVaultTitle'.tr(),
@@ -229,7 +229,7 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
 
   Widget _buildSummaryCard(DocumentVaultSummary summary) {
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -238,19 +238,19 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
             value: summary.totalDocs.toString(),
             color: AppColors.textPrimary,
           ),
-          Container(width: 1, height: 28, color: const Color(0xFF262638)),
+          Container(width: 1, height: 28, color: AppColors.hairline),
           _buildStatCol(
             title: 'Valid',
             value: summary.validDocs.toString(),
-            color: const Color(0xFF34D399),
+            color: Color(0xFF34D399),
           ),
-          Container(width: 1, height: 28, color: const Color(0xFF262638)),
+          Container(width: 1, height: 28, color: AppColors.hairline),
           _buildStatCol(
             title: 'Expiring Soon',
             value: summary.expiringSoonDocs.toString(),
-            color: const Color(0xFFFBBF24),
+            color: Color(0xFFFBBF24),
           ),
-          Container(width: 1, height: 28, color: const Color(0xFF262638)),
+          Container(width: 1, height: 28, color: AppColors.hairline),
           _buildStatCol(
             title: 'Expired',
             value: summary.expiredDocs.toString(),
@@ -276,12 +276,12 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
             color: color,
           ),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(
           title,
           style: GoogleFonts.inter(
             fontSize: 10.5,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -291,11 +291,11 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
 
   Widget _buildTabSegment(DocumentTabFilter activeTab) {
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
+        color: AppColors.appBar,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF262638), width: 1),
+        border: Border.all(color: AppColors.hairline, width: 1),
       ),
       child: Row(
         children: [
@@ -336,9 +336,9 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
             .read(selectedDocumentTabFilterProvider.notifier)
             .state = filter,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 7),
+          padding: EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF262638) : Colors.transparent,
+            color: isSelected ? AppColors.hairline : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           alignment: Alignment.center,
@@ -363,26 +363,26 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
       child: Row(
         children: [
           Padding(
-            padding: const EdgeInsets.only(right: 6),
+            padding: EdgeInsets.only(right: 6),
             child: ChoiceChip(
-              label: const Text('All Types'),
+              label: Text('All Types'),
               selected: selected == null,
               onSelected: (_) => ref
                   .read(selectedDocumentCategoryFilterProvider.notifier)
                   .state = null,
-              selectedColor: const Color(0xFF2E2E42),
-              backgroundColor: const Color(0xFF161622),
+              selectedColor: Color(0xFF2E2E42),
+              backgroundColor: AppColors.appBar,
               labelStyle: GoogleFonts.inter(
                 fontSize: 11.5,
                 fontWeight: selected == null ? FontWeight.w600 : FontWeight.w500,
-                color: selected == null ? Colors.white : const Color(0xFF94A3B8),
+                color: selected == null ? Colors.white : Color(0xFF94A3B8),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
                   color: selected == null
-                      ? const Color(0xFF3F3F56)
-                      : const Color(0xFF262638),
+                      ? Color(0xFF3F3F56)
+                      : AppColors.hairline,
                 ),
               ),
             ),
@@ -400,7 +400,7 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
                         color: isSelected
                             ? Colors.white
                             : const Color(0xFF94A3B8)),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(cat.localizedName),
                   ],
                 ),
@@ -410,22 +410,22 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
                       .read(selectedDocumentCategoryFilterProvider.notifier)
                       .state = isSelected ? null : cat;
                 },
-                selectedColor: const Color(0xFF2E2E42),
-                backgroundColor: const Color(0xFF161622),
+                selectedColor: Color(0xFF2E2E42),
+                backgroundColor: AppColors.appBar,
                 labelStyle: GoogleFonts.inter(
                   fontSize: 11.5,
                   fontWeight:
                       isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected
                       ? Colors.white
-                      : const Color(0xFF94A3B8),
+                      : Color(0xFF94A3B8),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(
                     color: isSelected
-                        ? const Color(0xFF3F3F56)
-                        : const Color(0xFF262638),
+                        ? Color(0xFF3F3F56)
+                        : AppColors.hairline,
                   ),
                 ),
               ),
@@ -439,11 +439,11 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
   Widget _buildEmptyState(BuildContext context, int? vehicleId) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
+        color: AppColors.appBar,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: const Color(0xFF262638), width: 1),
+        border: Border.all(color: AppColors.hairline, width: 1),
       ),
       child: Column(
         children: [
@@ -452,15 +452,15 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF1E1E2A),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF2A2A3C), width: 1),
+              border: Border.all(color: Color(0xFF2A2A3C), width: 1),
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.fileLock2,
               size: 36,
               color: Color(0xFF10B981),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             'docEmptyTitle'.tr(),
             style: GoogleFonts.inter(

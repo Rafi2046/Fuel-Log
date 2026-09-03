@@ -49,7 +49,7 @@ class StationFilterChips extends StatelessWidget {
             selected: isSelected,
             selectedColor: AppColors.primary,
             backgroundColor: AppColors.card,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
               side: BorderSide(

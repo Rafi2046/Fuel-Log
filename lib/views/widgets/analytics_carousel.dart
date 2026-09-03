@@ -114,7 +114,7 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        SizedBox(height: AppSpacing.xs),
         Container(
           height: widget.chartHeight,
           width: double.infinity,
@@ -148,7 +148,7 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       child: Tooltip(
                         message: 'expandChart'.tr(),
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.all(8),
                           child: Icon(
                             Icons.open_in_full_rounded,
@@ -171,12 +171,12 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
             return GestureDetector(
               onTap: () => _controller.animateToPage(
                 i,
-                duration: const Duration(milliseconds: 250),
+                duration: Duration(milliseconds: 250),
                 curve: Curves.easeOut,
               ),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
+                duration: Duration(milliseconds: 200),
+                margin: EdgeInsets.symmetric(horizontal: 3),
                 width: active ? 18 : 6,
                 height: 6,
                 decoration: BoxDecoration(

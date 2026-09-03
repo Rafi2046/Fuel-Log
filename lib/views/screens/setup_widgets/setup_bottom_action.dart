@@ -23,7 +23,7 @@ class SetupBottomAction extends ConsumerWidget {
         currentStep == 1 && ref.watch(vehicleProvider).isLoading;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
         AppSpacing.sm,
         AppSpacing.screenPadding,

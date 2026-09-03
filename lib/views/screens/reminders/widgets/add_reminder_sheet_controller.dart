@@ -91,11 +91,11 @@ mixin _AddReminderSheetController on ConsumerState<AddReminderSheet> {
       context: context,
       initialDate: initialDate.isBefore(now) ? now : initialDate,
       firstDate: now,
-      lastDate: now.add(const Duration(days: 365 * 5)),
+      lastDate: now.add(Duration(days: 365 * 5)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Color(0xFF1E1E2A),
@@ -223,7 +223,7 @@ mixin _AddReminderSheetController on ConsumerState<AddReminderSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('✅ Reminder "$finalTitle" saved successfully!'),
-          backgroundColor: const Color(0xFF1E1E2C),
+          backgroundColor: AppColors.control,
           behavior: SnackBarBehavior.floating,
         ),
       );

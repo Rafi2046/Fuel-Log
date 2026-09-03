@@ -67,13 +67,13 @@ class MonthlyCostBreakdown extends StatelessWidget {
     final months = _months;
     if (months.isEmpty) {
       return AppCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         child: Text('noLogsYet'.tr(), style: AppTextStyles.caption),
       );
     }
 
     return AppCard(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
@@ -81,7 +81,7 @@ class MonthlyCostBreakdown extends StatelessWidget {
         children: [
           for (var i = 0; i < months.length; i++) ...[
             if (i > 0)
-              const Divider(height: 1, color: AppColors.divider),
+              Divider(height: 1, color: AppColors.divider),
             _MonthRow(month: months[i]),
           ],
         ],
@@ -140,8 +140,8 @@ class _MonthRow extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(
+                  SizedBox(width: 4),
+                  Icon(
                     Icons.chevron_right_rounded,
                     size: 16,
                     color: AppColors.textTertiary,

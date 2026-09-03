@@ -76,10 +76,10 @@ class TripSummaryCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
-          color: const Color(0xFF2A2A32),
+          color: AppColors.border,
           width: 1,
         ),
         boxShadow: [
@@ -119,7 +119,7 @@ class TripSummaryCard extends ConsumerWidget {
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         title,
@@ -138,11 +138,11 @@ class TripSummaryCard extends ConsumerWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF24242E),
+                        color: AppColors.control,
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusPill),
                         border: Border.all(
-                          color: const Color(0xFF353542),
+                          color: AppColors.controlBorder,
                           width: 0.8,
                         ),
                       ),
@@ -176,7 +176,7 @@ class TripSummaryCard extends ConsumerWidget {
                         Container(
                           width: 1.5,
                           height: 22,
-                          color: const Color(0xFF3E3E4D),
+                          color: AppColors.border,
                           margin: const EdgeInsets.symmetric(vertical: 2),
                         ),
                         Container(
@@ -203,7 +203,7 @@ class TripSummaryCard extends ConsumerWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text(
                             destination,
                             maxLines: 1,
@@ -219,21 +219,21 @@ class TripSummaryCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
-                const Divider(
-                  color: Color(0xFF262630),
+                SizedBox(height: AppSpacing.md),
+                Divider(
+                  color: AppColors.divider,
                   height: 1,
                   thickness: 1,
                 ),
-                const SizedBox(height: AppSpacing.sm + 2),
+                SizedBox(height: AppSpacing.sm + 2),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       LucideIcons.calendar,
                       size: 13,
                       color: AppColors.textTertiary,
                     ),
-                    const SizedBox(width: 5),
+                    SizedBox(width: 5),
                     Expanded(
                       child: Text(
                         formattedDate,
@@ -301,7 +301,7 @@ class TripSummaryCard extends ConsumerWidget {
 }
 
 class _TripStat extends StatelessWidget {
-  const _TripStat({
+  _TripStat({
     required this.label,
     required this.value,
     this.emphasize = false,
@@ -323,7 +323,7 @@ class _TripStat extends StatelessWidget {
             fontSize: 10,
           ),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(
           value,
           maxLines: 1,

@@ -54,12 +54,12 @@ class MetricExplorerEmptyState extends StatelessWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.04),
+                      color: AppColors.wash,
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: AppColors.washBorder,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.insights_outlined,
                       color: AppColors.textSecondary,
                       size: 22,
@@ -73,9 +73,9 @@ class MetricExplorerEmptyState extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
                       'chartNeedMoreLogs'.tr(),
                       textAlign: TextAlign.center,
@@ -104,7 +104,7 @@ class MetricExplorerEmptyState extends StatelessWidget {
                     )
                   else
                     _MetricEmptyInfoLine(text: 'metricEmptyTipCosts'.tr()),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
                     logsLabel,
                     textAlign: TextAlign.center,
@@ -161,7 +161,7 @@ class _MetricUnlockSteps extends StatelessWidget {
           child: Container(
             width: 20,
             height: 1,
-            color: Colors.white.withValues(alpha: 0.1),
+            color: AppColors.washBorder,
           ),
         ),
         Expanded(
@@ -208,7 +208,7 @@ class _StepTile extends StatelessWidget {
         ? AppColors.primary.withValues(alpha: 0.28)
         : highlighted
             ? AppColors.primary.withValues(alpha: 0.45)
-            : Colors.white.withValues(alpha: 0.07);
+            : AppColors.washStrong;
 
     final content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -227,7 +227,7 @@ class _StepTile extends StatelessWidget {
                     ? AppColors.primary
                     : AppColors.textTertiary,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Expanded(
             child: Text(
               label,
@@ -251,7 +251,7 @@ class _StepTile extends StatelessWidget {
           ? AppColors.primary.withValues(alpha: 0.1)
           : highlighted
               ? AppColors.primary.withValues(alpha: 0.06)
-              : Colors.white.withValues(alpha: 0.03),
+              : AppColors.wash,
       borderRadius: radius,
       child: onTap == null
           ? content
@@ -273,11 +273,11 @@ class _MetricEmptyInfoLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: AppColors.wash,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: AppColors.washStrong),
       ),
       child: Text(
         text,

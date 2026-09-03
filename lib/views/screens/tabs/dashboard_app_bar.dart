@@ -180,7 +180,7 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
                                   ],
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.keyboard_arrow_down_rounded,
                                 color: AppColors.textTertiary,
                                 size: 18,
@@ -238,7 +238,7 @@ class _GhostIconButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(9),
+          padding: EdgeInsets.all(9),
           child: Stack(
             clipBehavior: Clip.none,
             children: [

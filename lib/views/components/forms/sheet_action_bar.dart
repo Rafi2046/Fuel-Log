@@ -29,14 +29,14 @@ class SheetActionBar extends StatelessWidget {
             child: OutlinedButton(
               onPressed: onCancel ?? () => Navigator.of(context).pop(),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF2E2E3E)),
+                side: BorderSide(color: Color(0xFF2E2E3E)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
                 cancelLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,

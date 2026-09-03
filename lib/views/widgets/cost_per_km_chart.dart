@@ -160,7 +160,7 @@ class _SingleCostPerKmChart extends StatelessWidget {
                 drawVerticalLine: false,
                 horizontalInterval: safeMaxY / 2,
                 getDrawingHorizontalLine: (_) => FlLine(
-                  color: Colors.white.withValues(alpha: 0.04),
+                  color: AppColors.wash,
                   strokeWidth: 1,
                 ),
               ),
@@ -182,10 +182,10 @@ class _SingleCostPerKmChart extends StatelessWidget {
                     interval: 0.5,
                     getTitlesWidget: (value, _) {
                       if ((value - 0.5).abs() > 0.01) {
-                        return const SizedBox.shrink();
+                        return SizedBox.shrink();
                       }
                       return Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: EdgeInsets.only(top: 6),
                         child: Text(
                           point.label,
                           style: AppTextStyles.caption.copyWith(
@@ -254,7 +254,7 @@ class _CostPerKmTrendChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+          padding: EdgeInsets.fromLTRB(8, 0, 8, 4),
           child: Row(
             children: [
               Text(
@@ -289,7 +289,7 @@ class _CostPerKmTrendChart extends StatelessWidget {
                 drawVerticalLine: false,
                 horizontalInterval: (safeMaxY - safeMinY) / 2,
                 getDrawingHorizontalLine: (_) => FlLine(
-                  color: Colors.white.withValues(alpha: 0.04),
+                  color: AppColors.wash,
                   strokeWidth: 1,
                 ),
               ),
@@ -308,7 +308,7 @@ class _CostPerKmTrendChart extends StatelessWidget {
                     interval: (safeMaxY - safeMinY) / 2,
                     getTitlesWidget: (value, _) {
                       if (value < safeMinY + 0.01 || value > safeMaxY - 0.01) {
-                        return const SizedBox.shrink();
+                        return SizedBox.shrink();
                       }
                       return Text(
                         AppCurrency.format(value),
@@ -330,10 +330,10 @@ class _CostPerKmTrendChart extends StatelessWidget {
                       if ((value - i).abs() > 0.01 ||
                           i < 0 ||
                           i >= data.length) {
-                        return const SizedBox.shrink();
+                        return SizedBox.shrink();
                       }
                       return Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                        padding: EdgeInsets.only(top: 4),
                         child: MetricChartLayout.axisDateLabel(
                           data[i].label,
                           color: AppColors.textSecondary,

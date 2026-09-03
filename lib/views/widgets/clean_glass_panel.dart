@@ -26,13 +26,13 @@ class CleanGlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Depend on Theme so glass surfaces rebuild when light/dark flips.
+    AppColors.setBrightness(Theme.of(context).brightness);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: borderRadius,
         color: AppColors.card,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: AppColors.glassBorder),
       ),
       child: ClipRRect(
         borderRadius: borderRadius,
@@ -83,7 +83,9 @@ class FrostedGlassPanel extends StatelessWidget {
             borderRadius: borderRadius,
             color: AppColors.card.withValues(alpha: tintOpacity),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.14),
+              color: AppColors.isDark
+                  ? Colors.white.withValues(alpha: 0.14)
+                  : AppColors.glassBorder,
             ),
           ),
           child: content,

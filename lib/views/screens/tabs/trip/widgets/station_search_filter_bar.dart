@@ -78,13 +78,13 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
                 color: AppColors.textTertiary,
                 fontSize: 13,
               ),
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.search_rounded,
                 size: 18,
                 color: AppColors.textTertiary,
               ),
               filled: true,
-              fillColor: const Color(0xFF1A1A22),
+              fillColor: AppColors.inputFill,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
@@ -92,11 +92,11 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: Color(0xFF2C2C38)),
+                borderSide: BorderSide(color: AppColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: Color(0xFF2C2C38)),
+                borderSide: BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -106,7 +106,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
               Text(
@@ -117,7 +117,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
                 ),
               ),
               if (widget.resultCount != null) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   _hasPendingChanges
                       ? '· tap Apply to update'
@@ -133,7 +133,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
             data: SliderTheme.of(context).copyWith(
               trackHeight: 3,
               activeTrackColor: AppColors.primary,
-              inactiveTrackColor: const Color(0xFF2C2C38),
+              inactiveTrackColor: AppColors.border,
               thumbColor: AppColors.primary,
               overlayColor: AppColors.primary.withValues(alpha: 0.14),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
@@ -171,7 +171,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -183,7 +183,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
                         : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: Color(0xFF3A3A4A)),
+                      side: BorderSide(color: AppColors.border),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       ),
@@ -207,7 +207,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
                     onPressed: _hasPendingChanges ? widget.onApply : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      disabledBackgroundColor: const Color(0xFF2A2A34),
+                      disabledBackgroundColor: AppColors.control,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -250,7 +250,7 @@ class _FilterChip extends StatelessWidget {
     return Material(
       color: selected
           ? AppColors.primary.withValues(alpha: 0.16)
-          : const Color(0xFF1A1A22),
+          : AppColors.control,
       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       child: InkWell(
         onTap: onTap,
@@ -261,7 +261,7 @@ class _FilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             border: Border.all(
-              color: selected ? AppColors.primary : const Color(0xFF2C2C38),
+              color: selected ? AppColors.primary : AppColors.border,
             ),
           ),
           child: Text(

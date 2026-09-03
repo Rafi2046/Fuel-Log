@@ -98,7 +98,7 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
             child: Container(
               width: 36,
               height: 4,
-              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+              margin: EdgeInsets.only(bottom: AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.border,
                 borderRadius: BorderRadius.circular(2),
@@ -129,13 +129,13 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                 onTap: () => Navigator.of(context).pop(),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: AppColors.cardElevated,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close_rounded,
                     size: 18,
                     color: AppColors.textPrimary,
@@ -145,11 +145,11 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
             ],
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -180,18 +180,18 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                       eyeShape: QrEyeShape.square,
                       color: Color(0xFF121212),
                     ),
-                    dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleStyle: QrDataModuleStyle(
                       dataModuleShape: QrDataModuleShape.square,
                       color: Color(0xFF121212),
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    const Expanded(child: Divider(color: AppColors.divider)),
+                    Expanded(child: Divider(color: AppColors.divider)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm,
                       ),
                       child: Text(
@@ -199,10 +199,10 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                         style: AppTextStyles.caption,
                       ),
                     ),
-                    const Expanded(child: Divider(color: AppColors.divider)),
+                    Expanded(child: Divider(color: AppColors.divider)),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 Text(
                   _displayCode,
                   textAlign: TextAlign.center,
@@ -213,7 +213,7 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: AppSpacing.xs),
                 Text(
                   'Share this code with riders on your tour',
                   textAlign: TextAlign.center,
@@ -233,7 +233,7 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
             compact: true,
             onPressed: _shareCode,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           SizedBox(
             height: AppSpacing.buttonHeightCompact,
             width: double.infinity,
@@ -278,11 +278,11 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                   ),
                 ),
                 icon: const Icon(Icons.sensors_rounded, size: 18),
-                label: const Text('Enter tour'),
+                label: Text('Enter tour'),
               ),
             ),
           ] else ...[
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
               height: AppSpacing.buttonHeightCompact,
@@ -290,7 +290,7 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                 onPressed: () => Navigator.of(context).pop(),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
-                  side: const BorderSide(color: AppColors.border),
+                  side: BorderSide(color: AppColors.border),
                   shape: _buttonShape,
                 ),
                 child: const Text('Close'),

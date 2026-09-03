@@ -122,7 +122,7 @@ class MonthlyDistanceChart extends StatelessWidget {
                   BarChartRodData(
                     toY: series[i].km,
                     width: series.length > 8 ? 10 : 14,
-                    borderRadius: const BorderRadius.vertical(
+                    borderRadius: BorderRadius.vertical(
                       top: Radius.circular(4),
                     ),
                     color: AppColors.primary,

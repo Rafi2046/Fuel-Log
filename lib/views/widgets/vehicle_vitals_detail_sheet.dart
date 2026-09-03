@@ -76,7 +76,7 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
         : (vehicle?.startOdo ?? 0.0);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppSpacing.radiusXl),
@@ -151,17 +151,17 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF71717A),
+              color: Color(0xFF71717A),
               letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1B1B27),
+              color: Color(0xFF1B1B27),
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              border: Border.all(color: const Color(0xFF262638), width: 1),
+              border: Border.all(color: AppColors.hairline, width: 1),
             ),
             child: Column(
               children: [
@@ -170,12 +170,12 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
                   value: '${currentOdo.toStringAsFixed(0)} km',
                   isBold: true,
                 ),
-                const Divider(height: 16, color: Color(0xFF262638)),
+                Divider(height: 16, color: AppColors.hairline),
                 _RowItem(
                   label: 'Initial Starting Odometer',
                   value: '${(vehicle?.startOdo ?? 0).toStringAsFixed(0)} km',
                 ),
-                const Divider(height: 16, color: Color(0xFF262638)),
+                Divider(height: 16, color: AppColors.hairline),
                 _RowItem(
                   label: 'Total Tracked Distance',
                   value: '${totalDistance.toStringAsFixed(0)} km',
@@ -192,17 +192,17 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF71717A),
+              color: Color(0xFF71717A),
               letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1B1B27),
+              color: Color(0xFF1B1B27),
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              border: Border.all(color: const Color(0xFF262638), width: 1),
+              border: Border.all(color: AppColors.hairline, width: 1),
             ),
             child: Column(
               children: [
@@ -211,17 +211,17 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
                   value: '${totalFuelConsumed.toStringAsFixed(1)} $unit',
                   isBold: true,
                 ),
-                const Divider(height: 16, color: Color(0xFF262638)),
+                Divider(height: 16, color: AppColors.hairline),
                 _RowItem(
                   label: isEV ? 'Total Charging Sessions' : 'Total Refill Count',
                   value: '$logsCount fill-ups',
                 ),
-                const Divider(height: 16, color: Color(0xFF262638)),
+                Divider(height: 16, color: AppColors.hairline),
                 _RowItem(
                   label: 'Average Refill Volume',
                   value: '${avgFillSize.toStringAsFixed(1)} $unit / fill',
                 ),
-                const Divider(height: 16, color: Color(0xFF262638)),
+                Divider(height: 16, color: AppColors.hairline),
                 _RowItem(
                   label: 'Average Fuel Efficiency',
                   value: avgMileage > 0
@@ -229,7 +229,7 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
                       : '—',
                   isBold: true,
                 ),
-                const Divider(height: 16, color: Color(0xFF262638)),
+                Divider(height: 16, color: AppColors.hairline),
                 _RowItem(
                   label: 'Last Recorded Mileage',
                   value: lastMileage > 0
@@ -239,18 +239,18 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // Quick Action Buttons
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  icon: const Icon(LucideIcons.gauge, size: 14),
-                  label: const Text('Mileage Log'),
+                  icon: Icon(LucideIcons.gauge, size: 14),
+                  label: Text('Mileage Log'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: Color(0xFF262638)),
+                    side: BorderSide(color: AppColors.hairline),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -260,20 +260,20 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
                     Navigator.of(context).pop();
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => const MileageLogScreen(),
+                        builder: (_) => MileageLogScreen(),
                       ),
                     );
                   },
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
-                  icon: const Icon(LucideIcons.fuel, size: 14),
-                  label: const Text('All Refuels'),
+                  icon: Icon(LucideIcons.fuel, size: 14),
+                  label: Text('All Refuels'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: Color(0xFF262638)),
+                    side: BorderSide(color: AppColors.hairline),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -314,7 +314,7 @@ class _RowItem extends StatelessWidget {
             label,
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: const Color(0xFF94A3B8),
+              color: Color(0xFF94A3B8),
               fontWeight: isBold ? FontWeight.w600 : FontWeight.w400,
             ),
           ),

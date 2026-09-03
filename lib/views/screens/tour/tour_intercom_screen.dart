@@ -150,7 +150,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
+                children: [
                   Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
                   SizedBox(width: 8),
                   Text('Rider connected to tour'),
@@ -166,7 +166,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
+                children: [
                   Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 18),
                   SizedBox(width: 8),
                   Text('Rider out of range / disconnected'),
@@ -239,7 +239,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
             onMeshBridgeChanged: intercomNotifier.toggleMeshBridge,
             onFecRecoveryChanged: intercomNotifier.toggleFecRecovery,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
           Text(
             _footerTip(intercomState),
             textAlign: TextAlign.center,

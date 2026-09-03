@@ -32,7 +32,7 @@ class WeatherDriveCard extends ConsumerWidget {
                 color: AppColors.primary.withValues(alpha: 0.7),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               'weatherLoading'.tr(),
               style: AppTextStyles.caption.copyWith(
@@ -48,8 +48,8 @@ class WeatherDriveCard extends ConsumerWidget {
       return _Shell(
         child: Row(
           children: [
-            const Icon(LucideIcons.cloudOff, size: 18, color: AppColors.textTertiary),
-            const SizedBox(width: 12),
+            Icon(LucideIcons.cloudOff, size: 18, color: AppColors.textTertiary),
+            SizedBox(width: 12),
             Expanded(
               child: Text(
                 'weatherUnavailable'.tr(),
@@ -94,7 +94,7 @@ class WeatherDriveCard extends ConsumerWidget {
             color: const Color(0xFFA1A1AA),
             size: 16,
           ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +110,7 @@ class WeatherDriveCard extends ConsumerWidget {
                       ),
                     ),
                     if (humidity != null) ...[
-                      const SizedBox(height: 1),
+                      SizedBox(height: 1),
                       Text(
                         '$humidity% · $wind km/h',
                         maxLines: 1,
@@ -149,10 +149,10 @@ class WeatherDriveCard extends ConsumerWidget {
                 tooltip: 'refresh'.tr(),
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: BoxConstraints(minWidth: 32, minHeight: 32),
                 onPressed: () =>
                     ref.read(weatherAdviceProvider.notifier).refresh(),
-                icon: const Icon(
+                icon: Icon(
                   LucideIcons.refreshCw,
                   size: 14,
                   color: AppColors.textTertiary,
@@ -187,14 +187,14 @@ class WeatherDriveTripBanner extends ConsumerWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF18181F).withValues(alpha: 0.94),
+            color: AppColors.card.withValues(alpha: AppColors.isDark ? 0.94 : 1),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(color: accent.withValues(alpha: 0.35)),
           ),
           child: Row(
             children: [
               Icon(advice.lucideIcon, size: 16, color: accent),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,13 +226,13 @@ class WeatherDriveTripBanner extends ConsumerWidget {
           ),
         );
       },
-      orElse: () => const SizedBox.shrink(),
+      orElse: () => SizedBox.shrink(),
     );
   }
 }
 
 class _Shell extends StatelessWidget {
-  const _Shell({required this.child});
+  _Shell({required this.child});
 
   final Widget child;
 
@@ -240,12 +240,12 @@ class _Shell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+      padding: EdgeInsets.fromLTRB(14, 12, 6, 12),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
-          color: const Color(0xFF262636),
+          color: AppColors.border,
           width: 1,
         ),
       ),

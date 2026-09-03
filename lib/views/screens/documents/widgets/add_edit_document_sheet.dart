@@ -19,7 +19,7 @@ import '../../../components/forms/sheet_action_bar.dart';
 
 /// Modal bottom sheet for adding or editing a vehicle document / license.
 class AddEditDocumentSheet extends ConsumerStatefulWidget {
-  const AddEditDocumentSheet({
+  AddEditDocumentSheet({
     super.key,
     required this.vehicleId,
     this.existingDoc,
@@ -36,7 +36,7 @@ class AddEditDocumentSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF161622),
+      backgroundColor: AppColors.appBar,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -228,7 +228,7 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
   Future<void> _pickDate({required bool isIssue}) async {
     final initialDate = isIssue
         ? (_issueDate ?? DateTime.now())
-        : (_expiryDate ?? DateTime.now().add(const Duration(days: 365)));
+        : (_expiryDate ?? DateTime.now().add(Duration(days: 365)));
 
     final picked = await showDatePicker(
       context: context,
@@ -238,7 +238,7 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               surface: Color(0xFF1E1E2A),
               onSurface: AppColors.textPrimary,
@@ -367,7 +367,7 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
                       size: 22,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Text(
                     isEditing ? 'editDocument'.tr() : 'addDocument'.tr(),
                     style: GoogleFonts.inter(
@@ -422,14 +422,14 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
                               isSelected ? FontWeight.w600 : FontWeight.w500,
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF94A3B8),
+                              : Color(0xFF94A3B8),
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                           side: BorderSide(
                             color: isSelected
                                 ? AppColors.primary
-                                : const Color(0xFF262638),
+                                : AppColors.hairline,
                           ),
                         ),
                       ),
@@ -604,12 +604,12 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
       onTap: disabled ? null : onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: disabled ? const Color(0xFF12121A) : const Color(0xFF1B1B27),
+          color: disabled ? Color(0xFF12121A) : Color(0xFF1B1B27),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: const Color(0xFF262638),
+            color: AppColors.hairline,
             width: 1,
           ),
         ),
@@ -646,7 +646,7 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
                       color: disabled
-                          ? const Color(0xFF71717A)
+                          ? Color(0xFF71717A)
                           : (date != null
                               ? AppColors.textPrimary
                               : const Color(0xFF71717A)),
@@ -676,10 +676,10 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
       child: Container(
         height: 100,
         decoration: BoxDecoration(
-          color: const Color(0xFF1B1B27),
+          color: Color(0xFF1B1B27),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: hasImage ? const Color(0xFF10B981) : const Color(0xFF262638),
+            color: hasImage ? Color(0xFF10B981) : AppColors.hairline,
             width: 1,
           ),
         ),

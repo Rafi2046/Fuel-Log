@@ -43,7 +43,7 @@ class NearbyStationsCarousel extends StatelessWidget {
             children: [
               // 1. Station count badge
               Material(
-                color: const Color(0xFF18181F).withValues(alpha: 0.95),
+                color: AppColors.mapOverlay,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                 child: InkWell(
                   onTap: onViewAll,
@@ -56,17 +56,17 @@ class NearbyStationsCarousel extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius:
                           BorderRadius.circular(AppSpacing.radiusPill),
-                      border: Border.all(color: const Color(0xFF2E2E38)),
+                      border: Border.all(color: AppColors.mapOverlayBorder),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           LucideIcons.fuel,
                           size: 13,
                           color: AppColors.primary,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           '${stations.length} Stations Found',
                           style: AppTextStyles.caption.copyWith(
@@ -83,7 +83,7 @@ class NearbyStationsCarousel extends StatelessWidget {
 
               // 2. "View List" pill button
               Material(
-                color: const Color(0xFF18181F).withValues(alpha: 0.95),
+                color: AppColors.mapOverlay,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                 child: InkWell(
                   onTap: onViewAll,
@@ -96,17 +96,17 @@ class NearbyStationsCarousel extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius:
                           BorderRadius.circular(AppSpacing.radiusPill),
-                      border: Border.all(color: const Color(0xFF2E2E38)),
+                      border: Border.all(color: AppColors.mapOverlayBorder),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           LucideIcons.list,
                           size: 13,
                           color: AppColors.primary,
                         ),
-                        const SizedBox(width: 5),
+                        SizedBox(width: 5),
                         Text(
                           'View List & Rates',
                           style: AppTextStyles.caption.copyWith(

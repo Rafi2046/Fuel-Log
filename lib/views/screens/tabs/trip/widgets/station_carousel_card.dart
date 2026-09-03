@@ -29,12 +29,12 @@ class StationCarouselCard extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFF16161C),
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: isSelected
               ? AppColors.primary
-              : const Color(0xFF2A2A34),
+              : AppColors.border,
           width: isSelected ? 1.4 : 1.0,
         ),
         boxShadow: [
@@ -155,7 +155,7 @@ class StationCarouselCard extends StatelessWidget {
                                 size: 10.5,
                                 color: Color(0xFFFFB74D),
                               ),
-                              const SizedBox(width: 2),
+                              SizedBox(width: 2),
                               Text(
                                 station.rating.toString(),
                                 style: AppTextStyles.caption.copyWith(

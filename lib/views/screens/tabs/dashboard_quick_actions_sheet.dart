@@ -62,7 +62,7 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
           top: false,
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.md,
                 AppSpacing.md,
@@ -222,7 +222,7 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
 }
 
 class _ActionTile extends StatelessWidget {
-  const _ActionTile({
+  _ActionTile({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -279,7 +279,7 @@ class _ActionTile extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: AppTextStyles.caption.copyWith(
@@ -290,7 +290,7 @@ class _ActionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 LucideIcons.chevronRight,
                 size: 16,
                 color: AppColors.textTertiary,

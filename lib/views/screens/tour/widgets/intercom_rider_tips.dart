@@ -19,7 +19,7 @@ class IntercomRiderTips extends StatelessWidget {
           body:
               'In areas with no cellular coverage, nearby riders connect over Wi-Fi Direct P2P with no mobile data cost.',
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         _InfoCard(
           icon: Icons.volume_up_outlined,
           title: 'Volume button PTT',
@@ -27,9 +27,9 @@ class IntercomRiderTips extends StatelessWidget {
               'Press and hold either volume button to talk without touching the screen.',
           badge: 'Glove mode',
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -64,7 +64,7 @@ class IntercomRiderTips extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({
+  _InfoCard({
     required this.icon,
     required this.title,
     required this.body,
@@ -79,7 +79,7 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -89,7 +89,7 @@ class _InfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: AppColors.cardElevated,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -97,7 +97,7 @@ class _InfoCard extends StatelessWidget {
             ),
             child: Icon(icon, size: 16, color: AppColors.textSecondary),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,7 +115,7 @@ class _InfoCard extends StatelessWidget {
                     ),
                     if (badge != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 2,
                         ),
@@ -135,7 +135,7 @@ class _InfoCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   body,
                   style: AppTextStyles.caption.copyWith(
@@ -153,7 +153,7 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _Bullet extends StatelessWidget {
-  const _Bullet({required this.text});
+  _Bullet({required this.text});
 
   final String text;
 
@@ -162,7 +162,7 @@ class _Bullet extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(top: 5, right: AppSpacing.sm),
           child: Icon(Icons.circle, size: 4, color: AppColors.textTertiary),
         ),

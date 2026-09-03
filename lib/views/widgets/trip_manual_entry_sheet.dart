@@ -398,7 +398,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
       note: note.isNotEmpty ? drift.Value(note) : const drift.Value.absent(),
       routeJson: widget.prefill?.routeJson != null
           ? drift.Value(widget.prefill!.routeJson)
-          : const drift.Value.absent(),
+          : drift.Value.absent(),
     );
 
     setState(() => _isSaving = true);
@@ -490,7 +490,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
                                     AppSpacing.radiusSm,
                                   ),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.route_rounded,
                                   color: AppColors.textSecondary,
                                   size: 18,
@@ -758,7 +758,7 @@ class _GlassSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return CleanGlassPanel(
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
+      padding: EdgeInsets.fromLTRB(12, 8, 12, 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -772,7 +772,7 @@ class _GlassSection extends StatelessWidget {
                 letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: AppSpacing.xs),
           ],
           child,
         ],
@@ -782,14 +782,14 @@ class _GlassSection extends StatelessWidget {
 }
 
 class _TripFieldDecor {
-  const _TripFieldDecor._();
+  _TripFieldDecor._();
 
   static const prefixConstraints = BoxConstraints(minWidth: 34, minHeight: 28);
   static const contentPadding = EdgeInsets.symmetric(vertical: 4);
   static const multiLinePadding = EdgeInsets.only(top: 8, bottom: 4);
-  static const _iconColor = AppColors.textTertiary;
-  static const _labelColor = AppColors.textTertiary;
-  static const _focusedLabelColor = AppColors.textSecondary;
+  static final _iconColor = AppColors.textTertiary;
+  static final _labelColor = AppColors.textTertiary;
+  static final _focusedLabelColor = AppColors.textSecondary;
 
   static InputDecoration base({
     String? labelText,
@@ -840,7 +840,7 @@ class _TripFieldDecor {
       errorBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: AppColors.error),
       ),
-      focusedErrorBorder: const UnderlineInputBorder(
+      focusedErrorBorder: UnderlineInputBorder(
         borderSide: BorderSide(color: AppColors.error, width: 1.4),
       ),
       labelStyle: AppTextStyles.caption.copyWith(
@@ -872,12 +872,12 @@ class _GlassIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white.withValues(alpha: 0.06),
-      shape: const CircleBorder(),
+      shape: CircleBorder(),
       child: InkWell(
         onTap: onPressed,
-        customBorder: const CircleBorder(),
+        customBorder: CircleBorder(),
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8),
           child: Icon(icon, size: 20, color: AppColors.textSecondary),
         ),
       ),
@@ -973,7 +973,7 @@ class _PrivacySelector extends StatelessWidget {
       key: ValueKey('$selected-${customCategories.length}'),
       initialValue: selected,
       dropdownColor: AppColors.card,
-      icon: const Icon(
+      icon: Icon(
         Icons.keyboard_arrow_down_rounded,
         color: AppColors.textTertiary,
       ),
@@ -1024,10 +1024,10 @@ class _AddCategoryDialogState extends State<_AddCategoryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF161622),
+      backgroundColor: AppColors.appBar,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFF262638)),
+        side: BorderSide(color: AppColors.hairline),
       ),
       title: Text(
         'addCustomCategory'.tr(),

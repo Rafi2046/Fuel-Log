@@ -19,19 +19,19 @@ class MapOfflineBanner extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF18181F).withValues(alpha: 0.96),
+          color: AppColors.mapOverlay,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: const Color(0xFF353542)),
+          border: Border.all(color: Color(0xFF353542)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               LucideIcons.wifiOff,
               size: 22,
               color: AppColors.primary,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               'mapOfflineHint'.tr(),
               textAlign: TextAlign.center,

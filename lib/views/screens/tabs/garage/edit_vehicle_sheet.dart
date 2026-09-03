@@ -97,7 +97,7 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
-            children: const [
+            children: [
               Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
               SizedBox(width: 8),
               Text('Vehicle details updated successfully'),
@@ -128,7 +128,7 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: const BorderRadius.vertical(
+        borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppSpacing.radiusXl),
         ),
         border: Border.all(color: AppColors.border),
@@ -149,7 +149,7 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
               child: Container(
                 width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                margin: EdgeInsets.only(bottom: AppSpacing.md),
                 decoration: BoxDecoration(
                   color: AppColors.textTertiary.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(2),
@@ -197,13 +197,13 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: Icon(Icons.close_rounded),
                   color: AppColors.textTertiary,
                   visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
 
             // Grouped Form Card
             Container(
@@ -272,7 +272,7 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // Action Buttons
             Row(
@@ -282,16 +282,16 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: AppColors.borderStrong),
+                      side: BorderSide(color: AppColors.borderStrong),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       ),
                     ),
-                    child: const Text('Cancel'),
+                    child: Text('Cancel'),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   flex: 2,
                   child: FilledButton(
@@ -359,7 +359,7 @@ class _EditFormField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       child: Row(
         children: [
           Container(
@@ -376,7 +376,7 @@ class _EditFormField extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,7 +421,7 @@ class _EditFormField extends StatelessWidget {
           ),
           if (suffixText != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: AppColors.card,
                 borderRadius: BorderRadius.circular(6),

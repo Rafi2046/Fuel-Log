@@ -34,40 +34,40 @@ class TripStatsPill extends StatelessWidget {
         vertical: AppSpacing.sm + 2,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF18181F).withValues(alpha: 0.94),
+        color: AppColors.mapOverlay,
         borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-        border: Border.all(color: const Color(0xFF2E2E38)),
+        border: Border.all(color: AppColors.mapOverlayBorder),
         boxShadow: AppShadows.floating,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             LucideIcons.navigation,
             size: 15,
             color: AppColors.primary,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
           Text(
             '${distanceKm.toStringAsFixed(2)} ${'km'.tr()}',
             style: AppTextStyles.label.copyWith(
-              color: AppColors.textPrimary,
+              color: AppColors.onMapOverlay,
               fontWeight: FontWeight.w700,
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Text(
               '|',
               style: AppTextStyles.label.copyWith(
-                color: AppColors.textTertiary,
+                color: AppColors.onMapOverlayMuted,
               ),
             ),
           ),
           Text(
             _timeLabel,
             style: AppTextStyles.label.copyWith(
-              color: AppColors.textPrimary,
+              color: AppColors.onMapOverlay,
               fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),

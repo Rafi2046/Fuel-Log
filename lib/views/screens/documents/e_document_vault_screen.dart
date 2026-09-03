@@ -82,15 +82,15 @@ class EDocumentVaultScreen extends ConsumerWidget {
       barrierColor: Colors.black.withValues(alpha: 0.72),
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        insetPadding: EdgeInsets.symmetric(horizontal: 28),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(22),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+              padding: EdgeInsets.fromLTRB(22, 24, 22, 20),
               decoration: BoxDecoration(
-                color: const Color(0xFF161622).withValues(alpha: 0.94),
+                color: AppColors.appBar.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.12),
@@ -127,7 +127,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Title
                   Text(
@@ -294,17 +294,17 @@ class EDocumentVaultScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppAppBar(
-        leading: const AppBackButton(),
+        leading: AppBackButton(),
         title: 'E-Document Vault',
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(
+            icon: Icon(
               LucideIcons.shieldCheck,
               color: Color(0xFF10B981),
               size: 20,
             ),
             tooltip: 'Vault Security',
-            color: const Color(0xFF1E1E2C),
+            color: AppColors.control,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
               side: const BorderSide(color: Color(0xFF2E2E42)),
@@ -473,7 +473,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
     required int expired,
   }) {
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: Row(
         children: [
           Expanded(
@@ -484,11 +484,11 @@ class EDocumentVaultScreen extends ConsumerWidget {
               title: 'Total',
               value: total.toString(),
               color: AppColors.textPrimary,
-              activeBorderColor: const Color(0xFFFF7A50),
-              activeBgColor: const Color(0xFFFF7A50).withValues(alpha: 0.12),
+              activeBorderColor: Color(0xFFFF7A50),
+              activeBgColor: Color(0xFFFF7A50).withValues(alpha: 0.12),
             ),
           ),
-          Container(width: 1, height: 32, color: const Color(0xFF262638)),
+          Container(width: 1, height: 32, color: AppColors.hairline),
           Expanded(
             child: _buildInteractiveStatItem(
               ref: ref,
@@ -496,12 +496,12 @@ class EDocumentVaultScreen extends ConsumerWidget {
               activeTab: activeTab,
               title: 'Valid',
               value: valid.toString(),
-              color: const Color(0xFF34D399),
-              activeBorderColor: const Color(0xFF10B981),
-              activeBgColor: const Color(0xFF10B981).withValues(alpha: 0.12),
+              color: Color(0xFF34D399),
+              activeBorderColor: Color(0xFF10B981),
+              activeBgColor: Color(0xFF10B981).withValues(alpha: 0.12),
             ),
           ),
-          Container(width: 1, height: 32, color: const Color(0xFF262638)),
+          Container(width: 1, height: 32, color: AppColors.hairline),
           Expanded(
             child: _buildInteractiveStatItem(
               ref: ref,
@@ -509,12 +509,12 @@ class EDocumentVaultScreen extends ConsumerWidget {
               activeTab: activeTab,
               title: 'Expiring',
               value: expiring.toString(),
-              color: const Color(0xFFFBBF24),
-              activeBorderColor: const Color(0xFFF59E0B),
-              activeBgColor: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+              color: Color(0xFFFBBF24),
+              activeBorderColor: Color(0xFFF59E0B),
+              activeBgColor: Color(0xFFF59E0B).withValues(alpha: 0.12),
             ),
           ),
-          Container(width: 1, height: 32, color: const Color(0xFF262638)),
+          Container(width: 1, height: 32, color: AppColors.hairline),
           Expanded(
             child: _buildInteractiveStatItem(
               ref: ref,
@@ -765,12 +765,12 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 24),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 38),
+      margin: EdgeInsets.only(top: 24),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 38),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1B24),
+        color: Color(0xFF1B1B24),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: const Color(0xFF262638), width: 1),
+        border: Border.all(color: AppColors.hairline, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -903,7 +903,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161622),
+        color: AppColors.appBar,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.07),
@@ -1199,7 +1199,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFFCBD5E1),
+            color: Color(0xFFCBD5E1),
           ),
         ),
       ],
@@ -1209,11 +1209,11 @@ class EDocumentVaultScreen extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, int? activeVehicleId) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 42),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1B24),
+        color: Color(0xFF1B1B24),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: const Color(0xFF262638), width: 1),
+        border: Border.all(color: AppColors.hairline, width: 1),
       ),
       child: Column(
         children: [
@@ -1227,13 +1227,13 @@ class EDocumentVaultScreen extends ConsumerWidget {
                 width: 1.5,
               ),
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.shieldCheck,
               size: 40,
               color: Color(0xFFFF7A50),
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Text(
             'Never lose your papers again.',
             style: GoogleFonts.inter(

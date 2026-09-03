@@ -45,11 +45,11 @@ class RefuelingDateSection extends StatelessWidget {
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now().add(Duration(days: 365)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Color(0xFF1E1E2A),
@@ -72,7 +72,7 @@ class RefuelingDateSection extends StatelessWidget {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Color(0xFF1E1E2A),
@@ -91,7 +91,7 @@ class RefuelingDateSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -100,12 +100,12 @@ class RefuelingDateSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today_rounded,
                     color: AppColors.textTertiary,
                     size: 15,
                   ),
-                  const SizedBox(width: 5),
+                  SizedBox(width: 5),
                   Text(
                     'refuelDateSection'.tr(),
                     style: AppTextStyles.caption.copyWith(
@@ -117,7 +117,7 @@ class RefuelingDateSection extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.border.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -144,7 +144,7 @@ class RefuelingDateSection extends StatelessWidget {
                   onTap: () => _pickDate(context),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 10,
                     ),
@@ -162,7 +162,7 @@ class RefuelingDateSection extends StatelessWidget {
                           color: AppColors.primary,
                           size: 18,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +187,7 @@ class RefuelingDateSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_drop_down_rounded,
                           color: AppColors.textTertiary,
                           size: 20,
@@ -205,7 +205,7 @@ class RefuelingDateSection extends StatelessWidget {
                   onTap: () => _pickTime(context),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 10,
                     ),
@@ -223,7 +223,7 @@ class RefuelingDateSection extends StatelessWidget {
                           color: AppColors.primary,
                           size: 18,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +248,7 @@ class RefuelingDateSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_drop_down_rounded,
                           color: AppColors.textTertiary,
                           size: 20,

@@ -133,7 +133,7 @@ class GarageTab extends ConsumerWidget {
             ),
           ],
           if (vehicles.length >= kMaxVehicles) ...[
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             Text(
               'vehicleLimitHint'.tr(
                 namedArgs: {'count': '$kMaxVehicles'},
@@ -263,7 +263,7 @@ Future<void> showVehicleLimitDialog(BuildContext context) {
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodySecondary.copyWith(height: 1.45),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(

@@ -164,7 +164,7 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +179,7 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
                     ),
                     Text(
                       '${widget.station.displayName} • ${grade.label}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),
@@ -192,11 +192,11 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
             ],
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // Bangladesh Govt Benchmark Price Info
           Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -204,16 +204,16 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.info_outline_rounded,
                   color: AppColors.primary,
                   size: 20,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'BPC Govt Official Rate: ৳${_officialRate(grade).toStringAsFixed(2)} ${grade.unit}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -224,7 +224,7 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
 
           // Price Input Field
           Text(
@@ -235,10 +235,10 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           TextField(
             controller: _priceController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
             autofocus: true,
             style: GoogleFonts.inter(
               fontSize: 20,
@@ -247,31 +247,31 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
             ),
             decoration: InputDecoration(
               prefixText: '৳ ',
-              prefixStyle: const TextStyle(
+              prefixStyle: TextStyle(
                 color: AppColors.primary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
               suffixText: grade.unit,
-              suffixStyle: const TextStyle(color: AppColors.textTertiary),
+              suffixStyle: TextStyle(color: AppColors.textTertiary),
               filled: true,
               fillColor: AppColors.inputFill,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: AppColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // Action Buttons: Symmetrical & Balanced
           Row(
@@ -283,7 +283,7 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: AppColors.border),
+                      side: BorderSide(color: AppColors.border),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       ),

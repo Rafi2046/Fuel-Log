@@ -206,7 +206,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            SizedBox(height: 2),
                             Text(
                               '${visible.length} of ${widget.stations.length} stations',
                               style: AppTextStyles.caption.copyWith(
@@ -220,13 +220,13 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF22222D),
+                            color: Color(0xFF22222D),
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF333342)),
+                            border: Border.all(color: Color(0xFF333342)),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.x,
                             size: 15,
                             color: AppColors.textSecondary,
@@ -245,12 +245,12 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                   onApply: _applyFilters,
                   onReset: _resetFilters,
                 ),
-                const Divider(color: Color(0xFF262633), height: 1),
+                Divider(color: Color(0xFF262633), height: 1),
 
                 Flexible(
                   child: visible.isEmpty
                       ? Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: EdgeInsets.all(24),
                           child: Text(
                             'No stations match these filters. Try a wider radius or another fuel type.',
                             textAlign: TextAlign.center,
@@ -313,7 +313,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                                 size: 16,
                                 color: AppColors.primary,
                               ),
-                              label: const Text(
+                              label: Text(
                                 'Log Fuel',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
@@ -457,7 +457,7 @@ class _StationListRowItem extends StatelessWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
 
                       // Line 2: ETA • drive distance • area
                       Row(
@@ -510,7 +510,7 @@ class _StationListRowItem extends StatelessWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
 
                       // Line 3: Available Fuel Types
                       Text(
@@ -562,7 +562,7 @@ class _StationListRowItem extends StatelessWidget {
                               size: 11,
                               color: Color(0xFFFFB74D),
                             ),
-                            const SizedBox(width: 2.5),
+                            SizedBox(width: 2.5),
                             Text(
                               station.rating.toString(),
                               style: AppTextStyles.caption.copyWith(

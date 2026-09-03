@@ -31,9 +31,9 @@ class GarageEmptyState extends StatelessWidget {
             letterSpacing: -0.3,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             'garageEmptySubtitle'.tr(),
             textAlign: TextAlign.center,
@@ -98,7 +98,7 @@ class _GarageHeroIllustration extends StatelessWidget {
                   AppColors.primary.withValues(alpha: 0.06),
                   Colors.transparent,
                 ],
-                stops: const [0.0, 0.45, 1.0],
+                stops: [0.0, 0.45, 1.0],
               ),
             ),
           ),
@@ -152,7 +152,7 @@ class _GarageHeroIllustration extends StatelessWidget {
 }
 
 class _VehicleGlyph extends StatelessWidget {
-  const _VehicleGlyph({
+  _VehicleGlyph({
     required this.icon,
     this.offset = Offset.zero,
     this.size = 38,
@@ -167,7 +167,7 @@ class _VehicleGlyph extends StatelessWidget {
     return Transform.translate(
       offset: offset,
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
@@ -180,7 +180,7 @@ class _VehicleGlyph extends StatelessWidget {
 }
 
 class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({
+  _FeatureChip({
     required this.icon,
     required this.label,
   });
@@ -191,7 +191,7 @@ class _FeatureChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusPill),

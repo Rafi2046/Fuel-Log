@@ -18,7 +18,7 @@ import 'document_image_viewer.dart';
 
 /// Full detail modal sheet for viewing, sharing, editing and managing a document.
 class DocumentDetailSheet extends ConsumerWidget {
-  const DocumentDetailSheet({
+  DocumentDetailSheet({
     super.key,
     required this.document,
   });
@@ -29,7 +29,7 @@ class DocumentDetailSheet extends ConsumerWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF161622),
+      backgroundColor: AppColors.appBar,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -72,15 +72,15 @@ class DocumentDetailSheet extends ConsumerWidget {
       barrierColor: Colors.black.withValues(alpha: 0.72),
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        insetPadding: EdgeInsets.symmetric(horizontal: 28),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(22),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+              padding: EdgeInsets.fromLTRB(22, 24, 22, 20),
               decoration: BoxDecoration(
-                color: const Color(0xFF161622).withValues(alpha: 0.94),
+                color: AppColors.appBar.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.12),
@@ -116,7 +116,7 @@ class DocumentDetailSheet extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'deleteDocument'.tr(),
                     style: GoogleFonts.inter(
@@ -269,7 +269,7 @@ class DocumentDetailSheet extends ConsumerWidget {
                       color: const Color(0xFFA1A1AA),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,18 +352,18 @@ class DocumentDetailSheet extends ConsumerWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF71717A),
+                  color: Color(0xFF71717A),
                   letterSpacing: 0.8,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B1B27),
+                  color: Color(0xFF1B1B27),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: const Color(0xFF262638), width: 1),
+                  border: Border.all(color: AppColors.hairline, width: 1),
                 ),
                 child: Column(
                   children: [
@@ -372,14 +372,14 @@ class DocumentDetailSheet extends ConsumerWidget {
                       value: category.localizedName,
                     ),
                     if (document.issueDate != null) ...[
-                      const Divider(height: 16, color: Color(0xFF262638)),
+                      Divider(height: 16, color: AppColors.hairline),
                       _buildMetaRow(
                         label: 'docIssueDateField'.tr(),
                         value: DateFormat('dd MMMM yyyy')
                             .format(document.issueDate!),
                       ),
                     ],
-                    const Divider(height: 16, color: Color(0xFF262638)),
+                    Divider(height: 16, color: AppColors.hairline),
                     _buildMetaRow(
                       label: 'docExpiryDateField'.tr(),
                       value: document.expiryDate != null
@@ -390,14 +390,14 @@ class DocumentDetailSheet extends ConsumerWidget {
                     ),
                     if (document.issuingAuthority != null &&
                         document.issuingAuthority!.isNotEmpty) ...[
-                      const Divider(height: 16, color: Color(0xFF262638)),
+                      Divider(height: 16, color: AppColors.hairline),
                       _buildMetaRow(
                         label: 'Authority',
                         value: document.issuingAuthority!,
                       ),
                     ],
                     if (document.cost != null && document.cost! > 0) ...[
-                      const Divider(height: 16, color: Color(0xFF262638)),
+                      Divider(height: 16, color: AppColors.hairline),
                       _buildMetaRow(
                         label: 'Cost / Fees',
                         value: AppCurrency.format(document.cost!),
@@ -405,7 +405,7 @@ class DocumentDetailSheet extends ConsumerWidget {
                     ],
                     if (document.note != null &&
                         document.note!.isNotEmpty) ...[
-                      const Divider(height: 16, color: Color(0xFF262638)),
+                      Divider(height: 16, color: AppColors.hairline),
                       _buildMetaRow(
                         label: 'docNoteField'.tr(),
                         value: document.note!,
@@ -422,8 +422,8 @@ class DocumentDetailSheet extends ConsumerWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _shareDocument(context),
-                      icon: const Icon(LucideIcons.share2, size: 16),
-                      label: const Text('Share'),
+                      icon: Icon(LucideIcons.share2, size: 16),
+                      label: Text('Share'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
                         side: const BorderSide(color: Color(0xFF2E2E42)),
@@ -538,7 +538,7 @@ class DocumentDetailSheet extends ConsumerWidget {
       child: Row(
         children: [
           Icon(icon, size: 20, color: border.withValues(alpha: 1.0)),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,9 +583,9 @@ class DocumentDetailSheet extends ConsumerWidget {
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          color: const Color(0xFF1B1B27),
+          color: Color(0xFF1B1B27),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: const Color(0xFF262638), width: 1),
+          border: Border.all(color: AppColors.hairline, width: 1),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd - 1),
@@ -643,7 +643,7 @@ class DocumentDetailSheet extends ConsumerWidget {
           label,
           style: GoogleFonts.inter(
             fontSize: 12.5,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
           ),
         ),
         Text(

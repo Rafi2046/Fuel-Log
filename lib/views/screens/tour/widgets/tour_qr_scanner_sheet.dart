@@ -86,11 +86,11 @@ class _TourQrScannerSheetState extends State<TourQrScannerSheet> {
 
           // Title
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
             child: Row(
               children: [
-                const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary, size: 22),
-                const SizedBox(width: 10),
+                Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary, size: 22),
+                SizedBox(width: 10),
                 Text(
                   'Scan Host QR Code',
                   style: GoogleFonts.plusJakartaSans(
@@ -99,9 +99,9 @@ class _TourQrScannerSheetState extends State<TourQrScannerSheet> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                  icon: Icon(Icons.close_rounded, color: AppColors.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -143,9 +143,9 @@ class _TourQrScannerSheetState extends State<TourQrScannerSheet> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
             child: Text(
               'Point camera at the host phone screen to instantly join the tour.',
               style: GoogleFonts.plusJakartaSans(

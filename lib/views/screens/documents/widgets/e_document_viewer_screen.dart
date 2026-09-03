@@ -166,11 +166,11 @@ class _EDocumentViewerScreenState extends State<EDocumentViewerScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A10),
       appBar: AppAppBar(
-        leading: const AppBackButton(),
+        leading: AppBackButton(),
         title: docType.displayName,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: InkWell(
               onTap: _shareDocument,
               borderRadius: BorderRadius.circular(10),
@@ -178,9 +178,9 @@ class _EDocumentViewerScreenState extends State<EDocumentViewerScreen> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E2C),
+                  color: AppColors.control,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF2A2A3E)),
+                  border: Border.all(color: AppColors.controlBorder),
                 ),
                 child: const Icon(
                   LucideIcons.share2,
@@ -261,9 +261,9 @@ class _EDocumentViewerScreenState extends State<EDocumentViewerScreen> {
               child: Center(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161622).withValues(alpha: 0.92),
+                    color: AppColors.appBar.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: const Color(0xFFFF7A50).withValues(alpha: 0.6),
@@ -375,13 +375,13 @@ class _EDocumentViewerScreenState extends State<EDocumentViewerScreen> {
                 color: Colors.white.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.fileX,
                 size: 40,
                 color: Color(0xFF71717A),
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             Text(
               'Document not available',
               style: GoogleFonts.inter(

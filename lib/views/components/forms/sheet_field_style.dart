@@ -25,13 +25,13 @@ abstract final class SheetFieldStyle {
       suffixText: suffixText,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
-      hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
-      labelStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
-      prefixStyle: const TextStyle(
+      hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
+      labelStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
+      prefixStyle: TextStyle(
         color: AppColors.primary,
         fontWeight: FontWeight.bold,
       ),
-      suffixStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
+      suffixStyle: TextStyle(color: AppColors.textTertiary, fontSize: 12),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: radius,

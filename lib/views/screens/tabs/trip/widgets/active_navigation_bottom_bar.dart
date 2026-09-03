@@ -29,7 +29,7 @@ class ActiveNavigationBottomBar extends StatelessWidget {
           const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF14141C).withValues(alpha: 0.96),
+        color: AppColors.mapOverlay,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color(0xFF2C2C3A),
@@ -63,7 +63,7 @@ class ActiveNavigationBottomBar extends StatelessWidget {
                             color: Color(0xFF00E5FF),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             '(${route?.formattedDistance ?? _cleanDistance(station.distance)})',
@@ -78,7 +78,7 @@ class ActiveNavigationBottomBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Estimated Arrival: ${route?.formattedEta ?? '...'}',
                       maxLines: 1,

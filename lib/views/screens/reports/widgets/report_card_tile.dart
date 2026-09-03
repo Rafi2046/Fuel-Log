@@ -46,7 +46,7 @@ class ReportCardTile extends StatelessWidget {
                       size: 16,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,7 @@ class ReportCardTile extends StatelessWidget {
                             fontSize: 13,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Text(
                           type.shortDescription,
                           maxLines: 2,
@@ -73,7 +73,7 @@ class ReportCardTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Icon(
                     LucideIcons.chevronRight,
                     size: 15,
