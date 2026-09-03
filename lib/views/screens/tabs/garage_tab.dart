@@ -270,7 +270,7 @@ Future<void> showVehicleLimitDialog(BuildContext context) {
                   onPressed: () => Navigator.of(context).pop(),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.textPrimary,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.md,
                     ),

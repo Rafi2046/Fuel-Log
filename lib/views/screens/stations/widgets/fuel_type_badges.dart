@@ -36,10 +36,10 @@ class FuelTypeBadges extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A22),
+            color: AppColors.inputFill,
             borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
             border: Border.all(
-              color: const Color(0xFF2C2C38),
+              color: AppColors.border,
             ),
           ),
           child: Row(

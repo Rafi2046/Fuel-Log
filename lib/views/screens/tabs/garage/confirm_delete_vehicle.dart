@@ -92,7 +92,7 @@ Future<bool> deleteVehicleWithConfirmation(
                       onPressed: () => Navigator.of(context).pop(true),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.error,
-                        foregroundColor: AppColors.textPrimary,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           vertical: AppSpacing.sm + 4,
                         ),

@@ -71,7 +71,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          side: BorderSide(color: AppColors.border),
         ),
         title: Text(
           'Leave tour?',

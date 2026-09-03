@@ -159,7 +159,7 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1B1B27),
+              color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               border: Border.all(color: AppColors.hairline, width: 1),
             ),
@@ -200,7 +200,7 @@ class VehicleVitalsDetailSheet extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1B1B27),
+              color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               border: Border.all(color: AppColors.hairline, width: 1),
             ),

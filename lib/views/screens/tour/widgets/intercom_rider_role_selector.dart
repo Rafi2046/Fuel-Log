@@ -154,6 +154,8 @@ class _RoleTile extends StatelessWidget {
                           color: AppColors.textTertiary,
                           height: 1.25,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ],

@@ -218,7 +218,7 @@ class _StationSearchFilterBarState extends State<StationSearchFilterBar> {
                       style: AppTextStyles.label.copyWith(
                         color: _hasPendingChanges
                             ? Colors.white
-                            : AppColors.textTertiary,
+                            : AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
                       ),

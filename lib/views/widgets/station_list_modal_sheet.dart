@@ -143,10 +143,10 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
         child: Container(
           constraints: BoxConstraints(maxHeight: maxHeight),
           decoration: BoxDecoration(
-            color: const Color(0xFF14141B).withValues(alpha: 0.94),
+            color: AppColors.card.withValues(alpha: 0.98),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(
-              color: const Color(0xFF2C2C38),
+              color: AppColors.border,
               width: 1.0,
             ),
             boxShadow: [
@@ -169,7 +169,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                     width: 42,
                     height: 4.5,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4A4A58),
+                      color: AppColors.borderStrong,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -222,9 +222,9 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                         icon: Container(
                           padding: EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Color(0xFF22222D),
+                            color: AppColors.control,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Color(0xFF333342)),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: Icon(
                             LucideIcons.x,
@@ -245,7 +245,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                   onApply: _applyFilters,
                   onReset: _resetFilters,
                 ),
-                Divider(color: Color(0xFF262633), height: 1),
+                Divider(color: AppColors.divider, height: 1),
 
                 Flexible(
                   child: visible.isEmpty
@@ -290,7 +290,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
 
                 // 4. Bottom Action Area for Selected Station
                 if (selectedStation != null) ...[
-                  const Divider(color: Color(0xFF262633), height: 1),
+                  Divider(color: AppColors.divider, height: 1),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                     child: Row(
@@ -322,7 +322,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                                 ),
                               ),
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFF3A3A4A)),
+                                side: BorderSide(color: AppColors.border),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -393,10 +393,10 @@ class _StationListRowItem extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF1E1E2A) : const Color(0xFF161620),
+        color: isSelected ? AppColors.inputFill : AppColors.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected ? AppColors.primary : const Color(0xFF262634),
+          color: isSelected ? AppColors.primary : AppColors.border,
           width: isSelected ? 1.4 : 1.0,
         ),
       ),
@@ -416,7 +416,7 @@ class _StationListRowItem extends StatelessWidget {
                   child: Container(
                     width: 52,
                     height: 52,
-                    color: const Color(0xFF20202A),
+                    color: AppColors.inputFill,
                     child: station.imageUrl != null
                         ? (station.imageUrl!.startsWith('http')
                             ? Image.network(

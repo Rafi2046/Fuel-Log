@@ -196,32 +196,18 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
                   height: 46,
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF14141B),
+                    color: AppColors.inputFill,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: const Color(0xFF282836),
+                      color: AppColors.border,
                       width: 1,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: TabBar(
                     controller: _tabController,
                     onTap: (_) => HapticFeedback.selectionClick(),
                     indicator: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.25),
-                          AppColors.primary.withValues(alpha: 0.12),
-                        ],
-                      ),
+                      color: AppColors.card,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: AppColors.primary.withValues(alpha: 0.75),
@@ -229,17 +215,17 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.22),
-                          blurRadius: 12,
+                          color: AppColors.primary.withValues(alpha: 0.16),
+                          blurRadius: 8,
                           spreadRadius: -1,
-                          offset: const Offset(0, 2),
+                          offset: const Offset(0, 1),
                         ),
                       ],
                     ),
                     indicatorSize: TabBarIndicatorSize.tab,
                     dividerColor: Colors.transparent,
                     labelColor: AppColors.primary,
-                    unselectedLabelColor: const Color(0xFF8E8EA0),
+                    unselectedLabelColor: AppColors.textSecondary,
                     labelStyle: AppTextStyles.label.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -426,7 +412,10 @@ class _HostTourTab extends StatelessWidget {
                   )
                 : Text(
                     'Host tour',
-                    style: AppTextStyles.button.copyWith(fontSize: 14),
+                    style: AppTextStyles.button.copyWith(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
                   ),
           ),
         ),
@@ -548,9 +537,12 @@ class _JoinTourTab extends StatelessWidget {
                             color: Colors.white,
                           ),
                         )
-                      : Text(
+                        : Text(
                           'Join tour',
-                          style: AppTextStyles.button.copyWith(fontSize: 14),
+                          style: AppTextStyles.button.copyWith(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),

@@ -69,12 +69,12 @@ class CostPerKmDetailSheet extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF13131E),
+        color: AppColors.card,
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(AppSpacing.radiusXl),
         ),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.border,
           width: 1,
         ),
         boxShadow: [
@@ -102,7 +102,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.borderStrong,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -195,7 +195,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     AppColors.primary.withValues(alpha: costPerKm > 0 ? 0.16 : 0.08),
-                    const Color(0xFF191928),
+                    AppColors.inputFill,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -204,7 +204,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                 border: Border.all(
                   color: costPerKm > 0
                       ? AppColors.primary.withValues(alpha: 0.35)
-                      : Colors.white.withValues(alpha: 0.08),
+                      : AppColors.border,
                   width: 1,
                 ),
                 boxShadow: [
@@ -384,7 +384,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
               Container(
                 height: 8,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppColors.inputFill,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -457,7 +457,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                     ),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textPrimary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -484,7 +484,7 @@ class CostPerKmDetailSheet extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
                       side: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.16),
+                        color: AppColors.border,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
@@ -553,10 +553,10 @@ class _MetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1B29),
+        color: AppColors.inputFill,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.07),
+          color: AppColors.border,
           width: 1,
         ),
       ),

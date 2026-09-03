@@ -298,7 +298,7 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
                     onPressed: _isSaving ? null : _save,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textPrimary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

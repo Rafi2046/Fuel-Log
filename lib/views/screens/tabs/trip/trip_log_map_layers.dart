@@ -8,7 +8,7 @@ mixin TripLogMapLayersMixin on TripLogTabController {
             !constraints.hasBoundedHeight ||
             constraints.maxWidth <= 0 ||
             constraints.maxHeight <= 0) {
-          return const ColoredBox(color: Color(0xFF0F0F12));
+          return ColoredBox(color: AppColors.background);
         }
 
         return Stack(

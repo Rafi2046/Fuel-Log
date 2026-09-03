@@ -88,9 +88,9 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
         child: Container(
           constraints: BoxConstraints(maxHeight: maxHeight),
           decoration: BoxDecoration(
-            color: const Color(0xFF13131A),
+            color: AppColors.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.45),
@@ -107,7 +107,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.borderStrong,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -155,7 +155,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               Container(
                 height: 1,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.border,
               ),
 
               // Copied toast banner if copied
@@ -212,9 +212,9 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   media.padding.bottom + 12,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B1B24),
+                  color: AppColors.inputFill,
                   border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+                    top: BorderSide(color: AppColors.border),
                   ),
                 ),
                 child: Row(
@@ -230,12 +230,12 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                           decoration: BoxDecoration(
                             color: _isCopied
                                 ? const Color(0xFF10B981).withValues(alpha: 0.18)
-                                : Colors.white.withValues(alpha: 0.04),
+                                : AppColors.inputFill,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: _isCopied
                                   ? const Color(0xFF10B981)
-                                  : Colors.white.withValues(alpha: 0.12),
+                                  : AppColors.border,
                               width: 1,
                             ),
                           ),
@@ -274,10 +274,10 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 11),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.04),
+                            color: AppColors.inputFill,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
+                              color: AppColors.border,
                               width: 1,
                             ),
                           ),
@@ -408,7 +408,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Color(0xFF1B1B24),
+              color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.hairline),
             ),
@@ -473,7 +473,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: Color(0xFF1B1B24),
+              color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.hairline),
             ),
@@ -500,7 +500,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 margin: EdgeInsets.only(bottom: 8),
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Color(0xFF1B1B24),
+                  color: AppColors.inputFill,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.hairline),
                 ),
@@ -600,7 +600,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
         Container(
           padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Color(0xFF1B1B24),
+            color: AppColors.inputFill,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.hairline),
           ),
@@ -647,7 +647,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: Color(0xFF1B1B24),
+              color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.hairline),
             ),
@@ -666,7 +666,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 margin: EdgeInsets.only(bottom: 8),
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Color(0xFF1B1B24),
+                  color: AppColors.inputFill,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.hairline),
                 ),
@@ -742,10 +742,13 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF261D18), Color(0xFF1B1B24)],
+              colors: [
+                AppColors.primary.withValues(alpha: 0.12),
+                AppColors.inputFill,
+              ],
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -800,7 +803,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
         Container(
           padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Color(0xFF1B1B24),
+            color: AppColors.inputFill,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.hairline),
           ),
@@ -893,7 +896,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF14241C),
+            color: AppColors.success.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: const Color(0xFF10B981).withValues(alpha: 0.35),
@@ -1064,7 +1067,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
-        color: Color(0xFF1B1B24),
+        color: AppColors.inputFill,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isHighlighted
@@ -1109,7 +1112,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
     return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFF1B1B24),
+        color: AppColors.inputFill,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.hairline),
       ),

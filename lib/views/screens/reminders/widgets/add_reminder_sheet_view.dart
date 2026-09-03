@@ -13,8 +13,8 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
 
     return Container(
       padding: EdgeInsets.fromLTRB(20, 14, 20, 20 + bottomInset),
-      decoration: const BoxDecoration(
-        color: Color(0xFF14141C),
+      decoration: BoxDecoration(
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
@@ -30,7 +30,7 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF333342),
+                    color: AppColors.borderStrong,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -104,11 +104,11 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                           }
                         },
                         selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                        backgroundColor: Color(0xFF1E1E2A),
+                        backgroundColor: AppColors.inputFill,
                         side: BorderSide(
                           color: isSelected
                               ? AppColors.primary
-                              : Color(0xFF2E2E3E),
+                              : AppColors.border,
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
@@ -135,7 +135,7 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                       val == null || val.trim().isEmpty ? 'Please enter a custom title' : null,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Color(0xFF1E1E2A),
+                    fillColor: AppColors.inputFill,
                     labelText: 'Custom Title Name',
                     labelStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                     hintText: 'e.g. Transmission Fluid, Coolant Flush...',
@@ -143,15 +143,15 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
                 ),
@@ -204,14 +204,14 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                           orElse: () => kReminderOilTypes.first,
                         )['label'] as String
                       : null,
-                  dropdownColor: Color(0xFF1E1E2A),
+                  dropdownColor: AppColors.inputFill,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Color(0xFF1E1E2A),
+                    fillColor: AppColors.inputFill,
                     hintText: 'Select oil type',
                     hintStyle: TextStyle(
                       color: AppColors.textTertiary,
@@ -228,15 +228,15 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
+                      borderSide: BorderSide(
                         color: AppColors.primary,
                         width: 1.5,
                       ),
@@ -275,17 +275,17 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                     suffixText: 'km',
                     suffixStyle: TextStyle(color: AppColors.textTertiary),
                     filled: true,
-                    fillColor: Color(0xFF1E1E2A),
+                    fillColor: AppColors.inputFill,
                     hintText: 'e.g. 5000 (Optional)',
                     hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E2E3E)),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -326,12 +326,12 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E2A),
+                    color: AppColors.inputFill,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _isDateOnlyReminder && _selectedTargetDate == null
                           ? const Color(0xFFEF4444).withValues(alpha: 0.6)
-                          : const Color(0xFF2E2E3E),
+                          : AppColors.border,
                     ),
                   ),
                   child: Row(

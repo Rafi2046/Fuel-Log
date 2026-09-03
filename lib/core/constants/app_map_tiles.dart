@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
+import 'app_colors.dart';
+
 /// OpenStreetMap tiles — same source as [openstreetmap.org](https://www.openstreetmap.org).
 abstract final class AppMapTiles {
   static const userAgentPackageName = 'com.example.fuel_log';
@@ -13,7 +15,7 @@ abstract final class AppMapTiles {
   ];
 
   /// Shown only while tiles load (not the final map colour).
-  static const backgroundColor = Color(0xFF1A1D24);
+  static Color get backgroundColor => AppColors.background;
 
   static const minZoom = 9.0;
   static const maxZoom = 19.0;

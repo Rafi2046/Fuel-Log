@@ -445,11 +445,11 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
           child: Container(
             height: maxHeight,
             decoration: BoxDecoration(
-              color: const Color(0xFF14141B).withValues(alpha: 0.94),
+              color: AppColors.card,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: AppColors.border,
               ),
             ),
             child: SafeArea(
@@ -472,7 +472,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
                               width: 36,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: AppColors.borderStrong,
                                 borderRadius: BorderRadius.circular(
                                   AppSpacing.radiusPill,
                                 ),
@@ -485,7 +485,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.06),
+                                  color: AppColors.border,
                                   borderRadius: BorderRadius.circular(
                                     AppSpacing.radiusSm,
                                   ),
@@ -801,7 +801,7 @@ class _TripFieldDecor {
     bool showBorder = true,
   }) {
     final borderSide = showBorder
-        ? BorderSide(color: Colors.white.withValues(alpha: 0.08))
+        ? BorderSide(color: AppColors.border)
         : BorderSide.none;
     final focusedBorder = showBorder
         ? UnderlineInputBorder(
@@ -871,7 +871,7 @@ class _GlassIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withValues(alpha: 0.06),
+      color: AppColors.inputFill,
       shape: CircleBorder(),
       child: InkWell(
         onTap: onPressed,
@@ -899,14 +899,14 @@ class _TripSaveFooter extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          top: BorderSide(color: AppColors.border),
         ),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF14141B).withValues(alpha: 0.2),
-            const Color(0xFF14141B).withValues(alpha: 0.96),
+            AppColors.card.withValues(alpha: 0.2),
+            AppColors.card,
           ],
         ),
       ),

@@ -3,7 +3,7 @@ part of '../trip_log_tab.dart';
 mixin TripLogMapViewMixin on TripLogMapLayersMixin {
   Widget buildTripMapScaffold(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F12),
+      backgroundColor: AppColors.background,
       body: Stack(
         fit: StackFit.expand,
         children: [
