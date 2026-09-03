@@ -2,16 +2,28 @@ part of '../trip_log_tab.dart';
 
 mixin TripLogMapViewMixin on TripLogMapLayersMixin {
   Widget buildTripMapScaffold(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          _buildMapLayer(),
-          _buildTopHud(),
-          _buildZoomControls(context),
-          _buildBottomArea(context),
-        ],
+    // Read dock offset *before* stripping bottom padding so we sit above the
+    // parent dashboard nav instead of overlapping it.
+    final overlayDock = DashboardBottomBar.overlayBottom(context);
+
+    return MediaQuery.removePadding(
+      context: context,
+      removeBottom: true,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
+          systemNavigationBarContrastEnforced: false,
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _buildMapLayer(),
+            _buildTopHud(),
+            _buildZoomControls(context, overlayDock),
+            _buildBottomArea(context, overlayDock),
+          ],
+        ),
       ),
     );
   }
@@ -87,10 +99,8 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
     return height;
   }
 
-  Widget _buildZoomControls(BuildContext context) {
-    final bottom = DashboardBottomBar.overlayBottom(context) +
-        _estimateBottomOverlayHeight() +
-        12;
+  Widget _buildZoomControls(BuildContext context, double overlayDock) {
+    final bottom = overlayDock + _estimateBottomOverlayHeight() + 12;
 
     return Positioned(
       right: AppSpacing.screenPadding,
@@ -104,11 +114,11 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
     );
   }
 
-  Widget _buildBottomArea(BuildContext context) {
+  Widget _buildBottomArea(BuildContext context, double overlayDock) {
     return Positioned(
       left: 0,
       right: 0,
-      bottom: DashboardBottomBar.overlayBottom(context),
+      bottom: overlayDock,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

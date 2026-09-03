@@ -213,7 +213,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
       child: Scaffold(
         extendBody: true,
-        backgroundColor: AppColors.background,
+        backgroundColor:
+            _isTripTab ? Colors.transparent : AppColors.background,
         appBar: _isTripTab
             ? null
             : buildDashboardAppBar(
@@ -264,10 +265,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
               ),
-        bottomNavigationBar: DashboardBottomBar(
-          currentIndex: _currentIndex,
-          onTabTapped: _onTabTapped,
-          showFabGap: !_isTripTab,
+        bottomNavigationBar: Material(
+          type: MaterialType.transparency,
+          child: DashboardBottomBar(
+            currentIndex: _currentIndex,
+            onTabTapped: _onTabTapped,
+            showFabGap: !_isTripTab,
+          ),
         ),
       ),
     );
