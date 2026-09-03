@@ -106,20 +106,22 @@ void main() {
     final endedAt = DateTime(2026, 8, 28, 9, 45);
 
     await tester.pumpWidget(
-      EasyLocalization(
-        supportedLocales: supportedAppLocales,
-        path: translationsPath,
-        fallbackLocale: const Locale('en'),
-        child: MaterialApp(
-          home: Scaffold(
-            body: TripManualEntrySheet(
-              prefill: TripManualEntryPrefill(
-                initialDistanceKm: 12.5,
-                initialDurationSec: 2700,
-                initialOrigin: 'Dhanmondi',
-                initialDestination: 'Gulshan',
-                startedAt: startedAt,
-                endedAt: endedAt,
+      ProviderScope(
+        child: EasyLocalization(
+          supportedLocales: supportedAppLocales,
+          path: translationsPath,
+          fallbackLocale: const Locale('en'),
+          child: MaterialApp(
+            home: Scaffold(
+              body: TripManualEntrySheet(
+                prefill: TripManualEntryPrefill(
+                  initialDistanceKm: 12.5,
+                  initialDurationSec: 2700,
+                  initialOrigin: 'Dhanmondi',
+                  initialDestination: 'Gulshan',
+                  startedAt: startedAt,
+                  endedAt: endedAt,
+                ),
               ),
             ),
           ),

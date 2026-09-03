@@ -161,7 +161,6 @@ void main() {
       await viewModel.toggleLoudspeaker(true);
       expect(viewModel.state.isLoudspeakerEnabled, isTrue);
       expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
-      expect(viewModel.state.riderRole, IntercomRiderRole.sameBikeDriver);
       expect(fakeTransport.audioSettings.loudspeakerEnabled, isTrue);
       await viewModel.toggleLoudspeaker(false);
       expect(viewModel.state.isLoudspeakerEnabled, isFalse);
@@ -171,9 +170,9 @@ void main() {
     test('setRiderRole applies driver preset', () async {
       await viewModel.setRiderRole(IntercomRiderRole.sameBikeDriver);
       expect(viewModel.state.riderRole, IntercomRiderRole.sameBikeDriver);
-      expect(viewModel.state.isLoudspeakerEnabled, isTrue);
-      expect(viewModel.state.isHelmetAudioRouteEnabled, isFalse);
-      expect(viewModel.state.isOpenMic, isFalse);
+      expect(viewModel.state.isLoudspeakerEnabled, isFalse);
+      expect(viewModel.state.isHelmetAudioRouteEnabled, isTrue);
+      expect(viewModel.state.isOpenMic, isTrue);
       expect(fakeTransport.audioSettings.riderRole,
           IntercomRiderRole.sameBikeDriver);
     });

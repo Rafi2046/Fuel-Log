@@ -142,19 +142,38 @@ class NearbyAudioTransport {
   // ── Request Required Runtime Permissions ──────────────────────────────────
   Future<bool> requestPermissions() async {
     if (Platform.isAndroid) {
-      final statuses = await [
-        Permission.microphone,
-        Permission.location,
-        Permission.bluetoothScan,
-        Permission.bluetoothAdvertise,
-        Permission.bluetoothConnect,
-        Permission.nearbyWifiDevices,
-      ].request();
+      try {
+        final permissionsToCheck = [
+          Permission.microphone,
+          Permission.location,
+          Permission.bluetoothScan,
+          Permission.bluetoothAdvertise,
+          Permission.bluetoothConnect,
+          Permission.nearbyWifiDevices,
+        ];
+        final needed = <Permission>[];
+        for (final p in permissionsToCheck) {
+          final isGranted = await p.isGranted;
+          if (!isGranted) {
+            needed.add(p);
+          }
+        }
 
-      final micGranted = statuses[Permission.microphone]?.isGranted ?? false;
-      final locGranted = statuses[Permission.location]?.isGranted ?? false;
-      debugPrint('[NearbyAudioTransport] Permissions -> Mic: $micGranted, Location: $locGranted');
-      return micGranted;
+        if (needed.isNotEmpty) {
+          await needed.request().timeout(
+            const Duration(seconds: 4),
+            onTimeout: () => {},
+          );
+        }
+
+        final micGranted = await Permission.microphone.isGranted;
+        final locGranted = await Permission.location.isGranted;
+        debugPrint('[NearbyAudioTransport] Permissions -> Mic: $micGranted, Location: $locGranted');
+        return micGranted;
+      } catch (e) {
+        debugPrint('[NearbyAudioTransport] requestPermissions error: $e');
+        return false;
+      }
     }
     return true;
   }
@@ -185,6 +204,12 @@ class NearbyAudioTransport {
         onConnectionInitiated: _onConnectionInitiated,
         onConnectionResult: _onConnectionResult,
         onDisconnected: _onDisconnected,
+      ).timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {
+          debugPrint('[NearbyAudioTransport] startAdvertising timed out.');
+          return false;
+        },
       );
       debugPrint('[NearbyAudioTransport] 📡 HOST Advertising started ($advResult) as "$advertisedName"');
     } catch (e) {
@@ -251,6 +276,12 @@ class NearbyAudioTransport {
         },
         onEndpointLost: (id) {
           if (id != null) _removeEndpoint(id);
+        },
+      ).timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {
+          debugPrint('[NearbyAudioTransport] startDiscovery timed out.');
+          return false;
         },
       );
       debugPrint(
@@ -365,7 +396,10 @@ class NearbyAudioTransport {
     try {
       if (_player == null) {
         _player = FlutterSoundPlayer();
-        await _player!.openPlayer();
+        await _player!.openPlayer().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => _player,
+        );
       }
       await _applyPlaybackVolume();
       await _startPlayerStream();
@@ -600,9 +634,9 @@ class NearbyAudioTransport {
     _prevOutputSample = 0;
 
     try {
-      await Nearby().stopAdvertising();
-      await Nearby().stopDiscovery();
-      await Nearby().stopAllEndpoints();
+      await Nearby().stopAdvertising().timeout(const Duration(seconds: 2), onTimeout: () {});
+      await Nearby().stopDiscovery().timeout(const Duration(seconds: 2), onTimeout: () {});
+      await Nearby().stopAllEndpoints().timeout(const Duration(seconds: 2), onTimeout: () {});
     } catch (_) {}
     _connectedEndpoints.clear();
     _endpointNames.clear();

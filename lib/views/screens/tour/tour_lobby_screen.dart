@@ -73,11 +73,18 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     await _notifier.setRiderRole(_selectedRole);
 
     setState(() => _isLoading = true);
-    // 1. Host enters and starts tour session immediately
-    await _notifier.createTour(tourName: name, preGeneratedCode: code);
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    try {
+      // 1. Host enters and starts tour session immediately
+      await _notifier.createTour(tourName: name, preGeneratedCode: code).timeout(
+        const Duration(seconds: 4),
+      );
+    } catch (e) {
+      debugPrint('[TourLobby] createTour error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
 
+    if (!mounted) return;
     // 2. Navigate host to the live Intercom room
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -117,20 +124,34 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
     }
     setState(() => _isLoading = true);
     HapticFeedback.heavyImpact();
-    await _notifier.setRiderRole(_selectedRole);
-    await _notifier.joinByCode(code);
+    try {
+      await _notifier.setRiderRole(_selectedRole);
+      await _notifier.joinByCode(code).timeout(
+        const Duration(seconds: 4),
+      );
+    } catch (e) {
+      debugPrint('[TourLobby] joinByCode error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
     if (!mounted) return;
-    setState(() => _isLoading = false);
     _goToIntercomScreen();
   }
 
   Future<void> _onRejoinRecentTour() async {
     setState(() => _isLoading = true);
     HapticFeedback.heavyImpact();
-    _selectedRole = ref.read(intercomProvider).riderRole;
-    await _notifier.rejoinRecentTour();
+    try {
+      _selectedRole = ref.read(intercomProvider).riderRole;
+      await _notifier.rejoinRecentTour().timeout(
+        const Duration(seconds: 4),
+      );
+    } catch (e) {
+      debugPrint('[TourLobby] rejoinRecentTour error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
     if (!mounted) return;
-    setState(() => _isLoading = false);
     _goToIntercomScreen();
   }
 
@@ -172,32 +193,87 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
                   const SizedBox(height: AppSpacing.md),
                 ],
                 Container(
-                  padding: const EdgeInsets.all(3),
+                  height: 46,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(color: AppColors.border),
+                    color: const Color(0xFF14141B),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF282836),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: TabBar(
                     controller: _tabController,
+                    onTap: (_) => HapticFeedback.selectionClick(),
                     indicator: BoxDecoration(
-                      color: AppColors.cardElevated,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      border: Border.all(color: AppColors.border),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.25),
+                          AppColors.primary.withValues(alpha: 0.12),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.75),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.22),
+                          blurRadius: 12,
+                          spreadRadius: -1,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     indicatorSize: TabBarIndicatorSize.tab,
                     dividerColor: Colors.transparent,
-                    labelColor: AppColors.textPrimary,
-                    unselectedLabelColor: AppColors.textSecondary,
+                    labelColor: AppColors.primary,
+                    unselectedLabelColor: const Color(0xFF8E8EA0),
                     labelStyle: AppTextStyles.label.copyWith(
-                      fontWeight: FontWeight.w600,
                       fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                     ),
-                    unselectedLabelStyle:
-                        AppTextStyles.label.copyWith(fontSize: 13),
+                    unselectedLabelStyle: AppTextStyles.label.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                     tabs: const [
-                      Tab(height: 36, text: 'Host'),
-                      Tab(height: 36, text: 'Join'),
+                      Tab(
+                        height: 38,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.podcasts_rounded, size: 16),
+                            SizedBox(width: 8),
+                            Text('Host'),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        height: 38,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.group_add_rounded, size: 16),
+                            SizedBox(width: 8),
+                            Text('Join'),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

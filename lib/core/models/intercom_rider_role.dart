@@ -19,11 +19,11 @@ extension IntercomRiderRoleX on IntercomRiderRole {
 
   String get subtitle => switch (this) {
         IntercomRiderRole.groupRider =>
-          'Multi-bike tour with Bluetooth helmet',
+          'Multi-bike tour with Bluetooth helmet / earbuds',
         IntercomRiderRole.sameBikeDriver =>
-          'Phone on mount — loudspeaker + push-to-talk',
+          'Bike driver — phone in pocket with earbuds, or mount',
         IntercomRiderRole.sameBikePillion =>
-          'Phone in pocket — earphone + hands-free',
+          'Pillion rider — phone in pocket with earbuds',
       };
 
   String get iconName => switch (this) {
@@ -32,9 +32,7 @@ extension IntercomRiderRoleX on IntercomRiderRole {
         IntercomRiderRole.sameBikePillion => 'pillion',
       };
 
-  bool get needsBackgroundSession =>
-      this == IntercomRiderRole.sameBikePillion ||
-      this == IntercomRiderRole.sameBikeDriver;
+  bool get needsBackgroundSession => true;
 
   static IntercomRiderRole fromPref(String? value) {
     return IntercomRiderRole.values.firstWhere(
@@ -66,10 +64,10 @@ class IntercomRolePreset {
               openMic: true,
             ),
         IntercomRiderRole.sameBikeDriver => const IntercomRolePreset(
-              helmetAudioRouteEnabled: false,
-              loudspeakerEnabled: true,
+              helmetAudioRouteEnabled: true,
+              loudspeakerEnabled: false,
               windNoiseFilterEnabled: true,
-              openMic: false,
+              openMic: true,
             ),
         IntercomRiderRole.sameBikePillion => const IntercomRolePreset(
               helmetAudioRouteEnabled: true,

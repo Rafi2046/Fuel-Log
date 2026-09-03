@@ -672,7 +672,6 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     state = state.copyWith(
       isHelmetAudioRouteEnabled: enabled,
       isLoudspeakerEnabled: enabled ? false : state.isLoudspeakerEnabled,
-      riderRole: IntercomRiderRole.groupRider,
     );
     await _syncAudioSettingsToTransport();
     await _syncBackgroundSession();
@@ -682,18 +681,10 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   Future<void> toggleLoudspeaker(bool? value) async {
     HapticFeedback.selectionClick();
     final enabled = value ?? !state.isLoudspeakerEnabled;
-    if (enabled) {
-      state = state.copyWith(
-        isLoudspeakerEnabled: true,
-        isHelmetAudioRouteEnabled: false,
-        riderRole: IntercomRiderRole.sameBikeDriver,
-      );
-    } else {
-      state = state.copyWith(
-        isLoudspeakerEnabled: false,
-        riderRole: IntercomRiderRole.groupRider,
-      );
-    }
+    state = state.copyWith(
+      isLoudspeakerEnabled: enabled,
+      isHelmetAudioRouteEnabled: enabled ? false : state.isHelmetAudioRouteEnabled,
+    );
     await _syncAudioSettingsToTransport();
     await _syncBackgroundSession();
     await _saveAudioPreferences();

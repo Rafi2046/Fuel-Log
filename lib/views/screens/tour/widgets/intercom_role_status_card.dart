@@ -104,17 +104,14 @@ class _RoleTips {
                   'Volume buttons still work as push-to-talk.',
             ),
         IntercomRiderRole.sameBikeDriver => const _RoleTips(
-              headline: 'Mount your phone and use push-to-talk',
+              headline: 'Earbuds, Bluetooth, or loudspeaker',
               body:
-                  'Loudspeaker is on. Hold the mic button or a volume key to talk. '
-                  'You can lock the screen — the notification keeps intercom alive.',
+                  'Connect any Bluetooth earbuds, neckband, or helmet. Keep your phone in your pocket and talk hands-free, or toggle loudspeaker if mounted.',
             ),
         IntercomRiderRole.sameBikePillion => const _RoleTips(
-              headline: 'Plug in earphones, then pocket your phone',
+              headline: 'Earbuds connected, phone in pocket',
               body:
-                  'Hands-free stays on so you can talk without opening the app. '
-                  'Use wired or Bluetooth earphones with a mic. Tap Hold PTT on the '
-                  'lock-screen notification or press your headset button.',
+                  'Talk hands-free with any Bluetooth earbuds or earphones. The background service keeps intercom active even when your phone is locked in your pocket.',
             ),
       };
 }

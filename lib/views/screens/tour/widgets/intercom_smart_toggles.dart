@@ -39,9 +39,6 @@ class IntercomSmartToggles extends StatelessWidget {
 
   static const _dividerIndent = 46.0;
 
-  bool get _isDriverRole => riderRole == IntercomRiderRole.sameBikeDriver;
-  bool get _isPillionRole => riderRole == IntercomRiderRole.sameBikePillion;
-  bool get _roleLocksRouting => _isDriverRole || _isPillionRole;
 
   @override
   Widget build(BuildContext context) {
@@ -76,22 +73,16 @@ class IntercomSmartToggles extends StatelessWidget {
               _SettingRow(
                 icon: Icons.headset_mic_rounded,
                 title: 'Helmet / earphone audio',
-                subtitle: _isPillionRole
-                    ? 'On for pocket + earphone mode'
-                    : 'Route through Bluetooth / wired headset',
+                subtitle: 'Route through Bluetooth / wired earbuds or helmet',
                 value: helmetAudioEnabled,
-                enabled: !_isDriverRole,
                 onChanged: onHelmetAudioChanged,
               ),
               _InsetDivider(indent: _dividerIndent),
               _SettingRow(
                 icon: Icons.volume_up_rounded,
                 title: 'Loudspeaker',
-                subtitle: _isDriverRole
-                    ? 'On for mounted driver mode'
-                    : 'Play through phone speaker',
+                subtitle: 'Play through phone speaker (for bike mount)',
                 value: loudspeakerEnabled,
-                enabled: !_roleLocksRouting,
                 onChanged: onLoudspeakerChanged,
               ),
               _InsetDivider(indent: _dividerIndent),
@@ -141,7 +132,6 @@ class _SettingRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
-    this.enabled = true,
   });
 
   final IconData icon;
@@ -149,10 +139,8 @@ class _SettingRow extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
-  final bool enabled;
 
   void _handleTap() {
-    if (!enabled) return;
     HapticFeedback.selectionClick();
     onChanged(!value);
   }
@@ -162,21 +150,17 @@ class _SettingRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: enabled ? _handleTap : null,
+        onTap: _handleTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        child: Opacity(
-          opacity: enabled ? 1 : 0.45,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: value && enabled
-                      ? AppColors.primary
-                      : AppColors.textTertiary,
-                ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: value ? AppColors.primary : AppColors.textTertiary,
+              ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -207,10 +191,9 @@ class _SettingRow extends StatelessWidget {
                 const SizedBox(width: 8),
                 _CompactSwitch(
                   value: value,
-                  onChanged: enabled ? onChanged : null,
+                  onChanged: onChanged,
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
