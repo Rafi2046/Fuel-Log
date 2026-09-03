@@ -58,6 +58,7 @@ class NearbyAudioTransport {
   bool _isHost = false;
   String _targetTourCode = '';
   String _riderDiscoveryName = '';
+  String? _connectingEndpointId;
   Timer? _discoveryRefreshTimer;
 
   // Thread-safe FIFO Queue to prevent native AudioTrack SIGSEGV crash
@@ -258,9 +259,15 @@ class NearbyAudioTransport {
           if (name.contains('#')) {
             final parts = name.split('#');
             if (parts.length >= 2 && parts[1].toUpperCase() == _targetTourCode) {
+              if (_connectingEndpointId != null) return;
+              _connectingEndpointId = id;
               debugPrint(
-                '[NearbyAudioTransport] Match found for tour $_targetTourCode! Requesting connection...',
+                '[NearbyAudioTransport] Match found for tour $_targetTourCode! Pausing discovery and requesting connection to $id...',
               );
+              _stopDiscoveryRefresh();
+              // Pause discovery so Wi-Fi hardware can dedicate full radio to the P2P connection handshake
+              unawaited(Nearby().stopDiscovery());
+
               Nearby().requestConnection(
                 _riderDiscoveryName,
                 id,
@@ -269,6 +276,11 @@ class NearbyAudioTransport {
                 onDisconnected: _onDisconnected,
               ).catchError((err) {
                 debugPrint('[NearbyAudioTransport] requestConnection error: $err');
+                _connectingEndpointId = null;
+                if (!_isHost && _connectedEndpoints.isEmpty && _isRunning) {
+                  _beginRiderDiscovery();
+                  _scheduleDiscoveryRefresh();
+                }
                 return false;
               });
             }
@@ -294,8 +306,8 @@ class NearbyAudioTransport {
 
   void _scheduleDiscoveryRefresh() {
     _discoveryRefreshTimer?.cancel();
-    _discoveryRefreshTimer = Timer.periodic(const Duration(seconds: 6), (_) {
-      if (!_isRunning || _isHost || _connectedEndpoints.isNotEmpty) return;
+    _discoveryRefreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!_isRunning || _isHost || _connectedEndpoints.isNotEmpty || _connectingEndpointId != null) return;
       unawaited(_refreshRiderDiscovery());
     });
   }
@@ -365,6 +377,7 @@ class NearbyAudioTransport {
 
   void _onConnectionResult(String id, Status status) {
     debugPrint('[NearbyAudioTransport] 📶 Connection status for $id: $status');
+    _connectingEndpointId = null;
     if (status == Status.CONNECTED) {
       _connectedEndpoints.add(id);
       _connectionStateController.add(connectedEndpoints);
@@ -374,6 +387,10 @@ class NearbyAudioTransport {
       );
     } else {
       _removeEndpoint(id);
+      if (!_isHost && _connectedEndpoints.isEmpty && _isRunning) {
+        _beginRiderDiscovery();
+        _scheduleDiscoveryRefresh();
+      }
     }
   }
 
@@ -623,6 +640,7 @@ class NearbyAudioTransport {
     await stopTransmitting();
     _stopDiscoveryRefresh();
     _riderDiscoveryName = '';
+    _connectingEndpointId = null;
     _isRunning = false;
     _audioSub?.cancel();
     _audioSub = null;

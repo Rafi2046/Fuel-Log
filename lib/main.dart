@@ -20,8 +20,8 @@ Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // Avoid runtime font downloads (fails offline / bad DNS on device).
-  GoogleFonts.config.allowRuntimeFetching = false;
+  // Allow GoogleFonts to download & cache fonts locally.
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   try {
     await EasyLocalization.ensureInitialized();
