@@ -647,6 +647,17 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
       ));
     }
 
+    final prevRemoteCount = state.members.where((m) => !m.isCurrentUser).length;
+    final newRemoteCount = remoteMembers.length;
+
+    if (prevRemoteCount > 0 && newRemoteCount != prevRemoteCount) {
+      if (newRemoteCount > prevRemoteCount) {
+        _transport.playChime(isJoin: true);
+      } else {
+        _transport.playChime(isJoin: false);
+      }
+    }
+
     state = state.copyWith(
       members: [localMember, ...remoteMembers],
     );

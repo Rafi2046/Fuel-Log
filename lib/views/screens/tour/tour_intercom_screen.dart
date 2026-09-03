@@ -139,6 +139,45 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
           mounted &&
           ModalRoute.of(context)?.isCurrent == true) {
         Navigator.of(context).maybePop();
+        return;
+      }
+
+      if (previous != null && previous.isConnected && next.isConnected && mounted) {
+        final prevCount = previous.members.where((m) => !m.isCurrentUser).length;
+        final nextCount = next.members.where((m) => !m.isCurrentUser).length;
+        if (nextCount > prevCount) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
+                  SizedBox(width: 8),
+                  Text('Rider connected to tour'),
+                ],
+              ),
+              backgroundColor: AppColors.cardElevated,
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else if (nextCount < prevCount) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 18),
+                  SizedBox(width: 8),
+                  Text('Rider out of range / disconnected'),
+                ],
+              ),
+              backgroundColor: AppColors.cardElevated,
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     });
 

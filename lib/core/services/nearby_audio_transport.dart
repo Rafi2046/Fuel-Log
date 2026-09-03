@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:nearby_connections/nearby_connections.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -434,6 +435,7 @@ class NearbyAudioTransport {
       _connectedEndpoints.add(id);
       _connectionStateController.add(connectedEndpoints);
       _stopDiscoveryRefresh();
+      playChime(isJoin: true);
       debugPrint(
         '[NearbyAudioTransport] ✅ CONNECTED with $id (${_endpointNames[id]}). Total active peers: ${_connectedEndpoints.length}',
       );
@@ -453,6 +455,7 @@ class NearbyAudioTransport {
 
   void _onDisconnected(String id) {
     debugPrint('[NearbyAudioTransport] ❌ Disconnected from $id (${_endpointNames[id]})');
+    playChime(isJoin: false);
     _removeEndpoint(id);
   }
 
@@ -553,6 +556,70 @@ class NearbyAudioTransport {
     }
 
     _isProcessingQueue = false;
+  }
+
+  // ── In-Ear Chimes & Status Tones ──────────────────────────────────────────
+  void playChime({required bool isJoin}) {
+    try {
+      if (isJoin) {
+        HapticFeedback.lightImpact();
+        final tone = _generateTone(
+          frequencies: [587.33, 880.0], // D5 -> A5 (pleasant ascending chime)
+          durationsMs: [90, 140],
+          volume: 0.32,
+        );
+        _playIncomingAudio(tone);
+      } else {
+        HapticFeedback.mediumImpact();
+        final tone = _generateTone(
+          frequencies: [784.0, 440.0], // G5 -> A4 (clear descending warning chime)
+          durationsMs: [95, 160],
+          volume: 0.35,
+        );
+        _playIncomingAudio(tone);
+      }
+    } catch (e) {
+      debugPrint('[NearbyAudioTransport] playChime error: $e');
+    }
+  }
+
+  Uint8List _generateTone({
+    required List<double> frequencies,
+    required List<int> durationsMs,
+    double volume = 0.35,
+  }) {
+    const int sRate = sampleRate; // 16000
+    int totalSamples = 0;
+    for (final ms in durationsMs) {
+      totalSamples += (sRate * ms) ~/ 1000;
+    }
+
+    final bytes = Uint8List(totalSamples * 2);
+    final data = ByteData.sublistView(bytes);
+
+    int sampleOffset = 0;
+    for (int seg = 0; seg < frequencies.length; seg++) {
+      final freq = frequencies[seg];
+      final segSamples = (sRate * durationsMs[seg]) ~/ 1000;
+      final twoPiF = 2.0 * math.pi * freq / sRate;
+
+      for (int i = 0; i < segSamples; i++) {
+        double envelope = 1.0;
+        final attackSamples = (segSamples * 0.15).toInt();
+        if (i < attackSamples && attackSamples > 0) {
+          envelope = i / attackSamples;
+        } else {
+          envelope = math.exp(-3.5 * (i - attackSamples) / math.max(1, segSamples - attackSamples));
+        }
+
+        final double val = math.sin(twoPiF * i) * 32767.0 * volume * envelope;
+        final int clamped = val.clamp(-32768.0, 32767.0).toInt();
+        data.setInt16((sampleOffset + i) * 2, clamped, Endian.little);
+      }
+      sampleOffset += segSamples;
+    }
+
+    return bytes;
   }
 
   // ── Mic Audio Transmission with DSP Noise Gate & High-Pass Filter ─────────
