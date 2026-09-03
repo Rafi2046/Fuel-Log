@@ -19,7 +19,7 @@ mixin TripLogMapLayersMixin on TripLogTabController {
               child: FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
-                  initialCenter: _userLocation,
+                  initialCenter: _mapCenter,
                   initialZoom:
                       _mapZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom),
                   minZoom: AppMapTiles.minZoom,
@@ -34,23 +34,13 @@ mixin TripLogMapLayersMixin on TripLogTabController {
                         InteractiveFlag.doubleTapZoom |
                         InteractiveFlag.scrollWheelZoom,
                   ),
-                  onMapReady: () {
-                    try {
-                      _mapController.move(_mapCenter, _mapZoom);
-                    } catch (_) {}
-                  },
                   onPositionChanged: (camera, hasGesture) {
-                    final clampedZoom = camera.zoom.clamp(
-                      AppMapTiles.minZoom,
-                      AppMapTiles.maxZoom,
-                    );
-                    if (clampedZoom != camera.zoom) {
-                      try {
-                        _mapController.move(camera.center, clampedZoom);
-                      } catch (_) {}
+                    if (camera.zoom.isFinite &&
+                        camera.center.latitude.isFinite &&
+                        camera.center.longitude.isFinite) {
+                      _mapZoom = camera.zoom;
+                      _mapCenter = camera.center;
                     }
-                    _mapZoom = clampedZoom;
-                    _mapCenter = camera.center;
                   },
                 ),
                 children: [

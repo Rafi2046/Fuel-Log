@@ -56,15 +56,51 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     });
   }
 
+  bool get _canMoveMap {
+    if (!mounted) return false;
+    try {
+      final camera = _mapController.camera;
+      final size = camera.nonRotatedSize;
+      if (!size.isFinite || size.width <= 0 || size.height <= 0) {
+        return false;
+      }
+      return camera.zoom.isFinite &&
+          camera.center.latitude.isFinite &&
+          camera.center.longitude.isFinite;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _safeMoveMap(LatLng center, double zoom) {
+    if (!center.latitude.isFinite ||
+        !center.longitude.isFinite ||
+        !zoom.isFinite) {
+      return;
+    }
+    final clampedZoom = zoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
+    _mapCenter = center;
+    _mapZoom = clampedZoom;
+    if (!_canMoveMap) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_canMoveMap) {
+          try {
+            _mapController.move(center, clampedZoom);
+          } catch (_) {}
+        }
+      });
+      return;
+    }
+    try {
+      _mapController.move(center, clampedZoom);
+    } catch (_) {}
+  }
+
   Future<void> _retryMapTiles() async {
     setState(() => _mapTileGeneration++);
     await _checkMapNetwork();
     if (!mounted) return;
-    try {
-      final z = _mapZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
-      _mapController.move(_userLocation, z + 0.01);
-      _mapController.move(_userLocation, z);
-    } catch (_) {}
+    _safeMoveMap(_userLocation, _mapZoom);
   }
 
   @override
@@ -75,13 +111,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _fetchLiveLocation();
-        try {
-          _mapController.move(_userLocation, _mapZoom);
-          // Nudge zoom so tiles reload after tab was inactive.
-          final z = _mapZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
-          _mapController.move(_userLocation, z + 0.01);
-          _mapController.move(_userLocation, z);
-        } catch (_) {}
+        _safeMoveMap(_userLocation, _mapZoom);
       });
     }
   }
@@ -93,25 +123,32 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     Curve curve = Curves.easeInOutCubic,
   }) {
     if (!mounted) return;
+    if (!destLocation.latitude.isFinite ||
+        !destLocation.longitude.isFinite ||
+        !destZoom.isFinite) {
+      return;
+    }
 
     final clampedZoom =
         destZoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
 
     void applyInstantMove() {
-      try {
-        _mapController.move(destLocation, clampedZoom);
-        _mapZoom = clampedZoom;
-        _mapCenter = destLocation;
-      } catch (_) {}
+      _safeMoveMap(destLocation, clampedZoom);
     }
 
-    if (duration <= Duration.zero) {
+    if (duration <= Duration.zero || !_canMoveMap) {
       applyInstantMove();
       return;
     }
 
     final startCenter = _mapController.camera.center;
     final startZoom = _mapController.camera.zoom;
+    if (!startCenter.latitude.isFinite ||
+        !startCenter.longitude.isFinite ||
+        !startZoom.isFinite) {
+      applyInstantMove();
+      return;
+    }
 
     final latTween = Tween<double>(
       begin: startCenter.latitude,
@@ -134,15 +171,20 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     final animation = CurvedAnimation(parent: controller, curve: curve);
 
     controller.addListener(() {
+      if (!_canMoveMap) return;
       try {
         final newCenter = LatLng(
           latTween.evaluate(animation),
           lngTween.evaluate(animation),
         );
         final newZoom = zoomTween.evaluate(animation);
-        _mapController.move(newCenter, newZoom);
-        _mapZoom = newZoom;
-        _mapCenter = newCenter;
+        if (newCenter.latitude.isFinite &&
+            newCenter.longitude.isFinite &&
+            newZoom.isFinite) {
+          _mapController.move(newCenter, newZoom);
+          _mapZoom = newZoom;
+          _mapCenter = newCenter;
+        }
       } catch (_) {}
     });
 
@@ -350,6 +392,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   }
 
   void _zoomIn() {
+    if (!_canMoveMap) return;
     final zoom = _mapController.camera.zoom;
     if (zoom < AppMapTiles.maxZoom) {
       _animatedMapMove(
@@ -361,6 +404,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   }
 
   void _zoomOut() {
+    if (!_canMoveMap) return;
     final zoom = _mapController.camera.zoom;
     if (zoom > AppMapTiles.minZoom) {
       _animatedMapMove(
@@ -512,9 +556,10 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
     }
 
     if (_isGeneralTripTracking || _isNavigating) {
+      final z = _canMoveMap ? _mapController.camera.zoom : _mapZoom;
       _animatedMapMove(
         currentLatLng,
-        _mapController.camera.zoom,
+        z,
         duration: const Duration(milliseconds: 140),
         curve: Curves.linear,
       );

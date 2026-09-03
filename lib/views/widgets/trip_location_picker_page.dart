@@ -69,6 +69,44 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
     super.dispose();
   }
 
+  bool get _canMoveMap {
+    if (!mounted) return false;
+    try {
+      final camera = _mapController.camera;
+      final size = camera.nonRotatedSize;
+      if (!size.isFinite || size.width <= 0 || size.height <= 0) return false;
+      return camera.zoom.isFinite &&
+          camera.center.latitude.isFinite &&
+          camera.center.longitude.isFinite;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _safeMoveMap(LatLng center, double zoom) {
+    if (!center.latitude.isFinite ||
+        !center.longitude.isFinite ||
+        !zoom.isFinite) {
+      return;
+    }
+    final clampedZoom = zoom.clamp(AppMapTiles.minZoom, AppMapTiles.maxZoom);
+    _center = center;
+    _zoom = clampedZoom;
+    if (!_canMoveMap) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_canMoveMap) {
+          try {
+            _mapController.move(center, clampedZoom);
+          } catch (_) {}
+        }
+      });
+      return;
+    }
+    try {
+      _mapController.move(center, clampedZoom);
+    } catch (_) {}
+  }
+
   Future<void> _goToGps({bool moveMap = true}) async {
     try {
       var permission = await Geolocator.checkPermission();
@@ -79,9 +117,7 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
           permission == LocationPermission.deniedForever) {
         return;
       }
-      final last = await Geolocator.getLastKnownPosition();
-      final pos = last ??
-          await Geolocator.getCurrentPosition(
+      final pos = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
               accuracy: LocationAccuracy.medium,
               timeLimit: Duration(seconds: 3),
@@ -91,9 +127,7 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
       if (!mounted) return;
       setState(() => _center = point);
       if (moveMap) {
-        try {
-          _mapController.move(point, 16);
-        } catch (_) {}
+        _safeMoveMap(point, 16);
       }
     } catch (_) {}
   }
@@ -124,9 +158,7 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
 
   Future<void> _goToPlace(GeocodedPlace place) async {
     setState(() => _center = place.point);
-    try {
-      _mapController.move(place.point, 15.4);
-    } catch (_) {}
+    _safeMoveMap(place.point, 15.4);
   }
 
   Future<void> _onCheckPressed() async {
@@ -260,23 +292,17 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
                 _MapRoundButton(
                   icon: Icons.add,
                   onTap: () {
-                    try {
-                      _mapController.move(
-                        _mapController.camera.center,
-                        (_mapController.camera.zoom + 1).clamp(8.5, 18),
-                      );
-                    } catch (_) {}
+                    if (!_canMoveMap) return;
+                    final cam = _mapController.camera;
+                    _safeMoveMap(cam.center, cam.zoom + 1);
                   },
                 ),
                 _MapRoundButton(
                   icon: Icons.remove,
                   onTap: () {
-                    try {
-                      _mapController.move(
-                        _mapController.camera.center,
-                        (_mapController.camera.zoom - 1).clamp(8.5, 18),
-                      );
-                    } catch (_) {}
+                    if (!_canMoveMap) return;
+                    final cam = _mapController.camera;
+                    _safeMoveMap(cam.center, cam.zoom - 1);
                   },
                 ),
               ],

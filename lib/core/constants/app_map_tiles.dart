@@ -33,6 +33,21 @@ abstract final class AppMapTiles {
     );
   }
 
+  /// Drops tile update events when camera has non-finite or non-positive dimensions
+  /// (e.g. before initial layout) or non-finite zoom/center, preventing Infinity/NaN toInt crashes.
+  static final safeTileUpdateTransformer =
+      TileUpdateTransformer.fromHandlers(handleData: (event, sink) {
+    if (event.wasTriggeredByTap()) return;
+    final size = event.camera.nonRotatedSize;
+    if (!size.isFinite || size.width <= 0 || size.height <= 0) return;
+    if (!event.zoom.isFinite ||
+        !event.center.latitude.isFinite ||
+        !event.center.longitude.isFinite) {
+      return;
+    }
+    sink.add(event);
+  });
+
   static TileLayer layer({
     int keepBuffer = 4,
     int panBuffer = 2,
@@ -52,6 +67,7 @@ abstract final class AppMapTiles {
       keepBuffer: keepBuffer,
       panBuffer: panBuffer,
       tileDisplay: const TileDisplay.instantaneous(),
+      tileUpdateTransformer: safeTileUpdateTransformer,
       tileBuilder: softDark ? osmSoftDarkTileBuilder : null,
       tileProvider: NetworkTileProvider(
         headers: <String, String>{},
