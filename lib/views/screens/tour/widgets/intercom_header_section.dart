@@ -73,14 +73,58 @@ class IntercomHeaderSection extends StatelessWidget {
                           style: AppTextStyles.caption.copyWith(fontSize: 11),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          _formatCode(state.channelCode),
-                          style: GoogleFonts.firaCode(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            letterSpacing: 3,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatCode(state.channelCode),
+                              style: GoogleFonts.firaCode(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                            if (onInvite != null) ...[
+                              const SizedBox(width: AppSpacing.sm),
+                              InkWell(
+                                onTap: onInvite,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                    border: Border.all(
+                                      color: AppColors.primary.withValues(alpha: 0.35),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.qr_code_rounded,
+                                        size: 13,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Show QR',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -131,6 +175,27 @@ class IntercomHeaderSection extends StatelessWidget {
                     ),
                 ],
               ),
+              if (isAlone && onInvite != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onInvite,
+                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
+                    label: const Text('Show Tour QR & Invite Code'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               if (state.members.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sm),
                 AnimatedSwitcher(
@@ -288,11 +353,11 @@ class _SessionActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (state.isHost && onInvite != null) ...[
+        if (onInvite != null) ...[
           Expanded(
             child: _ActionButton(
-              icon: Icons.person_add_outlined,
-              label: 'Invite',
+              icon: Icons.qr_code_rounded,
+              label: 'QR / Invite',
               onPressed: onInvite!,
             ),
           ),

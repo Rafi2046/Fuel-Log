@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -45,6 +46,7 @@ class NearbyAudioTransport {
 
   final _incomingAudioController = StreamController<NearbyAudioPacket>.broadcast();
   final _connectionStateController = StreamController<Set<String>>.broadcast();
+  final _rosterController = StreamController<List<String>>.broadcast();
 
   // Audio Engine
   AudioRecorder? _recorder;
@@ -77,6 +79,7 @@ class NearbyAudioTransport {
 
   Stream<NearbyAudioPacket> get incomingAudio => _incomingAudioController.stream;
   Stream<Set<String>> get connectionChanges => _connectionStateController.stream;
+  Stream<List<String>> get rosterChanges => _rosterController.stream;
 
   Set<String> get connectedEndpoints => Set.unmodifiable(_connectedEndpoints);
   Map<String, String> get endpointNames => Map.unmodifiable(_endpointNames);
@@ -348,6 +351,23 @@ class NearbyAudioTransport {
       onPayLoadRecieved: (endpointId, payload) {
         if (payload.type == PayloadType.BYTES && payload.bytes != null) {
           final rawBytes = payload.bytes!;
+
+          // Check for roster control message from host (CTRL:ROSTER:Host|Rider 1|...)
+          if (rawBytes.length >= 12 &&
+              rawBytes[0] == 67 && // 'C'
+              rawBytes[1] == 84 && // 'T'
+              rawBytes[2] == 82 && // 'R'
+              rawBytes[3] == 76) { // 'L'
+            try {
+              final msg = utf8.decode(rawBytes);
+              if (msg.startsWith('CTRL:ROSTER:')) {
+                final names = msg.substring(12).split('|').where((s) => s.isNotEmpty).toList();
+                _rosterController.add(names);
+                return;
+              }
+            } catch (_) {}
+          }
+
           // Frame sanity check: 16-bit PCM must have an even number of bytes and reasonable length
           if (rawBytes.length >= 64 && rawBytes.length % 2 == 0) {
             _incomingAudioController.add(
@@ -375,6 +395,16 @@ class NearbyAudioTransport {
     });
   }
 
+  void _broadcastRosterToPeers() {
+    if (!_isHost || _connectedEndpoints.isEmpty) return;
+    final names = _connectedEndpoints.map((id) => _endpointNames[id] ?? 'Rider').toList();
+    final rosterStr = 'CTRL:ROSTER:Host|${names.join('|')}';
+    final bytes = Uint8List.fromList(utf8.encode(rosterStr));
+    for (final id in _connectedEndpoints) {
+      unawaited(Nearby().sendBytesPayload(id, bytes));
+    }
+  }
+
   void _onConnectionResult(String id, Status status) {
     debugPrint('[NearbyAudioTransport] 📶 Connection status for $id: $status');
     _connectingEndpointId = null;
@@ -385,6 +415,11 @@ class NearbyAudioTransport {
       debugPrint(
         '[NearbyAudioTransport] ✅ CONNECTED with $id (${_endpointNames[id]}). Total active peers: ${_connectedEndpoints.length}',
       );
+      if (_isHost) {
+        Future<void>.delayed(const Duration(milliseconds: 300), () {
+          _broadcastRosterToPeers();
+        });
+      }
     } else {
       _removeEndpoint(id);
       if (!_isHost && _connectedEndpoints.isEmpty && _isRunning) {
@@ -403,6 +438,9 @@ class NearbyAudioTransport {
     _connectedEndpoints.remove(id);
     _endpointNames.remove(id);
     _connectionStateController.add(connectedEndpoints);
+    if (_isHost) {
+      _broadcastRosterToPeers();
+    }
     if (!_isHost && _isRunning && _connectedEndpoints.isEmpty) {
       _scheduleDiscoveryRefresh();
     }
@@ -667,6 +705,7 @@ class NearbyAudioTransport {
     await stop();
     await _incomingAudioController.close();
     await _connectionStateController.close();
+    await _rosterController.close();
     await _player?.stopPlayer();
     await _player?.closePlayer();
     _player = null;

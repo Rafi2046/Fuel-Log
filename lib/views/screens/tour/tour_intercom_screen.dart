@@ -150,7 +150,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
         children: [
           IntercomHeaderSection(
             state: intercomState,
-            onInvite: intercomState.isHost ? _handleInvite : null,
+            onInvite: _handleInvite,
             onMuteToggle: intercomNotifier.toggleMute,
             onLeave: _handleLeave,
           ),

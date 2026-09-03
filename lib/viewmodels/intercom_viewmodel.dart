@@ -233,8 +233,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
   final HardwarePttService _hardwarePttService;
   final NearbyAudioTransport _transport;
   final IntercomSessionService _sessionService;
-
   StreamSubscription<Set<String>>? _connectionSub;
+  StreamSubscription<List<String>>? _rosterSub;
 
   static const _codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   static const _prefTourCode = 'intercom_last_tour_code';
@@ -475,6 +475,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     try {
       _connectionSub?.cancel();
       _connectionSub = _transport.connectionChanges.listen(_onConnectionsChanged);
+      _rosterSub?.cancel();
+      _rosterSub = _transport.rosterChanges.listen(_onRosterReceived);
 
       await _transport.startHosting(
         userName: 'Host',
@@ -531,6 +533,8 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     try {
       _connectionSub?.cancel();
       _connectionSub = _transport.connectionChanges.listen(_onConnectionsChanged);
+      _rosterSub?.cancel();
+      _rosterSub = _transport.rosterChanges.listen(_onRosterReceived);
 
       await _transport.startJoining(
         userName: 'Rider',
@@ -607,6 +611,43 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     if (state.isOpenMic && !state.isMuted && !state.isTransmitting) {
       setTransmitting(true);
     }
+  }
+
+  void _onRosterReceived(List<String> names) {
+    if (state.isHost) return;
+    final localMember = state.members.firstWhere(
+      (m) => m.isCurrentUser,
+      orElse: () => const IntercomMember(
+        id: 'local',
+        name: 'You',
+        initials: 'YOU',
+        isCurrentUser: true,
+        isOnline: true,
+        batteryPercent: 92,
+      ),
+    );
+
+    final remoteMembers = <IntercomMember>[];
+    for (var i = 0; i < names.length; i++) {
+      final name = names[i];
+      final isHost = i == 0;
+      remoteMembers.add(IntercomMember(
+        id: 'roster_$i',
+        name: name,
+        initials: isHost
+            ? 'HO'
+            : (name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.toUpperCase()),
+        isCurrentUser: false,
+        isOnline: true,
+        batteryPercent: 90,
+      ));
+    }
+
+    state = state.copyWith(
+      members: [localMember, ...remoteMembers],
+    );
+
+    debugPrint('[IntercomVM] 📋 Remote Roster Synced: ${remoteMembers.length + 1} riders in tour');
   }
 
   // ── PTT / Hands-Free Transmission ─────────────────────────────────────────
@@ -747,6 +788,7 @@ class IntercomViewModel extends StateNotifier<IntercomState> {
     _sessionService.setEventHandler(null);
     _hardwarePttService.stopListening();
     _connectionSub?.cancel();
+    _rosterSub?.cancel();
     super.dispose();
   }
 }

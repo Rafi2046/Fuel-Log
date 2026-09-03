@@ -125,15 +125,22 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: AppColors.textTertiary,
+              InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardElevated,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                constraints: const BoxConstraints(maxWidth: 32, maxHeight: 32),
-                padding: EdgeInsets.zero,
               ),
             ],
           ),
@@ -272,6 +279,21 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
                 ),
                 icon: const Icon(Icons.sensors_rounded, size: 18),
                 label: const Text('Enter tour'),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              height: AppSpacing.buttonHeightCompact,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: _buttonShape,
+                ),
+                child: const Text('Close'),
               ),
             ),
           ],
