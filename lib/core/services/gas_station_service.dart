@@ -56,11 +56,21 @@ class GasStationService {
     final curatedStations =
         _getCuratedStationsForLocation(center, radiusMeters: radiusMeters);
 
-    // 4. Merge & deduplicate (Google/OSM first, then curated fill-ins)
-    for (final station in [...liveStations, ...curatedStations]) {
-      if (!_isDuplicate(station, combined)) {
-        combined.add(station);
-      }
+    // 4. Merge with confidence scoring.
+    // Trust order: Google/curated > OSM/Nominatim.
+    for (final station in liveStations) {
+      _upsertStationWithConfidence(
+        candidate: station,
+        target: combined,
+        preferCandidate: false,
+      );
+    }
+    for (final station in curatedStations) {
+      _upsertStationWithConfidence(
+        candidate: station,
+        target: combined,
+        preferCandidate: true,
+      );
     }
 
     // 5. Attach Google photos to OSM stations when possible
@@ -503,6 +513,59 @@ out center tags 60;
     return false;
   }
 
+  void _upsertStationWithConfidence({
+    required MockGasStation candidate,
+    required List<MockGasStation> target,
+    required bool preferCandidate,
+  }) {
+    for (var i = 0; i < target.length; i++) {
+      final current = target[i];
+      if (!_looksLikeSameStation(candidate, current)) continue;
+
+      final currentIsLowConfidence = _isLowConfidenceStation(current);
+      final candidateIsLowConfidence = _isLowConfidenceStation(candidate);
+      final shouldReplace = preferCandidate ||
+          (currentIsLowConfidence && !candidateIsLowConfidence);
+
+      if (shouldReplace) {
+        target[i] = _mergeStationPreferred(candidate, current);
+      }
+      return;
+    }
+    target.add(candidate);
+  }
+
+  bool _looksLikeSameStation(MockGasStation a, MockGasStation b) {
+    final dist = _distanceCalc.as(LengthUnit.Meter, a.location, b.location);
+    if (dist < 120) return true;
+
+    final aName = _normalizeName(a.name);
+    final bName = _normalizeName(b.name);
+    if (aName == bName) return true;
+    if (aName.length > 5 &&
+        bName.length > 5 &&
+        (aName.contains(bName) || bName.contains(aName))) {
+      return true;
+    }
+    return false;
+  }
+
+  bool _isLowConfidenceStation(MockGasStation s) {
+    return s.id.startsWith('nom_') || s.id.startsWith('osm_');
+  }
+
+  MockGasStation _mergeStationPreferred(
+    MockGasStation preferred,
+    MockGasStation fallback,
+  ) {
+    return preferred.copyWith(
+      googlePhotoResource:
+          preferred.googlePhotoResource ?? fallback.googlePhotoResource,
+      imageUrl: preferred.imageUrl ?? fallback.imageUrl,
+      stationInfo: preferred.stationInfo ?? fallback.stationInfo,
+    );
+  }
+
   String _normalizeName(String name) {
     return name
         .toLowerCase()
@@ -666,8 +729,8 @@ const List<_RealStationData> _bangladeshRealStations = [
     image: 'assets/images/station_padma.jpg',
   ),
   _RealStationData(
-    latitude: 23.8120,
-    longitude: 90.3950,
+    latitude: 23.8226,
+    longitude: 90.3918,
     name: 'CSD Filling Station',
     area: 'Shaheed Sharani, Dhaka Cantt',
     fuels: 'Octane • Petrol • Diesel',

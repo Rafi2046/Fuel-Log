@@ -106,15 +106,22 @@ mixin TripLogMapLayersMixin on TripLogTabController {
           child: const TripDestinationFlagMarker(),
         ),
       if (!_isNavigating && _showStations)
-        for (var i = 0; i < _stations.length; i++)
+        for (var i = 0; i < _visibleStations.length; i++)
           Marker(
-            point: _stations[i].location,
+            point: _visibleStations[i].location,
             width: 36,
             height: 44,
             alignment: Alignment.bottomCenter,
             child: TripStationPinMarker(
-              isSelected: i == _selectedStationIndex,
-              onTap: () => _selectStation(i),
+              isSelected: i ==
+                  _selectedStationIndex.clamp(
+                    0,
+                    _visibleStations.isEmpty ? 0 : _visibleStations.length - 1,
+                  ),
+              onTap: () {
+                final original = _stations.indexOf(_visibleStations[i]);
+                _selectStation(original >= 0 ? original : i);
+              },
             ),
           ),
     ];

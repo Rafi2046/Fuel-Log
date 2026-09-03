@@ -138,11 +138,14 @@ mixin TripLogMapViewMixin on TripLogMapLayersMixin {
                     onExternalMaps: _launchExternalVoiceNavigation,
                     onLogFuel: () => showTripManualEntrySheet(context),
                   )
-                : (_showStations && _stations.isNotEmpty
+                : (_showStations && _visibleStations.isNotEmpty
                     ? NearbyStationsCarousel(
                         key: const ValueKey('stations_carousel'),
-                        stations: _stations,
-                        selectedIndex: _selectedStationIndex,
+                        stations: _visibleStations,
+                        selectedIndex: _selectedStationIndex.clamp(
+                          0,
+                          _visibleStations.length - 1,
+                        ),
                         controller: _carouselController,
                         onPageChanged: (idx) {
                           setState(() => _selectedStationIndex = idx);

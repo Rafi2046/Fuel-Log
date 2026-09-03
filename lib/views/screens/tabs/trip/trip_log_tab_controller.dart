@@ -10,6 +10,10 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
   NavigationRouteResult? _activeRoute;
   int _selectedStationIndex = 0;
   List<MockGasStation> _stations = [];
+  StationSearchFilter _stationFilter = const StationSearchFilter();
+
+  List<MockGasStation> get _visibleStations =>
+      applyStationSearchFilter(_stations, _stationFilter);
   LatLng _userLocation = kDefaultUserLocation;
   Timer? _gpsPollingTimer;
   StreamSubscription<Position>? _gpsStream;
@@ -287,6 +291,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
 
     final newStations = await GasStationService.instance.getNearbyStations(
       center: center,
+      radiusMeters: _stationFilter.radiusKm * 1000,
     );
 
     if (!mounted) return;
@@ -332,6 +337,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
 
       final stations = await GasStationService.instance.getNearbyStations(
         center: live,
+        radiusMeters: _stationFilter.radiusKm * 1000,
       );
       if (!mounted || !_showStations) return;
       setState(() {
@@ -372,6 +378,14 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       context,
       stations: _stations,
       initialIndex: initialIndex,
+      initialFilter: _stationFilter,
+      onFilterChanged: (next) {
+        final radiusChanged = next.radiusKm != _stationFilter.radiusKm;
+        setState(() => _stationFilter = next);
+        if (radiusChanged && _showStations) {
+          unawaited(openNearbyStations());
+        }
+      },
       onStationSelected: (idx) {
         setState(() => _selectedStationIndex = idx);
         if (_carouselController.hasClients) {
@@ -902,6 +916,7 @@ mixin TripLogTabController on State<TripLogTab>, TickerProviderStateMixin<TripLo
       setState(() => _isLoadingStations = true);
       final list = await GasStationService.instance.getNearbyStations(
         center: _userLocation,
+        radiusMeters: _stationFilter.radiusKm * 1000,
       );
       if (!mounted) return;
       setState(() {

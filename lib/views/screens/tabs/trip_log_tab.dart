@@ -17,6 +17,8 @@ import '../../../core/services/gas_station_service.dart';
 import '../../../core/services/navigation_routing_service.dart';
 import '../../../core/utils/network_status.dart';
 import '../../../core/utils/notification_service.dart';
+import '../../../core/utils/station_search_filter.dart';
+import '../../../models/station_search_filter.dart';
 import '../../widgets/map_offline_banner.dart';
 import '../../../models/mock_gas_station.dart';
 import '../../widgets/station_list_modal_sheet.dart';

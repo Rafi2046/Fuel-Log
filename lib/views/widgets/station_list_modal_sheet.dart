@@ -5,10 +5,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/utils/station_search_filter.dart';
+import '../../models/mock_gas_station.dart';
+import '../../models/station_search_filter.dart';
 import '../screens/refueling_form_screen.dart';
 import '../screens/stations/station_detail_screen.dart';
 import '../screens/tabs/trip/widgets/station_image_placeholder.dart';
-import '../../models/mock_gas_station.dart';
+import '../screens/tabs/trip/widgets/station_search_filter_bar.dart';
 
 /// Luxury frosted glass modal sheet showing all nearby stations in rich detail
 class StationListModalSheet extends StatefulWidget {
@@ -18,12 +21,16 @@ class StationListModalSheet extends StatefulWidget {
     required this.initialIndex,
     required this.onStationSelected,
     required this.onNavigate,
+    this.initialFilter = const StationSearchFilter(),
+    this.onFilterChanged,
   });
 
   final List<MockGasStation> stations;
   final int initialIndex;
   final ValueChanged<int> onStationSelected;
   final ValueChanged<MockGasStation> onNavigate;
+  final StationSearchFilter initialFilter;
+  final ValueChanged<StationSearchFilter>? onFilterChanged;
 
   static Future<void> show(
     BuildContext context, {
@@ -31,6 +38,8 @@ class StationListModalSheet extends StatefulWidget {
     int initialIndex = 0,
     required ValueChanged<int> onStationSelected,
     required ValueChanged<MockGasStation> onNavigate,
+    StationSearchFilter initialFilter = const StationSearchFilter(),
+    ValueChanged<StationSearchFilter>? onFilterChanged,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -42,6 +51,8 @@ class StationListModalSheet extends StatefulWidget {
         initialIndex: initialIndex,
         onStationSelected: onStationSelected,
         onNavigate: onNavigate,
+        initialFilter: initialFilter,
+        onFilterChanged: onFilterChanged,
       ),
     );
   }
@@ -52,17 +63,74 @@ class StationListModalSheet extends StatefulWidget {
 
 class _StationListModalSheetState extends State<StationListModalSheet> {
   late int _selectedIndex;
+  late StationSearchFilter _draft;
+  late StationSearchFilter _applied;
+  final _listController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex.clamp(0, widget.stations.length - 1);
+    _draft = widget.initialFilter;
+    _applied = widget.initialFilter;
+  }
+
+  @override
+  void dispose() {
+    _listController.dispose();
+    super.dispose();
+  }
+
+  void _scrollResultsToTop() {
+    if (!_listController.hasClients) return;
+    _listController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
+  }
+
+  List<MockGasStation> get _visibleStations =>
+      applyStationSearchFilter(widget.stations, _applied);
+
+  void _applyFilters() {
+    setState(() {
+      _applied = _draft;
+      _selectedIndex = 0;
+    });
+    widget.onFilterChanged?.call(_applied);
+    final nextVisible = applyStationSearchFilter(widget.stations, _applied);
+    if (nextVisible.isNotEmpty) {
+      final originalIndex = widget.stations.indexOf(nextVisible.first);
+      if (originalIndex >= 0) {
+        widget.onStationSelected(originalIndex);
+      }
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollResultsToTop();
+    });
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _draft = const StationSearchFilter();
+      _applied = const StationSearchFilter();
+      _selectedIndex = 0;
+    });
+    widget.onFilterChanged?.call(_applied);
+    if (widget.stations.isNotEmpty) {
+      widget.onStationSelected(0);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollResultsToTop();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedStation = widget.stations.isNotEmpty
-        ? widget.stations[_selectedIndex]
+    final visible = _visibleStations;
+    final selectedStation = visible.isNotEmpty
+        ? visible[_selectedIndex.clamp(0, visible.length - 1)]
         : null;
 
     final mediaQuery = MediaQuery.of(context);
@@ -140,7 +208,7 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${widget.stations.length} stations found nearby',
+                              '${visible.length} of ${widget.stations.length} stations',
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.textSecondary,
                                 fontSize: 12,
@@ -169,20 +237,40 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                StationSearchFilterBar(
+                  draft: _draft,
+                  applied: _applied,
+                  resultCount: visible.length,
+                  onDraftChanged: (next) => setState(() => _draft = next),
+                  onApply: _applyFilters,
+                  onReset: _resetFilters,
+                ),
                 const Divider(color: Color(0xFF262633), height: 1),
 
-                // 3. Station List (Scrollable)
                 Flexible(
-                  child: ListView.separated(
+                  child: visible.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            'No stations match these filters. Try a wider radius or another fuel type.',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                    controller: _listController,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
                     shrinkWrap: true,
-                    itemCount: widget.stations.length,
+                    itemCount: visible.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final station = widget.stations[index];
+                      final station = visible[index];
                       final isSelected = index == _selectedIndex;
 
                       return _StationListRowItem(
@@ -190,7 +278,10 @@ class _StationListModalSheetState extends State<StationListModalSheet> {
                         isSelected: isSelected,
                         onTap: () {
                           setState(() => _selectedIndex = index);
-                          widget.onStationSelected(index);
+                          final originalIndex = widget.stations.indexOf(station);
+                          widget.onStationSelected(
+                            originalIndex >= 0 ? originalIndex : index,
+                          );
                         },
                       );
                     },
