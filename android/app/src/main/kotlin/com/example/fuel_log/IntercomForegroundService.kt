@@ -19,7 +19,7 @@ import androidx.core.app.NotificationCompat
 
 class IntercomForegroundService : Service() {
     companion object {
-        const val CHANNEL_ID = "intercom_live"
+        const val CHANNEL_ID = "intercom_live_v2"
         const val NOTIFICATION_ID = 42001
         const val EXTRA_TOUR_NAME = "tour_name"
         const val EXTRA_ROLE = "role"
@@ -136,12 +136,14 @@ class IntercomForegroundService : Service() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Tour intercom",
-            NotificationManager.IMPORTANCE_LOW,
+            "Tour Intercom Voice",
+            NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
-            description = "Keeps voice intercom active when the screen is locked"
+            description = "Live Tour Intercom voice connection"
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setSound(null, null)
+            enableVibration(false)
         }
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
@@ -221,7 +223,7 @@ class IntercomForegroundService : Service() {
             .setOnlyAlertOnce(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(launchPendingIntent())
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
 
         if (!openMic) {
