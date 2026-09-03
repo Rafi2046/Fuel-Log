@@ -294,7 +294,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     return ListView(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
-        AppSpacing.md,
+        AppSpacing.appBarBodyGap,
         AppSpacing.screenPadding,
         DashboardBottomBar.contentBottomInset(context),
       ),

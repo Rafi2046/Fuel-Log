@@ -341,7 +341,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
-        AppSpacing.sm,
+        AppSpacing.appBarBodyGap,
         AppSpacing.screenPadding,
         AppSpacing.xs,
       ),

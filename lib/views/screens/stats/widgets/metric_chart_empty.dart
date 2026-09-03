@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../widgets/app_primary_button.dart';
 import '../../refueling_form_screen.dart';
 
 String _metricTr(String key, {Map<String, String>? replace}) {
@@ -39,92 +38,92 @@ class MetricExplorerEmptyState extends StatelessWidget {
       replace: {'count': '$totalLogs'},
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.04),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.04),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.insights_outlined,
+                      color: AppColors.textSecondary,
+                      size: 22,
+                    ),
                   ),
-                ),
-                child: const Icon(
-                  Icons.insights_outlined,
-                  color: AppColors.textSecondary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'metricNoTrendYet'.tr(),
-                style: AppTextStyles.title.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'chartNeedMoreLogs'.tr(),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.35,
+                  const SizedBox(height: 12),
+                  Text(
+                    'metricNoTrendYet'.tr(),
+                    style: AppTextStyles.title.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 72,
-                width: double.infinity,
-                child: CustomPaint(
-                  painter: MetricEmptySparklinePainter(
-                    lineColor: AppColors.primary.withValues(alpha: 0.55),
-                    fillColor: AppColors.primary.withValues(alpha: 0.14),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      'chartNeedMoreLogs'.tr(),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    height: 56,
+                    width: double.infinity,
+                    child: CustomPaint(
+                      painter: MetricEmptySparklinePainter(
+                        lineColor: AppColors.primary.withValues(alpha: 0.55),
+                        fillColor: AppColors.primary.withValues(alpha: 0.14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (_needsTwoFuelLogs)
+                    _MetricUnlockSteps(
+                      fuelLogCount: fuelLogCount,
+                      onAddRefueling: () => openMetricRefueling(context),
+                    )
+                  else
+                    _MetricEmptyInfoLine(text: 'metricEmptyTipCosts'.tr()),
+                  const SizedBox(height: 10),
+                  Text(
+                    logsLabel,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-        if (_needsTwoFuelLogs)
-          _MetricUnlockSteps(
-            fuelLogCount: fuelLogCount,
-            onAddRefueling: () => _openRefueling(context),
-          )
-        else
-          _MetricEmptyInfoLine(text: 'metricEmptyTipCosts'.tr()),
-        const SizedBox(height: 10),
-        Text(
-          logsLabel,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textTertiary,
-            fontSize: 11,
-          ),
-        ),
-        const SizedBox(height: 12),
-        AppPrimaryButton(
-          label: 'actionRefueling'.tr(),
-          icon: Icons.local_gas_station_rounded,
-          compact: true,
-          onPressed: () => _openRefueling(context),
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
-void _openRefueling(BuildContext context) {
+void openMetricRefueling(BuildContext context) {
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => const RefuelingFormScreen(),

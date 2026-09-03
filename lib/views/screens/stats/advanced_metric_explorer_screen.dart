@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_spacing.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/analytics_period.dart';
 import '../../../core/utils/app_formatters.dart';
@@ -144,40 +145,48 @@ class _AdvancedMetricExplorerScreenState
         ),
         error: (e, _) =>
             Center(child: Text('errorPrefix'.tr(namedArgs: {'error': '$e'}))),
-        data: (_) => Padding(
-          padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
-          child: Column(
-            children: [
-              MetricOverviewCard(
-                periodLabel: _short(_period),
-                onPeriodSelect: _selectPeriod,
-                costPerKm: distanceKm > 0 ? spend / distanceKm : 0,
-                spendLabel: AppCurrency.format(spend),
-                distanceKm: distanceKm,
-                periodHint: _short(_period),
-              ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onHorizontalDragEnd: _handleCategoryBarSwipe,
-                child: MetricFilterChips(
-                  index: _categoryIndex,
-                  onChanged: _setCategory,
+        data: (_) => SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenPadding,
+              AppSpacing.appBarBodyGap,
+              AppSpacing.screenPadding,
+              AppSpacing.md,
+            ),
+            child: Column(
+              children: [
+                MetricOverviewCard(
+                  periodLabel: _short(_period),
+                  onPeriodSelect: _selectPeriod,
+                  costPerKm: distanceKm > 0 ? spend / distanceKm : 0,
+                  spendLabel: AppCurrency.format(spend),
+                  distanceKm: distanceKm,
+                  periodHint: _short(_period),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: MetricChartPane(
-                  categoryIndex: _categoryIndex,
-                  subMetricIndex: _subMetricIndices[_categoryIndex],
-                  onPageChanged: _onMetricPageChanged,
-                  fuelLogs: fuelLogs,
-                  serviceLogs: serviceLogs,
-                  mileageUnit: isEV ? 'km/kWh' : 'km/L',
-                  isEV: isEV,
+                const SizedBox(height: 10),
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragEnd: _handleCategoryBarSwipe,
+                  child: MetricFilterChips(
+                    index: _categoryIndex,
+                    onChanged: _setCategory,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                Expanded(
+                  child: MetricChartPane(
+                    categoryIndex: _categoryIndex,
+                    subMetricIndex: _subMetricIndices[_categoryIndex],
+                    onPageChanged: _onMetricPageChanged,
+                    fuelLogs: fuelLogs,
+                    serviceLogs: serviceLogs,
+                    mileageUnit: isEV ? 'km/kWh' : 'km/L',
+                    isEV: isEV,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -52,7 +52,7 @@ class StatsTab extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(
           AppSpacing.screenPadding,
-          AppSpacing.sm,
+          AppSpacing.appBarBodyGap,
           AppSpacing.screenPadding,
           DashboardBottomBar.contentBottomInset(context),
         ),

@@ -182,7 +182,12 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
         },
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.appBarBodyGap,
+          AppSpacing.screenPadding,
+          90,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

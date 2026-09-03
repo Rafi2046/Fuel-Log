@@ -384,7 +384,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
       ),
       body: Column(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.appBarBodyGap),
           // 1. Top Summary Banner
           _buildTopSummaryBanner(
               remindersState, totalServiceSpend, serviceLogs.length),

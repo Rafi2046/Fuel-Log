@@ -85,7 +85,7 @@ class LogsTab extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.screenPadding,
-          AppSpacing.sm,
+          AppSpacing.appBarBodyGap,
           AppSpacing.screenPadding,
           AppSpacing.sm,
         ),

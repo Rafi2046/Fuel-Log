@@ -14,6 +14,8 @@ abstract final class AppSpacing {
   static const double radiusPill = 40.0;
 
   static const double screenPadding = 20.0;
+  /// Gap between AppBar divider and the first body widget — same on every screen.
+  static const double appBarBodyGap = md;
   static const double cardPadding = 20.0;
   static const double listGap = sm;
   static const double listCardPaddingH = 12.0;

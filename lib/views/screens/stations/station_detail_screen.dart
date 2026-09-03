@@ -189,9 +189,11 @@ class StationDetailScreen extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.screenPadding,
-          vertical: 4,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.appBarBodyGap,
+          AppSpacing.screenPadding,
+          AppSpacing.appBarBodyGap,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -394,7 +394,12 @@ class EDocumentVaultScreen extends ConsumerWidget {
               ),
             ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.appBarBodyGap,
+          AppSpacing.screenPadding,
+          90,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

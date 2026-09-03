@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../widgets/advanced_efficiency_chart.dart';
+import '../../../widgets/app_primary_button.dart';
 import '../../../widgets/cost_per_km_chart.dart';
 import '../../../widgets/fill_up_cost_chart.dart';
 import '../../../widgets/fuel_price_chart.dart';
@@ -180,7 +181,7 @@ class _MetricChartPaneState extends State<MetricChartPane> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 16, 12),
+          padding: const EdgeInsets.fromLTRB(10, 10, 16, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -189,6 +190,7 @@ class _MetricChartPaneState extends State<MetricChartPane> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
+                  clipBehavior: Clip.hardEdge,
                   onPageChanged: _handlePageChanged,
                   children: [
                     for (final slot in MetricExplorerPages.slots)
@@ -207,6 +209,15 @@ class _MetricChartPaneState extends State<MetricChartPane> {
                   ],
                 ),
               ),
+              if (!_hasDataFor(widget.categoryIndex)) ...[
+                const SizedBox(height: 10),
+                AppPrimaryButton(
+                  label: 'actionRefueling'.tr(),
+                  icon: Icons.local_gas_station_rounded,
+                  compact: true,
+                  onPressed: () => openMetricRefueling(context),
+                ),
+              ],
             ],
           ),
         ),

@@ -83,7 +83,7 @@ class MileageLogScreen extends ConsumerWidget {
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
                       AppSpacing.screenPadding,
-                      AppSpacing.sm,
+                      AppSpacing.appBarBodyGap,
                       AppSpacing.screenPadding,
                       AppSpacing.listGap,
                     ),

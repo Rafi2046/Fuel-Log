@@ -185,7 +185,7 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
       title: 'Tour intercom',
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,
-        AppSpacing.md,
+        AppSpacing.appBarBodyGap,
         AppSpacing.screenPadding,
         0,
       ),

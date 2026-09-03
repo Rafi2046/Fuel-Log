@@ -133,7 +133,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(14, 6, 14, 32),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            AppSpacing.appBarBodyGap,
+            AppSpacing.screenPadding,
+            32,
+          ),
         children: [
           CleanGlassPanel(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),

@@ -35,21 +35,24 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasAppBar = title != null || titleWidget != null;
     return Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      appBar: (title == null && titleWidget == null)
-          ? null
-          : AppAppBar(
+      appBar: hasAppBar
+          ? AppAppBar(
               title: title,
               titleWidget: titleWidget,
               actions: actions,
               leading: leading,
               automaticallyImplyLeading: automaticallyImplyLeading,
-            ),
+            )
+          : null,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(
+        // AppBar already clears the status bar; keep top inset when bare.
+        top: !hasAppBar,
         child: padding == null
             ? body
             : Padding(padding: padding!, child: body),
@@ -58,6 +61,10 @@ class AppScaffold extends StatelessWidget {
   }
 }
 
-/// Default screen edge padding helper.
-EdgeInsets get appScreenPadding =>
-    const EdgeInsets.all(AppSpacing.screenPadding);
+/// Default screen edge padding helper (matches AppBar → content gap).
+EdgeInsets get appScreenPadding => const EdgeInsets.fromLTRB(
+      AppSpacing.screenPadding,
+      AppSpacing.appBarBodyGap,
+      AppSpacing.screenPadding,
+      AppSpacing.screenPadding,
+    );

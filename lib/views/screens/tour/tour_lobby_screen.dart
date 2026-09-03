@@ -174,7 +174,7 @@ class _TourLobbyScreenState extends ConsumerState<TourLobbyScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.screenPadding,
-              AppSpacing.sm,
+              AppSpacing.appBarBodyGap,
               AppSpacing.screenPadding,
               0,
             ),

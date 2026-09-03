@@ -73,7 +73,9 @@ class GarageTab extends ConsumerWidget {
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        padding: const EdgeInsets.all(AppSpacing.screenPadding).copyWith(
+          top: AppSpacing.appBarBodyGap,
+        ),
         children: [
           if (!isEmpty) ...[
             GarageSlotsHeader(used: vehicles.length, max: kMaxVehicles),

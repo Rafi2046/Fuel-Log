@@ -290,9 +290,11 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
         children: [
           // Segmented Tab Toggle Bar
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenPadding,
-              vertical: 8,
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenPadding,
+              AppSpacing.appBarBodyGap,
+              AppSpacing.screenPadding,
+              8,
             ),
             child: Row(
               children: [
