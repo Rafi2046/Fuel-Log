@@ -32,6 +32,7 @@ class TourIntercomScreen extends ConsumerStatefulWidget {
 class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
     with WidgetsBindingObserver {
   IntercomViewModel get _notifier => ref.read(intercomProvider.notifier);
+  bool _isUserLeaving = false;
 
   @override
   void initState() {
@@ -93,9 +94,12 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
+              _isUserLeaving = true;
               Navigator.of(ctx).pop();
               _notifier.leaveIntercom();
-              Navigator.of(context).pop();
+              if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+                Navigator.of(context).pop();
+              }
             },
             child: const Text('Leave'),
           ),
@@ -128,10 +132,12 @@ class _TourIntercomScreenState extends ConsumerState<TourIntercomScreen>
     final intercomNotifier = ref.read(intercomProvider.notifier);
 
     ref.listen<IntercomState>(intercomProvider, (previous, next) {
+      if (_isUserLeaving) return;
       if (previous?.isConnected == true &&
           !next.isConnected &&
           next.mode == IntercomMode.idle &&
-          mounted) {
+          mounted &&
+          ModalRoute.of(context)?.isCurrent == true) {
         Navigator.of(context).maybePop();
       }
     });
