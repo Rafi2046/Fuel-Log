@@ -151,7 +151,7 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
                         child: Padding(
                           padding: EdgeInsets.all(8),
                           child: Icon(
-                            Icons.open_in_full_rounded,
+                            Icons.show_chart_rounded,
                             size: 16,
                             color: AppColors.textSecondary,
                           ),

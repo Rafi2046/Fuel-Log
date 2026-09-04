@@ -85,78 +85,88 @@ class EfficiencyGauge extends StatelessWidget {
               progressColor: AppColors.primary,
             ),
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'efficiency'.tr().toUpperCase(),
-                    style: AppTextStyles.caption.copyWith(
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        hasValue ? value.toStringAsFixed(1) : '—',
-                        style: AppTextStyles.display.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          height: 1,
-                        ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: size * 0.16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'efficiency'.tr().toUpperCase(),
+                      style: AppTextStyles.caption.copyWith(
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
                       ),
-                      if (hasValue) ...[
-                        const SizedBox(width: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
-                          child: Text(
-                            unit,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 11,
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            hasValue
+                                ? (value >= 10000
+                                    ? value.toStringAsFixed(0)
+                                    : value.toStringAsFixed(1))
+                                : '—',
+                            style: AppTextStyles.display.copyWith(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              height: 1,
                             ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _statusColor.withValues(alpha: 0.15),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusPill),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(_statusIcon, size: 12, color: _statusColor),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          child: Text(
-                            _statusKey.tr(),
-                            style: AppTextStyles.caption.copyWith(
-                              color: _statusColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10,
+                          if (hasValue) ...[
+                            const SizedBox(width: 4),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 3),
+                              child: Text(
+                                unit,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _statusColor.withValues(alpha: 0.15),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusPill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(_statusIcon, size: 12, color: _statusColor),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            child: Text(
+                              _statusKey.tr(),
+                              style: AppTextStyles.caption.copyWith(
+                                color: _statusColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

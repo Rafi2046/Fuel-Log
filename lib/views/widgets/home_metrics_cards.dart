@@ -138,17 +138,20 @@ class _MetricCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.2,
+          const SizedBox(height: 10),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.2,
+              ),
+              maxLines: 1,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -319,18 +322,22 @@ class _VitalItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: alignRight ? TextAlign.end : TextAlign.start,
         ),
-        SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.2,
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment:
+              alignRight ? Alignment.centerRight : Alignment.centerLeft,
+          child: Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.2,
+            ),
+            maxLines: 1,
+            textAlign: alignRight ? TextAlign.end : TextAlign.start,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: alignRight ? TextAlign.end : TextAlign.start,
         ),
       ],
     );

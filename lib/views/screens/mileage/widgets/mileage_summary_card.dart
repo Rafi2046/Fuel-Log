@@ -78,29 +78,33 @@ class MileageSummaryCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                formattedMain,
-                style: AppTextStyles.headline.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                  height: 1.1,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  formattedMain,
+                  style: AppTextStyles.headline.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                    height: 1.1,
+                  ),
                 ),
-              ),
-              SizedBox(width: AppSpacing.xs),
-              Text(
-                selectedUnit.label,
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  selectedUnit.label,
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           SizedBox(height: AppSpacing.sm),
           Divider(color: AppColors.divider, height: 1),
@@ -224,15 +228,17 @@ class _SubStatTile extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.body.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            color: AppColors.textPrimary,
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: AppTextStyles.body.copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ],

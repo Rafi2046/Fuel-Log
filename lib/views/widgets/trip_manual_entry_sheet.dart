@@ -482,21 +482,6 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
                           const SizedBox(height: AppSpacing.md),
                           Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.border,
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusSm,
-                                  ),
-                                ),
-                                child: Icon(
-                                  Icons.route_rounded,
-                                  color: AppColors.textSecondary,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
                                   'addTrip'.tr(),
@@ -1138,17 +1123,30 @@ class _LocationField extends StatelessWidget {
             validator: validator,
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 8),
         Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: IconButton(
-            tooltip: 'pickOnMap'.tr(),
-            onPressed: onPickMap,
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.primary.withValues(alpha: 0.14),
-              foregroundColor: AppColors.primary,
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Material(
+            color: AppColors.wash,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              onTap: onPickMap,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Icon(
+                  Icons.map_outlined,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ),
-            icon: const Icon(Icons.map_outlined, size: 20),
           ),
         ),
       ],
