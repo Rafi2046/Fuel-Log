@@ -421,23 +421,17 @@ class _HomeScrollShellState extends State<_HomeScrollShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scrollbar(
+    return SingleChildScrollView(
       controller: _controller,
-      thumbVisibility: true,
-      thickness: 3,
-      radius: const Radius.circular(8),
-      child: SingleChildScrollView(
-        controller: _controller,
-        primary: false,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding,
-          AppSpacing.appBarBodyGap,
-          AppSpacing.screenPadding,
-          DashboardBottomBar.contentBottomInset(context),
-        ),
-        child: widget.child,
+      primary: false,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.appBarBodyGap,
+        AppSpacing.screenPadding,
+        DashboardBottomBar.contentBottomInset(context),
       ),
+      child: widget.child,
     );
   }
 }

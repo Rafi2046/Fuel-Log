@@ -9,6 +9,7 @@ import '../../core/services/onboarding_prefs.dart';
 import '../../viewmodels/region_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import 'dashboard_screen.dart';
+import 'onboarding_locale_screen.dart';
 import 'splash_screen.dart';
 import 'vehicle_setup_screen.dart';
 
@@ -44,8 +45,8 @@ class _AppStartupGateState extends ConsumerState<AppStartupGate> {
 
   @override
   Widget build(BuildContext context) {
-    // Keep EasyLocalization in sync with persisted language+currency region.
-    ref.listen(appRegionProvider, (prev, next) {
+    // Keep EasyLocalization in sync with persisted language preference.
+    ref.listen(appLanguageProvider, (prev, next) {
       if (context.locale.languageCode != next.locale.languageCode) {
         context.setLocale(next.locale);
       }
@@ -88,12 +89,11 @@ class _AppStartupGateState extends ConsumerState<AppStartupGate> {
     final hasSeenOnboarding = onboardingSeenAsync.asData?.value ?? false;
     final vehicles = vehiclesAsync.asData?.value ?? [];
 
-    // ── FIRST-TIME USER: show premium onboarding splash exactly once ──────────
+    // ── FIRST-TIME USER: splash → language/currency → vehicle setup ─────────
     if (!hasSeenOnboarding) {
       return SplashScreen(
-        next: const VehicleSetupScreen(),
+        next: const OnboardingLocaleScreen(),
         autoNavigate: false,
-        onGetStarted: () => OnboardingPrefs.markOnboardingComplete(),
       );
     }
 

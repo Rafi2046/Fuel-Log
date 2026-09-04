@@ -15,7 +15,6 @@ import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/trip_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
-import '../../../viewmodels/theme_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../documents/e_document_vault_screen.dart';
@@ -37,21 +36,19 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   bool _isRestoring = false;
   final _backupService = const BackupRestoreService();
 
-  String _regionValueLabel(AppRegion region) {
-    return '${region.flagEmoji} ${region.languageNameKey.tr()} · ${region.currencyCode}';
+  String _languageValueLabel(AppLanguage language) {
+    return '${language.flagEmoji} ${language.nameKey.tr()}';
   }
 
-  String _themeModeLabel(ThemeMode mode) => switch (mode) {
-        ThemeMode.light => 'themeLight'.tr(),
-        ThemeMode.dark => 'themeDark'.tr(),
-        ThemeMode.system => 'themeSystem'.tr(),
-      };
+  String _currencyValueLabel(AppCurrencyId currency) {
+    return '${currency.flagEmoji} ${currency.code} (${currency.glyph})';
+  }
 
-  Future<void> _pickThemeMode(WidgetRef ref) =>
-      showAppearancePickerSheet(context: context, ref: ref);
+  Future<void> _pickLanguage(WidgetRef ref) =>
+      showLanguagePickerSheet(context: context, ref: ref);
 
-  Future<void> _pickRegion(WidgetRef ref) =>
-      showRegionPickerSheet(context: context, ref: ref);
+  Future<void> _pickCurrency(WidgetRef ref) =>
+      showCurrencyPickerSheet(context: context, ref: ref);
 
   Future<void> _handleExport() async {
     if (_isExporting) return;
@@ -206,7 +203,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final region = ref.watch(appRegionProvider);
+    final language = ref.watch(appLanguageProvider);
+    final currency = ref.watch(appCurrencyProvider);
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -272,22 +270,24 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
+        const AppearanceThemeSection(),
+        const SizedBox(height: AppSpacing.lg),
         _SettingsGroup(
           title: 'preferences'.tr(),
           children: [
             _SettingsTile(
-              icon: LucideIcons.globe,
-              title: 'languageAndCurrency'.tr(),
-              subtitle: 'languageAndCurrencySubtitle'.tr(),
-              valueText: _regionValueLabel(region),
-              onTap: () => _pickRegion(ref),
+              icon: LucideIcons.languages,
+              title: 'language'.tr(),
+              subtitle: 'languageSubtitle'.tr(),
+              valueText: _languageValueLabel(language),
+              onTap: () => _pickLanguage(ref),
             ),
             _SettingsTile(
-              icon: LucideIcons.sunMoon,
-              title: 'appearance'.tr(),
-              subtitle: 'appearanceSubtitle'.tr(),
-              valueText: _themeModeLabel(ref.watch(themeModeProvider)),
-              onTap: () => _pickThemeMode(ref),
+              icon: LucideIcons.coins,
+              title: 'currency'.tr(),
+              subtitle: 'currencySubtitle'.tr(),
+              valueText: _currencyValueLabel(currency),
+              onTap: () => _pickCurrency(ref),
             ),
             _SettingsTile(
               icon: LucideIcons.cloudSun,

@@ -6,51 +6,60 @@ import 'package:fuel_log/core/utils/app_formatters.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('AppRegion detection', () {
-    test('BD / bn → Bangladesh + BDT', () {
+  group('AppLanguage detection', () {
+    test('BD / bn → Bangla', () {
       expect(
-        AppRegionX.detectFromDeviceLocale(const Locale('bn', 'BD')),
-        AppRegion.bangladesh,
-      );
-      expect(
-        AppRegionX.detectFromDeviceLocale(const Locale('en', 'BD')),
-        AppRegion.bangladesh,
+        AppLanguageX.detectFromDeviceLocale(const Locale('bn', 'BD')),
+        AppLanguage.bangla,
       );
     });
 
-    test('IN / hi → India + INR', () {
+    test('IN / hi → Hindi', () {
       expect(
-        AppRegionX.detectFromDeviceLocale(const Locale('hi', 'IN')),
-        AppRegion.india,
-      );
-      expect(
-        AppRegionX.detectFromDeviceLocale(const Locale('en', 'IN')),
-        AppRegion.india,
+        AppLanguageX.detectFromDeviceLocale(const Locale('hi', 'IN')),
+        AppLanguage.hindi,
       );
     });
 
-    test('other → United States + USD', () {
+    test('other → English', () {
       expect(
-        AppRegionX.detectFromDeviceLocale(const Locale('en', 'US')),
-        AppRegion.unitedStates,
-      );
-      expect(
-        AppRegionX.detectFromDeviceLocale(const Locale('en', 'GB')),
-        AppRegion.unitedStates,
+        AppLanguageX.detectFromDeviceLocale(const Locale('en', 'US')),
+        AppLanguage.english,
       );
     });
   });
 
-  group('AppCurrency region symbols', () {
-    test('formats with region glyph', () {
-      AppCurrency.setRegion(AppRegion.bangladesh);
-      expect(AppCurrency.format(1500), contains('৳'));
+  group('AppCurrencyId detection', () {
+    test('BD → BDT', () {
+      expect(
+        AppCurrencyIdX.detectFromDeviceLocale(const Locale('en', 'BD')),
+        AppCurrencyId.bdt,
+      );
+    });
 
-      AppCurrency.setRegion(AppRegion.india);
-      expect(AppCurrency.format(1500), contains('₹'));
+    test('IN → INR', () {
+      expect(
+        AppCurrencyIdX.detectFromDeviceLocale(const Locale('en', 'IN')),
+        AppCurrencyId.inr,
+      );
+    });
 
-      AppCurrency.setRegion(AppRegion.unitedStates);
+    test('other → USD', () {
+      expect(
+        AppCurrencyIdX.detectFromDeviceLocale(const Locale('en', 'US')),
+        AppCurrencyId.usd,
+      );
+    });
+  });
+
+  group('AppCurrency independent of language', () {
+    test('can mix Bangla language with USD currency', () {
+      AppCurrency.setCurrency(AppCurrencyId.usd);
       expect(AppCurrency.format(1500), contains(r'$'));
+      AppCurrency.setCurrency(AppCurrencyId.bdt);
+      expect(AppCurrency.format(1500), contains('৳'));
+      AppCurrency.setCurrency(AppCurrencyId.inr);
+      expect(AppCurrency.format(1500), contains('₹'));
     });
   });
 }

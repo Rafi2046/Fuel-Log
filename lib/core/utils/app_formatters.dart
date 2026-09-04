@@ -2,23 +2,23 @@ import 'package:intl/intl.dart';
 
 import '../constants/app_regions.dart';
 
-/// Region-aware money formatting — English digits, active currency symbol.
+/// Currency formatting — English digits, active currency symbol.
 abstract final class AppCurrency {
-  static AppRegion _region = AppRegion.bangladesh;
-  static NumberFormat _formatter = _build(AppRegion.bangladesh);
+  static AppCurrencyId _currency = AppCurrencyId.bdt;
+  static NumberFormat _formatter = _build(AppCurrencyId.bdt);
 
-  static AppRegion get region => _region;
-  static String get code => _region.currencyCode;
-  static String get symbol => _region.currencyGlyph;
+  static AppCurrencyId get currency => _currency;
+  static String get code => _currency.code;
+  static String get symbol => _currency.glyph;
 
-  static void setRegion(AppRegion region) {
-    _region = region;
-    _formatter = _build(region);
+  static void setCurrency(AppCurrencyId currency) {
+    _currency = currency;
+    _formatter = _build(currency);
   }
 
-  static NumberFormat _build(AppRegion region) => NumberFormat.currency(
+  static NumberFormat _build(AppCurrencyId currency) => NumberFormat.currency(
         locale: 'en',
-        symbol: region.currencySymbol,
+        symbol: currency.currencySymbol,
         decimalDigits: 0,
       );
 
