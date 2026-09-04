@@ -314,7 +314,7 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
               right: 12,
               top: 8,
               child: Material(
-                color: const Color(0xFF1A1A22),
+                color: AppColors.mapOverlay,
                 borderRadius: BorderRadius.circular(12),
                 child: ListView.separated(
                   shrinkWrap: true,
@@ -356,14 +356,18 @@ class _MapRoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Color(0xFF18181F).withValues(alpha: 0.94),
-      shape: CircleBorder(),
+      color: AppColors.mapOverlay,
+      shape: CircleBorder(
+        side: BorderSide(color: AppColors.mapOverlayBorder),
+      ),
+      elevation: AppColors.isDark ? 0 : 1,
+      shadowColor: Colors.black26,
       child: InkWell(
-        customBorder: CircleBorder(),
+        customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.all(10),
-          child: Icon(icon, size: 18, color: AppColors.textPrimary),
+          padding: const EdgeInsets.all(10),
+          child: Icon(icon, size: 18, color: AppColors.onMapOverlay),
         ),
       ),
     );

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -60,19 +62,41 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
   }
 
   void _shareTextReport() {
-    // ignore: deprecated_member_use
-    Share.share(
-      widget.reportData.formattedTextReport,
-      subject: '${widget.reportData.vehicleName} - ${widget.reportData.type.title}',
+    SharePlus.instance.share(
+      ShareParams(
+        text: widget.reportData.formattedTextReport,
+        subject:
+            '${widget.reportData.vehicleName} - ${widget.reportData.type.title}',
+      ),
     );
   }
 
-  void _shareCsvReport() {
-    // ignore: deprecated_member_use
-    Share.share(
-      widget.reportData.rawCsvData,
-      subject: '${widget.reportData.vehicleName}_report.csv',
-    );
+  Future<void> _shareCsvReport() async {
+    try {
+      final dir = await getTemporaryDirectory();
+      final sanitizedName = widget.reportData.vehicleName
+          .replaceAll(RegExp(r'[^\w\s-]'), '')
+          .trim()
+          .replaceAll(RegExp(r'\s+'), '_');
+      final fileName =
+          '${sanitizedName.isEmpty ? "vehicle" : sanitizedName}_${widget.reportData.type.name}_report.csv';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsString(widget.reportData.rawCsvData);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'text/csv', name: fileName)],
+          subject:
+              '${widget.reportData.vehicleName} - ${widget.reportData.type.title}',
+        ),
+      );
+    } catch (_) {
+      SharePlus.instance.share(
+        ShareParams(
+          text: widget.reportData.rawCsvData,
+          subject: '${widget.reportData.vehicleName}_report.csv',
+        ),
+      );
+    }
   }
 
   @override
@@ -93,8 +117,10 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.45),
-                blurRadius: 24,
+                color: Colors.black.withValues(
+                  alpha: AppColors.isDark ? 0.45 : 0.12,
+                ),
+                blurRadius: AppColors.isDark ? 24 : 16,
                 offset: const Offset(0, -4),
               ),
             ],
@@ -124,7 +150,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                           Text(
                             report.type.title,
                             style: GoogleFonts.inter(
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.w700,
                               fontSize: 16.5,
                             ),
@@ -133,7 +159,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                           Text(
                             '${report.vehicleName} (${report.licensePlate})',
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF94A3B8),
+                              color: AppColors.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -141,9 +167,9 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.close_rounded,
-                        color: Color(0xFF94A3B8),
+                        color: AppColors.textTertiary,
                         size: 22,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
@@ -165,10 +191,10 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    color: AppColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                      color: AppColors.success.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -177,15 +203,15 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                       const Icon(
                         LucideIcons.checkCheck,
                         size: 14,
-                        color: Color(0xFF34D399),
+                        color: AppColors.success,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Report text copied to clipboard!',
+                        'reportCopiedToast'.tr(),
                         style: GoogleFonts.inter(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF34D399),
+                          color: AppColors.success,
                         ),
                       ),
                     ],
@@ -212,7 +238,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   media.padding.bottom + 12,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.inputFill,
+                  color: AppColors.card,
                   border: Border(
                     top: BorderSide(color: AppColors.border),
                   ),
@@ -226,38 +252,41 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         borderRadius: BorderRadius.circular(10),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          height: 42,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
                             color: _isCopied
-                                ? const Color(0xFF10B981).withValues(alpha: 0.18)
-                                : AppColors.inputFill,
+                                ? AppColors.success.withValues(alpha: 0.12)
+                                : AppColors.wash,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: _isCopied
-                                  ? const Color(0xFF10B981)
+                                  ? AppColors.success
                                   : AppColors.border,
                               width: 1,
                             ),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 _isCopied ? LucideIcons.check : LucideIcons.copy,
                                 size: 15,
                                 color: _isCopied
-                                    ? const Color(0xFF34D399)
-                                    : Colors.white,
+                                    ? AppColors.success
+                                    : AppColors.textPrimary,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                _isCopied ? 'Copied!' : 'Copy',
+                                _isCopied ? 'reportCopied'.tr() : 'reportCopy'.tr(),
                                 style: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
                                   color: _isCopied
-                                      ? const Color(0xFF34D399)
-                                      : Colors.white,
+                                      ? AppColors.success
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                             ],
@@ -272,9 +301,11 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         onTap: _shareCsvReport,
                         borderRadius: BorderRadius.circular(10),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          height: 42,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.inputFill,
+                            color: AppColors.wash,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: AppColors.border,
@@ -283,19 +314,20 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
                                 LucideIcons.fileSpreadsheet,
                                 size: 15,
-                                color: Color(0xFF38BDF8),
+                                color: AppColors.primary,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'CSV',
+                                'reportCsv'.tr(),
                                 style: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ],
@@ -304,22 +336,27 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Primary Share Button
+                    // Primary Share Button — equal width with Copy / CSV
                     Expanded(
-                      flex: 2,
                       child: ElevatedButton.icon(
                         onPressed: _shareTextReport,
-                        icon: const Icon(LucideIcons.share2, size: 16),
-                        label: const Text('Share Report'),
+                        icon: const Icon(LucideIcons.share2, size: 15),
+                        label: Text(
+                          'reportShare'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF7A50),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
+                          elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 11),
+                          minimumSize: const Size.fromHeight(42),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           textStyle: GoogleFonts.inter(
-                            fontSize: 13,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -370,7 +407,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           children: [
             Expanded(
               child: _buildMetricCard(
-                label: 'Service Spend',
+                label: 'reportLabelServiceSpend'.tr(),
                 value: AppCurrency.format(report.totalServiceSpend),
                 isHighlighted: true,
               ),
@@ -378,14 +415,14 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Total Visits',
+                label: 'reportLabelTotalVisits'.tr(),
                 value: '${report.serviceLogCount} services',
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Avg / Service',
+                label: 'reportLabelAvgPerService'.tr(),
                 value: AppCurrency.format(avgCost),
               ),
             ),
@@ -401,14 +438,14 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: Color(0xFF94A3B8),
+              color: AppColors.textSecondary,
             ),
           ),
           SizedBox(height: 8),
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.inputFill,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.hairline),
             ),
@@ -425,7 +462,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFF7A50),
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -436,7 +473,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -445,7 +482,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF94A3B8),
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -464,7 +501,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: Color(0xFF94A3B8),
+            color: AppColors.textSecondary,
           ),
         ),
         SizedBox(height: 8),
@@ -473,23 +510,23 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: AppColors.inputFill,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.hairline),
             ),
             child: Column(
               children: [
-                const Icon(
+                Icon(
                   LucideIcons.wrench,
                   size: 28,
-                  color: Color(0xFF71717A),
+                  color: AppColors.textTertiary,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'No workshop service records logged yet.',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
-                    color: Color(0xFF94A3B8),
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -500,7 +537,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 margin: EdgeInsets.only(bottom: 8),
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.inputFill,
+                  color: AppColors.wash,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.hairline),
                 ),
@@ -509,13 +546,13 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF7A50).withValues(alpha: 0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         LucideIcons.wrench,
                         size: 16,
-                        color: Color(0xFFFF7A50),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -528,7 +565,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -536,7 +573,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                             '${s.category} · ${DateFormat('d MMM yyyy').format(s.date)}${s.odometer != null ? ' · ${s.odometer!.toStringAsFixed(0)} km' : ''}',
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: const Color(0xFF94A3B8),
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -547,7 +584,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFFF7A50),
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
@@ -571,24 +608,25 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           children: [
             Expanded(
               child: _buildMetricCard(
-                label: 'Avg Mileage',
-                value: '${report.avgEfficiency.toStringAsFixed(1)} km/L',
+                label: 'reportLabelAvgMileage'.tr(),
+                value:
+                    '${report.avgEfficiency.toStringAsFixed(1)} ${report.efficiencyUnit}',
                 isHighlighted: true,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Best Mileage',
+                label: 'reportLabelBestMileage'.tr(),
                 value: report.bestEfficiency > 0
-                    ? '${report.bestEfficiency.toStringAsFixed(1)} km/L'
+                    ? '${report.bestEfficiency.toStringAsFixed(1)} ${report.efficiencyUnit}'
                     : '--',
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Cost / km',
+                label: 'reportLabelCostPerKm'.tr(),
                 value: '${AppCurrency.format(report.avgCostPerKm)}/km',
               ),
             ),
@@ -600,7 +638,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
         Container(
           padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.inputFill,
+            color: AppColors.wash,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.hairline),
           ),
@@ -614,7 +652,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               Divider(color: AppColors.hairline, height: 16),
               _buildDetailItem(
                 'Total Volume Consumed',
-                '${report.totalLitres.toStringAsFixed(1)} Liters',
+                '${report.totalLitres.toStringAsFixed(1)} ${report.volumeUnit == "L" ? "Liters" : "kWh"}',
               ),
               Divider(color: AppColors.hairline, height: 16),
               _buildDetailItem(
@@ -624,7 +662,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               Divider(color: AppColors.hairline, height: 16),
               _buildDetailItem(
                 'Average Fuel Price',
-                '${AppCurrency.format(report.avgFuelPrice)} / L',
+                '${AppCurrency.format(report.avgFuelPrice)} / ${report.volumeUnit}',
               ),
             ],
           ),
@@ -638,7 +676,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: Color(0xFF94A3B8),
+            color: AppColors.textSecondary,
           ),
         ),
         SizedBox(height: 8),
@@ -647,7 +685,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: AppColors.inputFill,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.hairline),
             ),
@@ -656,7 +694,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 'No refueling records found in this range.',
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  color: Color(0xFF94A3B8),
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -666,7 +704,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 margin: EdgeInsets.only(bottom: 8),
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.inputFill,
+                  color: AppColors.wash,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.hairline),
                 ),
@@ -675,13 +713,13 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF38BDF8).withValues(alpha: 0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         LucideIcons.fuel,
                         size: 16,
-                        color: Color(0xFF38BDF8),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -694,7 +732,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -702,7 +740,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                             '${DateFormat('d MMM yyyy').format(f.date)} · Odo: ${f.odometer.toStringAsFixed(0)} km',
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: const Color(0xFF94A3B8),
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -713,7 +751,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFFF7A50),
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
@@ -747,12 +785,12 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               end: Alignment.bottomRight,
               colors: [
                 AppColors.primary.withValues(alpha: 0.12),
-                AppColors.inputFill,
+                AppColors.wash,
               ],
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFFF7A50).withValues(alpha: 0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -764,7 +802,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
-                  color: const Color(0xFFFF7A50),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 6),
@@ -773,7 +811,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 style: GoogleFonts.inter(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -781,7 +819,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 'Running cost: ${AppCurrency.format(report.avgCostPerKm)} for every kilometer driven.',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: const Color(0xFFCBD5E1),
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -796,14 +834,14 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: Color(0xFF94A3B8),
+            color: AppColors.textSecondary,
           ),
         ),
         SizedBox(height: 8),
         Container(
           padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.inputFill,
+            color: AppColors.wash,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.hairline),
           ),
@@ -817,11 +855,11 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                     children: [
                       Expanded(
                         flex: (fuelPct * 100).toInt(),
-                        child: Container(color: const Color(0xFFFF7A50)),
+                        child: Container(color: AppColors.primary),
                       ),
                       Expanded(
                         flex: (servicePct * 100).toInt(),
-                        child: Container(color: const Color(0xFF38BDF8)),
+                        child: Container(color: AppColors.primary),
                       ),
                     ],
                   ),
@@ -837,7 +875,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF7A50),
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -846,7 +884,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         'Fuel: ${AppCurrency.format(report.totalFuelSpend)} (${(fuelPct * 100).toStringAsFixed(0)}%)',
                         style: GoogleFonts.inter(
                           fontSize: 11.5,
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -857,7 +895,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF38BDF8),
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -866,7 +904,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                         'Service: ${AppCurrency.format(report.totalServiceSpend)} (${(servicePct * 100).toStringAsFixed(0)}%)',
                         style: GoogleFonts.inter(
                           fontSize: 11.5,
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -899,7 +937,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             color: AppColors.success.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF10B981).withValues(alpha: 0.35),
+              color: AppColors.success.withValues(alpha: 0.35),
             ),
           ),
           child: Row(
@@ -907,13 +945,13 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  color: AppColors.success.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   LucideIcons.badgeCheck,
                   size: 24,
-                  color: Color(0xFF34D399),
+                  color: AppColors.success,
                 ),
               ),
               const SizedBox(width: 12),
@@ -922,19 +960,19 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Verified Vehicle History',
+                      'reportVerifiedTitle'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF34D399),
+                        color: AppColors.success,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Complete digital logbook ready for buyers.',
+                      'reportVerifiedSubtitle'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
-                        color: const Color(0xFF94A3B8),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -950,23 +988,24 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           children: [
             Expanded(
               child: _buildMetricCard(
-                label: 'Distance Logged',
+                label: 'reportLabelDistanceLogged'.tr(),
                 value: '${report.totalDistanceKm.toStringAsFixed(0)} km',
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Avg Mileage',
-                value: '${report.avgEfficiency.toStringAsFixed(1)} km/L',
+                label: 'reportLabelAvgMileage'.tr(),
+                value:
+                    '${report.avgEfficiency.toStringAsFixed(1)} ${report.efficiencyUnit}',
                 isHighlighted: true,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Services Done',
-                value: '${report.serviceLogCount} records',
+                label: 'reportLabelServicesDone'.tr(),
+                value: 'reportRecordsCount'.tr(namedArgs: {'count': '${report.serviceLogCount}'}),
               ),
             ),
           ],
@@ -991,7 +1030,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           children: [
             Expanded(
               child: _buildMetricCard(
-                label: 'Annual Spend',
+                label: 'reportLabelAnnualSpend'.tr(),
                 value: AppCurrency.format(report.grandTotalSpend),
                 isHighlighted: true,
               ),
@@ -999,14 +1038,14 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Monthly Avg',
+                label: 'reportLabelMonthlyAvg'.tr(),
                 value: AppCurrency.format(monthlySpend),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Annual KM',
+                label: 'reportLabelAnnualKm'.tr(),
                 value: '${report.totalDistanceKm.toStringAsFixed(0)} km',
               ),
             ),
@@ -1029,7 +1068,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           children: [
             Expanded(
               child: _buildMetricCard(
-                label: 'Total Spend',
+                label: 'reportLabelTotalSpend'.tr(),
                 value: AppCurrency.format(report.grandTotalSpend),
                 isHighlighted: true,
               ),
@@ -1037,14 +1076,14 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Fuel Cost',
+                label: 'reportLabelFuelCost'.tr(),
                 value: AppCurrency.format(report.totalFuelSpend),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMetricCard(
-                label: 'Service Cost',
+                label: 'reportLabelServiceCost'.tr(),
                 value: AppCurrency.format(report.totalServiceSpend),
               ),
             ),
@@ -1067,11 +1106,11 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
-        color: AppColors.inputFill,
+        color: AppColors.wash,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isHighlighted
-              ? Color(0xFFFF7A50).withValues(alpha: 0.35)
+              ? AppColors.primary.withValues(alpha: 0.35)
               : AppColors.hairline,
           width: 1,
         ),
@@ -1083,7 +1122,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             style: GoogleFonts.inter(
               fontSize: 10.5,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF94A3B8),
+              color: AppColors.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1094,7 +1133,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: isHighlighted ? const Color(0xFFFF7A50) : Colors.white,
+              color: isHighlighted ? AppColors.primary : AppColors.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1112,40 +1151,40 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
     return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.inputFill,
+        color: AppColors.wash,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.hairline),
       ),
       child: Column(
         children: [
-          _buildDetailItem('Vehicle', '${report.vehicleName} (${report.licensePlate})'),
+          _buildDetailItem('reportLabelVehicle'.tr(), '${report.vehicleName} (${report.licensePlate})'),
           Divider(color: AppColors.hairline, height: 16),
-          _buildDetailItem('Period', period),
+          _buildDetailItem('reportLabelPeriod'.tr(), period),
           Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
-            'Total Spend',
+            'reportLabelTotalSpend'.tr(),
             AppCurrency.format(report.grandTotalSpend),
             highlight: true,
           ),
           Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
-            'Fuel Expenses',
-            '${AppCurrency.format(report.totalFuelSpend)} (${report.fuelLogCount} fill-ups)',
+            'reportLabelFuelExpenses'.tr(),
+            '${AppCurrency.format(report.totalFuelSpend)} (${'reportFillUpsCount'.tr(namedArgs: {'count': '${report.fuelLogCount}'})})',
           ),
           Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
-            'Service Expenses',
-            '${AppCurrency.format(report.totalServiceSpend)} (${report.serviceLogCount} services)',
+            'reportLabelServiceExpenses'.tr(),
+            '${AppCurrency.format(report.totalServiceSpend)} (${'reportServicesCount'.tr(namedArgs: {'count': '${report.serviceLogCount}'})})',
           ),
           Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
-            'Total Distance',
+            'reportLabelTotalDistance'.tr(),
             '${report.totalDistanceKm.toStringAsFixed(0)} km',
           ),
           Divider(color: AppColors.hairline, height: 16),
           _buildDetailItem(
-            'Average Efficiency',
-            '${report.avgEfficiency.toStringAsFixed(1)} km/L',
+            'reportLabelAvgEfficiency'.tr(),
+            '${report.avgEfficiency.toStringAsFixed(1)} ${report.efficiencyUnit}',
           ),
         ],
       ),
@@ -1160,7 +1199,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           label,
           style: GoogleFonts.inter(
             fontSize: 12.5,
-            color: const Color(0xFF94A3B8),
+            color: AppColors.textSecondary,
           ),
         ),
         Text(
@@ -1168,7 +1207,7 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w600,
-            color: highlight ? const Color(0xFFFF7A50) : Colors.white,
+            color: highlight ? AppColors.primary : AppColors.textPrimary,
           ),
         ),
       ],

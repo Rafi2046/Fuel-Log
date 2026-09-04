@@ -17,23 +17,56 @@ class ReportGeneratorService {
     DateTimeRange? dateRange,
   }) {
     final now = DateTime.now();
-    final startDate = dateRange?.start ??
-        (fuelLogs.isNotEmpty
-            ? fuelLogs.last.date
-            : now.subtract(const Duration(days: 365)));
-    final endDate = dateRange?.end ?? now;
+    final isEV = activeVehicle.isElectric;
+    final unit = isEV ? 'kWh' : 'L';
+    final efficiencyUnit = isEV ? 'km/kWh' : 'km/L';
 
-    final filteredFuel = fuelLogs.where((log) {
-      return (log.date.isAfter(startDate) ||
-              log.date.isAtSameMomentAs(startDate)) &&
-          (log.date.isBefore(endDate.add(const Duration(days: 1))));
-    }).toList();
+    final List<FuelLog> filteredFuel;
+    final List<ServiceLog> filteredService;
+    final DateTime startDate;
+    final DateTime endDate;
 
-    final filteredService = serviceLogs.where((log) {
-      return (log.date.isAfter(startDate) ||
-              log.date.isAtSameMomentAs(startDate)) &&
-          (log.date.isBefore(endDate.add(const Duration(days: 1))));
-    }).toList();
+    if (dateRange != null) {
+      startDate = dateRange.start;
+      endDate = dateRange.end;
+      filteredFuel = fuelLogs.where((log) {
+        return (log.date.isAfter(startDate) ||
+                log.date.isAtSameMomentAs(startDate)) &&
+            (log.date.isBefore(endDate.add(const Duration(days: 1))));
+      }).toList();
+      filteredService = serviceLogs.where((log) {
+        return (log.date.isAfter(startDate) ||
+                log.date.isAtSameMomentAs(startDate)) &&
+            (log.date.isBefore(endDate.add(const Duration(days: 1))));
+      }).toList();
+    } else if (type == VehicleReportType.annualSummary) {
+      // Annual summary defaults to past 365 days if no custom range is picked
+      endDate = now;
+      startDate = now.subtract(const Duration(days: 365));
+      filteredFuel = fuelLogs.where((log) {
+        return (log.date.isAfter(startDate) ||
+                log.date.isAtSameMomentAs(startDate)) &&
+            (log.date.isBefore(endDate.add(const Duration(days: 1))));
+      }).toList();
+      filteredService = serviceLogs.where((log) {
+        return (log.date.isAfter(startDate) ||
+                log.date.isAtSameMomentAs(startDate)) &&
+            (log.date.isBefore(endDate.add(const Duration(days: 1))));
+      }).toList();
+    } else {
+      // All dates: include all logs without arbitrary 365-day cutoff
+      filteredFuel = List<FuelLog>.from(fuelLogs);
+      filteredService = List<ServiceLog>.from(serviceLogs);
+      endDate = now;
+      DateTime? earliest;
+      for (final l in filteredFuel) {
+        if (earliest == null || l.date.isBefore(earliest)) earliest = l.date;
+      }
+      for (final s in filteredService) {
+        if (earliest == null || s.date.isBefore(earliest)) earliest = s.date;
+      }
+      startDate = earliest ?? activeVehicle.createdAt;
+    }
 
     final totalFuelSpend = filteredFuel.fold(0.0, (s, l) => s + l.cost);
     final totalServiceSpend = filteredService.fold(0.0, (s, l) => s + l.cost);
@@ -42,11 +75,13 @@ class ReportGeneratorService {
     double totalDistanceKm = 0.0;
     if (filteredFuel.length >= 2) {
       final sorted = List<FuelLog>.from(filteredFuel)
-        ..sort((a, b) => a.date.compareTo(b.date));
+        ..sort((a, b) => a.odometer.compareTo(b.odometer));
       final diff = sorted.last.odometer - sorted.first.odometer;
-      totalDistanceKm = diff > 0 ? diff : diff.abs();
-    } else if (filteredFuel.isNotEmpty) {
-      totalDistanceKm = filteredFuel.first.odometer.clamp(0.0, double.infinity);
+      totalDistanceKm = diff > 0 ? diff : 0.0;
+    } else if (filteredFuel.length == 1 &&
+        filteredFuel.first.odometer > activeVehicle.startOdo) {
+      totalDistanceKm = (filteredFuel.first.odometer - activeVehicle.startOdo)
+          .clamp(0.0, double.infinity);
     }
 
     final avgCostPerKm =
@@ -63,7 +98,7 @@ class ReportGeneratorService {
         totalLitres > 0 ? (totalFuelSpend / totalLitres) : 0.0;
 
     final sortedFuel = List<FuelLog>.from(filteredFuel)
-      ..sort((a, b) => a.date.compareTo(b.date));
+      ..sort((a, b) => a.odometer.compareTo(b.odometer));
 
     final List<double> efficiencies = [];
     for (int i = 1; i < sortedFuel.length; i++) {
@@ -106,14 +141,14 @@ class ReportGeneratorService {
     csv.writeln('Grand Total Spend,${AppCurrency.format(grandTotal)}');
     csv.writeln('Total Distance,${totalDistanceKm.toStringAsFixed(1)} km');
     csv.writeln('Cost Per KM,${AppCurrency.format(avgCostPerKm)} / km');
-    csv.writeln('Average Efficiency,${avgEfficiency.toStringAsFixed(2)} km/L');
+    csv.writeln('Average Efficiency,${avgEfficiency.toStringAsFixed(2)} $efficiencyUnit');
     if (bestEfficiency > 0) {
-      csv.writeln('Best Efficiency,${bestEfficiency.toStringAsFixed(2)} km/L');
+      csv.writeln('Best Efficiency,${bestEfficiency.toStringAsFixed(2)} $efficiencyUnit');
     }
     csv.writeln('');
     csv.writeln('--- REFUELING LOGS ---');
     csv.writeln(
-        'Date,Odometer (km),Amount (L/kWh),Cost,Price/Unit,Full Tank,Note');
+        'Date,Odometer (km),Amount ($unit),Cost,Price/Unit,Full Tank,Note');
     for (final l in filteredFuel) {
       final unitPrice = l.amount > 0 ? (l.cost / l.amount) : 0.0;
       csv.writeln(
@@ -139,16 +174,16 @@ class ReportGeneratorService {
     textReport.writeln('──────────────────────────────');
     textReport.writeln('💰 Total Spend: ${AppCurrency.format(grandTotal)}');
     textReport.writeln(
-        '⛽ Fuel Cost: ${AppCurrency.format(totalFuelSpend)} (${filteredFuel.length} fill-ups, ${totalLitres.toStringAsFixed(1)} L)');
+        '⛽ Fuel Cost: ${AppCurrency.format(totalFuelSpend)} (${filteredFuel.length} fill-ups, ${totalLitres.toStringAsFixed(1)} $unit)');
     textReport.writeln(
         '🛠️ Service Cost: ${AppCurrency.format(totalServiceSpend)} (${filteredService.length} services)');
     textReport.writeln('📏 Distance: ${totalDistanceKm.toStringAsFixed(0)} km');
     textReport.writeln('📊 Cost/km: ${AppCurrency.format(avgCostPerKm)} / km');
     textReport.writeln(
-        '🚀 Avg Mileage: ${avgEfficiency.toStringAsFixed(1)} km/L');
+        '🚀 Avg Mileage: ${avgEfficiency.toStringAsFixed(1)} $efficiencyUnit');
     if (bestEfficiency > 0 && bestEfficiency != avgEfficiency) {
       textReport.writeln(
-          '⭐ Best Mileage: ${bestEfficiency.toStringAsFixed(1)} km/L');
+          '⭐ Best Mileage: ${bestEfficiency.toStringAsFixed(1)} $efficiencyUnit');
     }
     textReport.writeln('──────────────────────────────');
     textReport.writeln('Generated via Fuel-Log App on ${_dateFormat.format(now)}');
@@ -176,6 +211,7 @@ class ReportGeneratorService {
       formattedTextReport: textReport.toString(),
       fuelLogs: filteredFuel,
       serviceLogs: filteredService,
+      isElectric: isEV,
     );
   }
 }

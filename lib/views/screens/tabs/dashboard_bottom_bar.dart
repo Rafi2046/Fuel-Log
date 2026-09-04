@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -34,9 +32,11 @@ class DashboardBottomBar extends StatefulWidget {
   static const fabClearance = 32.0;
 
   /// Exact height of the bottom shell (nav pill + safe area).
+  ///
+  /// Uses [MediaQuery.viewPadding] only — [MediaQuery.padding.bottom] inside a
+  /// Scaffold body already includes this bar and would double-count.
   static double shellHeight(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final safeBottom = math.max(mq.viewPadding.bottom, mq.padding.bottom);
+    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
     final bottomInset =
         safeBottom > homeIndicatorGap ? safeBottom : homeIndicatorGap;
     return topFloatPad + barHeight + bottomInset;
@@ -47,14 +47,9 @@ class DashboardBottomBar extends StatefulWidget {
     return shellHeight(context) + fabClearance;
   }
 
-  /// Overlay dock (Trip map controls) — sit clearly above the floating nav pill.
-  ///
-  /// Uses the larger of the nav shell and [MediaQuery] padding so this works
-  /// both inside an `extendBody` scaffold (padding already includes the bar)
-  /// and in a full-bleed map stack.
+  /// Overlay dock (Trip map controls) — clear of the floating nav pill.
   static double overlayBottom(BuildContext context, {double gap = 16}) {
-    final paddingBottom = MediaQuery.paddingOf(context).bottom;
-    return math.max(shellHeight(context), paddingBottom) + gap;
+    return shellHeight(context) + gap;
   }
 
   @override

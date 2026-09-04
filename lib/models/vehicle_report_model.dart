@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -16,34 +17,34 @@ extension VehicleReportTypeExtension on VehicleReportType {
   String get title {
     switch (this) {
       case VehicleReportType.seller:
-        return "Seller's History Report";
+        return 'reportTypeSeller'.tr();
       case VehicleReportType.custom:
-        return 'Custom Date-Range Report';
+        return 'reportTypeCustom'.tr();
       case VehicleReportType.ownershipCost:
-        return 'Cost of Ownership Report';
+        return 'reportTypeOwnership'.tr();
       case VehicleReportType.annualSummary:
-        return 'Annual Vehicle Summary';
+        return 'reportTypeAnnual'.tr();
       case VehicleReportType.fuelEfficiency:
-        return 'Fuel Efficiency Analysis';
+        return 'reportTypeFuelEfficiency'.tr();
       case VehicleReportType.maintenanceHistory:
-        return 'Maintenance & Workshop History';
+        return 'reportTypeMaintenance'.tr();
     }
   }
 
   String get description {
     switch (this) {
       case VehicleReportType.seller:
-        return 'Vehicle history report with fuel consumption, odo counter & cost breakdown for prospective buyers.';
+        return 'reportDescSeller'.tr();
       case VehicleReportType.custom:
-        return 'Define date range and custom parameters to export fuel & service records.';
+        return 'reportDescCustom'.tr();
       case VehicleReportType.ownershipCost:
-        return 'Total cost of owning your vehicle including purchase price, fuel & maintenance.';
+        return 'reportDescOwnership'.tr();
       case VehicleReportType.annualSummary:
-        return 'Year in review: total spending, distance driven, best & worst mileage months.';
+        return 'reportDescAnnual'.tr();
       case VehicleReportType.fuelEfficiency:
-        return 'Detailed consumption trends, best fill-ups, and efficiency metrics.';
+        return 'reportDescFuelEfficiency'.tr();
       case VehicleReportType.maintenanceHistory:
-        return 'Chronological service logs formatted for workshop, warranty claims, or insurance.';
+        return 'reportDescMaintenance'.tr();
     }
   }
 
@@ -51,17 +52,17 @@ extension VehicleReportTypeExtension on VehicleReportType {
   String get shortDescription {
     switch (this) {
       case VehicleReportType.seller:
-        return 'Fuel, odometer & cost for buyers';
+        return 'reportShortSeller'.tr();
       case VehicleReportType.custom:
-        return 'Export logs for a custom range';
+        return 'reportShortCustom'.tr();
       case VehicleReportType.ownershipCost:
-        return 'Purchase, fuel & maintenance total';
+        return 'reportShortOwnership'.tr();
       case VehicleReportType.annualSummary:
-        return 'Yearly spend, distance & mileage';
+        return 'reportShortAnnual'.tr();
       case VehicleReportType.fuelEfficiency:
-        return 'Consumption trends & fill-ups';
+        return 'reportShortFuelEfficiency'.tr();
       case VehicleReportType.maintenanceHistory:
-        return 'Service logs for workshop use';
+        return 'reportShortMaintenance'.tr();
     }
   }
 
@@ -109,6 +110,7 @@ class VehicleReportData {
     required this.formattedTextReport,
     this.fuelLogs = const [],
     this.serviceLogs = const [],
+    this.isElectric = false,
   });
 
   final VehicleReportType type;
@@ -133,6 +135,9 @@ class VehicleReportData {
   final String formattedTextReport;
   final List<dynamic> fuelLogs;
   final List<dynamic> serviceLogs;
+  final bool isElectric;
 
   double get grandTotalSpend => totalFuelSpend + totalServiceSpend;
+  String get volumeUnit => isElectric ? 'kWh' : 'L';
+  String get efficiencyUnit => isElectric ? 'km/kWh' : 'km/L';
 }

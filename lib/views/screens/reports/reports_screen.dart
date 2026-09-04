@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -37,24 +37,35 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final rangeFill = AppColors.primary.withValues(alpha: 0.22);
     final pickerTheme = Theme.of(context).copyWith(
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: ColorScheme.dark(
+      colorScheme: ColorScheme(
+        brightness: isDark ? Brightness.dark : Brightness.light,
         primary: AppColors.primary,
-        onPrimary: AppColors.textPrimary,
+        onPrimary: Colors.white,
         primaryContainer: rangeFill,
         onPrimaryContainer: AppColors.textPrimary,
         secondary: AppColors.primary,
-        onSecondary: AppColors.textPrimary,
+        onSecondary: Colors.white,
         secondaryContainer: rangeFill,
         onSecondaryContainer: AppColors.textPrimary,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
+        error: AppColors.error,
+        onError: Colors.white,
       ),
       datePickerTheme: DatePickerThemeData(
         backgroundColor: AppColors.background,
         rangeSelectionBackgroundColor: rangeFill,
+        headerForegroundColor: AppColors.textPrimary,
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.textPrimary;
+        }),
         dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return AppColors.primary;
@@ -85,7 +96,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   }
 
   String get _dateLabel {
-    if (_selectedDateRange == null) return 'All dates';
+    if (_selectedDateRange == null) return 'reportAllDates'.tr();
     final start = _shortDate.format(_selectedDateRange!.start);
     final end = _shortDate.format(_selectedDateRange!.end);
     return '$start – $end';
@@ -98,7 +109,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     if (vehicle == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an active vehicle first.')),
+        SnackBar(content: Text('reportSelectVehicleFirst'.tr())),
       );
       return;
     }
@@ -121,9 +132,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppAppBar(
-        leading: AppBackButton(),
-        title: 'Create Report',
+      appBar: AppAppBar(
+        leading: const AppBackButton(),
+        title: 'reportCreateTitle'.tr(),
       ),
       body: AppRefreshIndicator(
         onRefresh: () async {
@@ -174,7 +185,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        activeVehicle?.name ?? 'Vehicle Report',
+                        activeVehicle?.name ?? 'reportVehicleFallback'.tr(),
                         style: AppTextStyles.label.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
@@ -185,7 +196,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       ),
                       SizedBox(height: 3),
                       Text(
-                        'Share CSV & text reports',
+                        'reportShareCsvText'.tr(),
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.textTertiary,
                           fontSize: 11,
@@ -207,7 +218,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           Padding(
             padding: EdgeInsets.only(left: 2, bottom: 8),
             child: Text(
-              'SELECT REPORT',
+              'reportSelectSection'.tr(),
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.textTertiary,
                 fontWeight: FontWeight.w600,
@@ -253,7 +264,7 @@ class _DateFilterChip extends StatelessWidget {
     return Material(
       color: active
           ? AppColors.primary.withValues(alpha: 0.14)
-          : Colors.white.withValues(alpha: 0.04),
+          : AppColors.wash,
       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       child: InkWell(
         onTap: onTap,
@@ -265,7 +276,7 @@ class _DateFilterChip extends StatelessWidget {
             border: Border.all(
               color: active
                   ? AppColors.primary.withValues(alpha: 0.35)
-                  : Colors.white.withValues(alpha: 0.08),
+                  : AppColors.border,
             ),
           ),
           child: Row(
