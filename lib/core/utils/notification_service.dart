@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -24,7 +26,7 @@ class NotificationService {
     if (_isInitialized) return;
 
     try {
-      tz.initializeTimeZones();
+      await _configureLocalTimeZone();
 
       const androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -52,6 +54,23 @@ class NotificationService {
       _isInitialized = true;
     } catch (_) {
       // Platform channel not registered in headless test runners
+    }
+  }
+
+  /// Must set [tz.local] or scheduled times run in UTC (wrong for BD/IN).
+  Future<void> _configureLocalTimeZone() async {
+    tz.initializeTimeZones();
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      final name = info.identifier;
+      tz.setLocalLocation(tz.getLocation(name));
+    } catch (e) {
+      debugPrint('Timezone detect failed ($e) — falling back to Asia/Dhaka');
+      try {
+        tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
+      } catch (_) {
+        // Leave package default if even fallback fails.
+      }
     }
   }
 

@@ -7,7 +7,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/vehicle_display.dart';
-import '../../../viewmodels/reminder_viewmodel.dart';
+import '../../../viewmodels/notification_inbox_viewmodel.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/clean_glass_panel.dart';
 import '../notifications/notifications_screen.dart';
@@ -81,9 +81,7 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reminders = ref.watch(remindersProvider);
-    final hasAlerts =
-        reminders.overdueCount + reminders.dueSoonCount > 0;
+    final badgeCount = ref.watch(notificationBadgeCountProvider);
 
     final vehicleIcon = activeVehicle != null
         ? VehicleDisplay.iconFor(activeVehicle!)
@@ -202,7 +200,7 @@ class HomeDashboardAppBar extends ConsumerWidget implements PreferredSizeWidget 
                     tooltip: 'notificationsTitle'.tr(),
                     icon: Icons.notifications_outlined,
                     onTap: () => NotificationsScreen.open(context),
-                    showDot: hasAlerts,
+                    badgeCount: badgeCount,
                   ),
                 ],
               ),
@@ -220,17 +218,18 @@ class _GhostIconButton extends StatelessWidget {
     required this.onTap,
     this.tooltip,
     this.iconColor,
-    this.showDot = false,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final VoidCallback? onTap;
   final String? tooltip;
   final Color? iconColor;
-  final bool showDot;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
+    final label = badgeCount > 9 ? '9+' : '$badgeCount';
     final button = Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(8),
@@ -238,7 +237,7 @@ class _GhostIconButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: EdgeInsets.all(9),
+          padding: const EdgeInsets.all(9),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -247,19 +246,29 @@ class _GhostIconButton extends StatelessWidget {
                 size: 20,
                 color: iconColor ?? AppColors.textSecondary,
               ),
-              if (showDot)
+              if (badgeCount > 0)
                 Positioned(
-                  right: -1,
-                  top: -1,
+                  right: -6,
+                  top: -5,
                   child: Container(
-                    width: 7,
-                    height: 7,
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: AppColors.card,
                         width: 1.5,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      label,
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1,
                       ),
                     ),
                   ),

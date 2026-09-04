@@ -116,27 +116,18 @@ mixin _AddCostServiceSheetController on ConsumerState<AddCostServiceSheet> {
     );
 
     if (!mounted) return;
-    Navigator.of(context).pop();
+    // Capture messenger/navigator before pop — sheet context after pop
+    // can leave a floating snackbar stuck across screens.
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    navigator.pop();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.card,
-        content: Text(
-          '✅ Added "$rawTitle" (৳${cost.toStringAsFixed(0)})',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        action: SnackBarAction(
-          label: 'View History',
-          textColor: AppColors.primary,
-          onPressed: () {
-            ServicesScreen.open(context, initialTabIndex: 1);
-          },
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
+    showAppSnackBar(
+      messenger,
+      title: rawTitle,
+      subtitle: 'Added · ${AppCurrency.format(cost)}',
+      actionLabel: 'History',
+      onAction: () => ServicesScreen.open(navigator.context, initialTabIndex: 1),
     );
   }
 

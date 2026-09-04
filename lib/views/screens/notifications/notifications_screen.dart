@@ -10,6 +10,7 @@ import '../../../core/database/app_database.dart';
 import '../../../models/reminder_model.dart';
 import '../../../models/weather_models.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/notification_inbox_viewmodel.dart';
 import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../viewmodels/weather_viewmodel.dart';
@@ -42,7 +43,6 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   NotificationCategory _selectedCategory = NotificationCategory.all;
-  final Set<String> _dismissedIds = {};
 
   List<AppNotificationItem> _buildNotifications({
     required Vehicle? vehicle,
@@ -50,14 +50,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     required List<ServiceReminder> dueSoonReminders,
     required DriveAdvice? weatherAdvice,
     required double currentOdometer,
-    required bool hasFuelLogs,
+    required Set<String> dismissedIds,
   }) {
     final list = <AppNotificationItem>[];
 
-    // 1. Overdue Service Alerts
     for (final r in overdueReminders) {
       final id = 'overdue_${r.id}';
-      if (_dismissedIds.contains(id)) continue;
+      if (dismissedIds.contains(id)) continue;
       list.add(
         AppNotificationItem(
           id: id,
@@ -69,15 +68,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           icon: LucideIcons.triangleAlert,
           timeAgo: 'Action Required',
           actionLabel: 'Open Services Hub',
-          onTap: () => ServicesScreen.open(context),
+          onTap: () async {
+            await ref.read(notificationInboxProvider.notifier).dismiss(id);
+            if (!mounted) return;
+            await ServicesScreen.open(context);
+          },
         ),
       );
     }
 
-    // 2. Due Soon Service Alerts
     for (final r in dueSoonReminders) {
       final id = 'due_soon_${r.id}';
-      if (_dismissedIds.contains(id)) continue;
+      if (dismissedIds.contains(id)) continue;
       list.add(
         AppNotificationItem(
           id: id,
@@ -89,18 +91,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           icon: LucideIcons.bellRing,
           timeAgo: 'Due Soon',
           actionLabel: 'Open Services Hub',
-          onTap: () => ServicesScreen.open(context),
+          onTap: () async {
+            await ref.read(notificationInboxProvider.notifier).dismiss(id);
+            if (!mounted) return;
+            await ServicesScreen.open(context);
+          },
         ),
       );
     }
 
-    // 3. Weather Safety Alert
     if (weatherAdvice != null) {
       final isCautionOrAvoid = weatherAdvice.level == DriveAdviceLevel.caution ||
           weatherAdvice.level == DriveAdviceLevel.avoid;
 
-      final weatherId = 'weather_daily_alert';
-      if (!_dismissedIds.contains(weatherId)) {
+      const weatherId = 'weather_daily_alert';
+      if (!dismissedIds.contains(weatherId)) {
         list.add(
           AppNotificationItem(
             id: weatherId,
@@ -115,17 +120,19 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 : NotificationSeverity.info,
             icon: weatherAdvice.lucideIcon,
             timeAgo: 'Today',
+            onTap: () => ref
+                .read(notificationInboxProvider.notifier)
+                .dismiss(weatherId),
           ),
         );
       }
     }
 
-    // 4. Vehicle Optimal Health Notification
     if (vehicle != null &&
         overdueReminders.isEmpty &&
         dueSoonReminders.isEmpty) {
       final id = 'vehicle_optimal_${vehicle.id}';
-      if (!_dismissedIds.contains(id)) {
+      if (!dismissedIds.contains(id)) {
         list.add(
           AppNotificationItem(
             id: id,
@@ -137,15 +144,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             icon: LucideIcons.shieldCheck,
             timeAgo: 'Active',
             actionLabel: 'View Services',
-            onTap: () => ServicesScreen.open(context),
+            onTap: () async {
+              await ref.read(notificationInboxProvider.notifier).dismiss(id);
+              if (!mounted) return;
+              await ServicesScreen.open(context);
+            },
           ),
         );
       }
     }
 
-    // 5. Fuel / Efficiency Tracking Tip
-    final fuelTipId = 'fuel_economy_tip';
-    if (!_dismissedIds.contains(fuelTipId)) {
+    const fuelTipId = 'fuel_economy_tip';
+    if (!dismissedIds.contains(fuelTipId)) {
       list.add(
         AppNotificationItem(
           id: fuelTipId,
@@ -157,8 +167,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           icon: LucideIcons.fuel,
           timeAgo: 'Tip',
           actionLabel: 'Log Refuel',
-          onTap: () {
-            Navigator.of(context).push(
+          onTap: () async {
+            await ref
+                .read(notificationInboxProvider.notifier)
+                .dismiss(fuelTipId);
+            if (!mounted) return;
+            await Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const RefuelingFormScreen(),
               ),
@@ -176,8 +190,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final vehicle = ref.watch(activeVehicleProvider).valueOrNull;
     final remindersState = ref.watch(remindersProvider);
     final weatherAdvice = ref.watch(weatherAdviceProvider).valueOrNull;
-    final logsAsync = ref.watch(vehicleLogsProvider);
-    final fuelLogs = logsAsync.valueOrNull ?? [];
+    final dismissedIds = ref.watch(notificationInboxProvider);
 
     final activeReminders = remindersState.activeReminders;
     final overdueReminders = activeReminders
@@ -195,7 +208,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       dueSoonReminders: dueSoonReminders,
       weatherAdvice: weatherAdvice,
       currentOdometer: remindersState.currentOdometer,
-      hasFuelLogs: fuelLogs.isNotEmpty,
+      dismissedIds: dismissedIds,
     );
 
     final filtered = allNotifications.where((n) {
@@ -213,11 +226,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    _dismissedIds.addAll(allNotifications.map((n) => n.id));
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final ids = allNotifications.map((n) => n.id).toList();
+                  await ref
+                      .read(notificationInboxProvider.notifier)
+                      .dismissAll(ids);
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text('notificationsMarkRead'.tr()),
                       behavior: SnackBarBehavior.floating,
@@ -276,8 +291,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         final item = filtered[index];
                         return NotificationItemCard(
                           item: item,
-                          onDismiss: () =>
-                              setState(() => _dismissedIds.add(item.id)),
+                          onDismiss: () => ref
+                              .read(notificationInboxProvider.notifier)
+                              .dismiss(item.id),
                         );
                       },
                     ),

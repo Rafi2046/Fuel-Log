@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   flutter_sound
+  flutter_timezone
   flutter_volume_controller
   geolocator_windows
   local_auth_windows

@@ -73,6 +73,7 @@ dependencies:
   qr_flutter: ^4.1.0
   nearby_connections: ^4.3.0
   mobile_scanner: ^7.4.0
+  flutter_timezone: ^5.1.0
 
 # Flutter 3.41 / Dart 3.11 pins meta 1.17; splash 2.4.7 wants xml 6.x while
 # Syncfusion 34 wants xml 7.x — override keeps both resolvable.

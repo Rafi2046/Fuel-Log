@@ -28,6 +28,7 @@ Future<void> showLanguagePickerSheet({
   );
   if (selected == null || !context.mounted) return;
   await ref.read(appLanguageProvider.notifier).setLanguage(selected);
+  if (!context.mounted) return;
   await context.setLocale(selected.locale);
 }
 

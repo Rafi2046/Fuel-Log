@@ -57,10 +57,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       final db = ref.read(databaseProvider);
       await _backupService.shareBackup(db: db);
       if (!mounted) return;
-      _toast('Backup exported successfully');
+      _toast('backupExportedSuccess'.tr());
     } catch (e) {
       if (!mounted) return;
-      _toast('Could not export backup: $e');
+      _toast('backupExportFailed'.tr(namedArgs: {'error': '$e'}));
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -77,88 +77,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
       final shouldRestore = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.cardElevated,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            side: BorderSide(color: AppColors.border),
-          ),
-          title: Row(
-            children: [
-              const Icon(
-                LucideIcons.triangleAlert,
-                color: AppColors.warning,
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Restore Backup?',
-                style: AppTextStyles.title.copyWith(fontSize: 18),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'This will replace your current data with the selected backup:',
-                style: AppTextStyles.bodySecondary,
-              ),
-              SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('🚗 Vehicles: ${summary.vehicleCount}',
-                        style: AppTextStyles.body),
-                    Text('⛽ Fuel Logs: ${summary.fuelLogCount}',
-                        style: AppTextStyles.body),
-                    Text('🗺️ Trip Logs: ${summary.tripLogCount}',
-                        style: AppTextStyles.body),
-                    Text('🔧 Service Logs: ${summary.serviceLogCount}',
-                        style: AppTextStyles.body),
-                    Text('⏰ Reminders: ${summary.reminderCount}',
-                        style: AppTextStyles.body),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '⚠️ Existing records will be overwritten.',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Cancel', style: AppTextStyles.bodySecondary),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-              ),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Restore Data'),
-            ),
-          ],
-        ),
+        barrierColor: Colors.black.withValues(alpha: 0.68),
+        builder: (ctx) => _RestoreBackupDialog(summary: summary),
       );
 
       if (shouldRestore != true || !mounted) return;
@@ -179,10 +99,16 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
       if (!mounted) return;
       _toast(
-          '✅ Restored ${restored.vehicleCount} vehicles & ${restored.totalRecords} records!');
+        'backupRestoredSuccess'.tr(
+          namedArgs: {
+            'vehicles': '${restored.vehicleCount}',
+            'records': '${restored.totalRecords}',
+          },
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
-      _toast('Restore error: $e');
+      _toast('backupRestoreFailed'.tr(namedArgs: {'error': '$e'}));
     } finally {
       if (mounted) setState(() => _isRestoring = false);
     }
@@ -231,8 +157,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           children: [
             _SettingsTile(
               icon: LucideIcons.fileText,
-              title: 'Create Vehicle Report',
-              subtitle: 'Share CSV & text reports for buyer or tax',
+              title: 'createVehicleReport'.tr(),
+              subtitle: 'createVehicleReportSubtitle'.tr(),
               onTap: () => ReportsScreen.open(context),
             ),
             _SettingsTile(
@@ -472,6 +398,225 @@ class _SettingsTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Compact premium confirm dialog for backup restore.
+class _RestoreBackupDialog extends StatelessWidget {
+  const _RestoreBackupDialog({required this.summary});
+
+  final BackupSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <(IconData, String, int)>[
+      (LucideIcons.car, 'restoreStatVehicles'.tr(), summary.vehicleCount),
+      (LucideIcons.fuel, 'restoreStatFuel'.tr(), summary.fuelLogCount),
+      (LucideIcons.map, 'restoreStatTrips'.tr(), summary.tripLogCount),
+      (LucideIcons.wrench, 'restoreStatService'.tr(), summary.serviceLogCount),
+      (LucideIcons.bell, 'restoreStatReminders'.tr(), summary.reminderCount),
+    ];
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+        decoration: BoxDecoration(
+          color: AppColors.cardElevated,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(
+                    LucideIcons.rotateCcw,
+                    size: 16,
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'restoreBackupTitle'.tr(),
+                    style: AppTextStyles.title.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'restoreBackupBody'.tr(),
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 12.5,
+                height: 1.35,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.8),
+                ),
+              ),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final row in rows)
+                    _RestoreStatChip(
+                      icon: row.$1,
+                      label: row.$2,
+                      count: row.$3,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  LucideIcons.info,
+                  size: 13,
+                  color: AppColors.error.withValues(alpha: 0.9),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'restoreBackupOverwrite'.tr(),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 11.5,
+                      color: AppColors.error.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 42,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(11),
+                          side: BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                      child: Text(
+                        'restoreBackupCancel'.tr(),
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: SizedBox(
+                    height: 42,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                      ),
+                      child: Text(
+                        'restoreBackupConfirm'.tr(),
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RestoreStatChip extends StatelessWidget {
+  const _RestoreStatChip({
+    required this.icon,
+    required this.label,
+    required this.count,
+  });
+
+  final IconData icon;
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardElevated.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.textTertiary),
+          const SizedBox(width: 5),
+          Text(
+            '$label  $count',
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

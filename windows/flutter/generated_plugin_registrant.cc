@@ -8,6 +8,7 @@
 
 #include <file_selector_windows/file_selector_windows.h>
 #include <flutter_sound/flutter_sound_plugin_c_api.h>
+#include <flutter_timezone/flutter_timezone_plugin_c_api.h>
 #include <flutter_volume_controller/flutter_volume_controller_plugin_c_api.h>
 #include <geolocator_windows/geolocator_windows.h>
 #include <local_auth_windows/local_auth_plugin.h>
@@ -24,6 +25,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
   FlutterSoundPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterSoundPluginCApi"));
+  FlutterTimezonePluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FlutterTimezonePluginCApi"));
   FlutterVolumeControllerPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterVolumeControllerPluginCApi"));
   GeolocatorWindowsRegisterWithRegistrar(

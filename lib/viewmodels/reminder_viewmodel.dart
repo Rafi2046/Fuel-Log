@@ -174,6 +174,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     if (numId != null) {
       final db = ref.read(databaseProvider);
       await db.deleteReminder(numId);
+      await NotificationService().cancelNotification(numId);
     }
     await loadReminders();
   }
