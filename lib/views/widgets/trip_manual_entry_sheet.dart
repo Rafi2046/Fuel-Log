@@ -1124,30 +1124,23 @@ class _LocationField extends StatelessWidget {
             validator: validator,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 6),
         Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: 6),
           child: Tooltip(
             message: 'pickOnMap'.tr(),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: onPickMap,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                child: Ink(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.28),
-                    ),
-                  ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
                   child: Icon(
-                    LucideIcons.mapPinned,
-                    size: 17,
-                    color: AppColors.primary,
+                    LucideIcons.map,
+                    size: 18,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
