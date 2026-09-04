@@ -10,12 +10,14 @@ import '../../../core/utils/app_formatters.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/app_primary_button.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/app_shimmer.dart';
 import '../../widgets/list_lead_icon.dart';
 
 import '../mileage/mileage_log_screen.dart';
 import '../mileage/widgets/fuel_log_detail_sheet.dart';
+import '../refueling_form_screen.dart';
 import '../services/services_screen.dart';
 
 /// Logs tab — real Drift fuel/charge entries for the active vehicle.
@@ -25,10 +27,15 @@ class LogsTab extends ConsumerWidget {
   static Future<void> open(BuildContext context) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => AppScaffold(
-          title: 'logsTitle'.tr(),
-          body: const LogsTab(),
-        ),
+        builder: (_) => const _LogsScreen(),
+      ),
+    );
+  }
+
+  static void _openRefueling(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const RefuelingFormScreen(),
       ),
     );
   }
@@ -57,18 +64,69 @@ class LogsTab extends ConsumerWidget {
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            AppSpacing.lg,
+            AppSpacing.screenPadding,
+            AppSpacing.lg,
+          ),
           children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.4,
-            ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Text(
-                  'noFuelLogsFound'.tr(),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySecondary,
-                ),
+            SizedBox(height: MediaQuery.sizeOf(context).height * 0.12),
+            AppCard(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.wash,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Icon(
+                      isEV
+                          ? Icons.battery_charging_full_rounded
+                          : Icons.local_gas_station_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'noFuelLogsFound'.tr(),
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.title.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    isEV
+                        ? 'Log your first charge to start tracking costs and efficiency.'
+                        : 'Log your first refill to start tracking costs and efficiency.',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySecondary.copyWith(
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  AppPrimaryButton(
+                    label: isEV ? 'Add Charge' : 'addFuelQuick'.tr(),
+                    icon: Icons.add_rounded,
+                    compact: true,
+                    onPressed: () => _openRefueling(context),
+                  ),
+                ],
               ),
             ),
           ],
@@ -87,145 +145,170 @@ class LogsTab extends ConsumerWidget {
           AppSpacing.screenPadding,
           AppSpacing.appBarBodyGap,
           AppSpacing.screenPadding,
-          AppSpacing.sm,
+          AppSpacing.xxl,
         ),
-          children: [
-            AppCard(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.listCardPaddingH,
-                vertical: AppSpacing.listCardPaddingV,
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const MileageLogScreen(),
-                  ),
-                );
-              },
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const ListLeadIcon(icon: Icons.speed_rounded),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mileage Log & Efficiency',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          'View fuel efficiency, km/L stats & breakdown',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption.copyWith(fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: AppColors.textTertiary,
-                  ),
-                ],
-              ),
+        children: [
+          AppCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.listCardPaddingH,
+              vertical: AppSpacing.listCardPaddingV,
             ),
-            const SizedBox(height: AppSpacing.listGap),
-            AppCard(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.listCardPaddingH,
-                vertical: AppSpacing.listCardPaddingV,
-              ),
-              onTap: () => ServicesScreen.open(context, initialTabIndex: 1),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const ListLeadIcon(icon: Icons.build_circle_rounded),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Services & Maintenance History',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          'View repair costs, oil changes & service logs',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption.copyWith(fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: AppColors.textTertiary,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.listGap),
-
-            ...logs.map((log) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.listGap),
-                child: Dismissible(
-                  key: ValueKey(log.id),
-                  direction: DismissDirection.endToStart,
-                  dismissThresholds: const {
-                    DismissDirection.endToStart: 0.35,
-                  },
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: AppColors.error,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  onDismissed: (_) async {
-                    await ref.read(fuelLogProvider.notifier).deleteFuelLog(log.id);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('logDeleted'.tr())),
-                    );
-                  },
-                  child: GestureDetector(
-                    onTap: () => FuelLogDetailSheet.show(
-                      context,
-                      log: log,
-                      unit: unit,
-                      isEV: isEV,
-                    ),
-                    behavior: HitTestBehavior.opaque,
-                    child: _LogTile(log: log, unit: unit, isEV: isEV),
-                  ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const MileageLogScreen(),
                 ),
               );
-            }),
-          ],
-        ),
-      );
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const ListLeadIcon(icon: Icons.speed_rounded),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mileage Log & Efficiency',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'View fuel efficiency, km/L stats & breakdown',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.listGap),
+          AppCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.listCardPaddingH,
+              vertical: AppSpacing.listCardPaddingV,
+            ),
+            onTap: () => ServicesScreen.open(context, initialTabIndex: 1),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const ListLeadIcon(icon: Icons.build_circle_rounded),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Services & Maintenance History',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'View repair costs, oil changes & service logs',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.listGap),
+          ...logs.map((log) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.listGap),
+              child: Dismissible(
+                key: ValueKey(log.id),
+                direction: DismissDirection.endToStart,
+                dismissThresholds: const {
+                  DismissDirection.endToStart: 0.35,
+                },
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: AppColors.error,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                onDismissed: (_) async {
+                  await ref.read(fuelLogProvider.notifier).deleteFuelLog(log.id);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('logDeleted'.tr())),
+                  );
+                },
+                child: GestureDetector(
+                  onTap: () => FuelLogDetailSheet.show(
+                    context,
+                    log: log,
+                    unit: unit,
+                    isEV: isEV,
+                  ),
+                  behavior: HitTestBehavior.opaque,
+                  child: _LogTile(log: log, unit: unit, isEV: isEV),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pushed Logs route — empty state has Add Fuel CTA; FAB when logs exist.
+class _LogsScreen extends ConsumerWidget {
+  const _LogsScreen();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasLogs =
+        (ref.watch(vehicleLogsProvider).valueOrNull ?? []).isNotEmpty;
+
+    return AppScaffold(
+      title: 'logsTitle'.tr(),
+      floatingActionButton: hasLogs
+          ? FloatingActionButton(
+              onPressed: () => LogsTab._openRefueling(context),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 2,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
+      body: const LogsTab(),
+    );
   }
 }
 

@@ -7,6 +7,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/app_formatters.dart';
+import '../screens/stats/widgets/metric_chart_empty.dart';
 
 /// Donut breakdown: fuel vs service spend for the current month.
 class ExpenseRatioChart extends StatelessWidget {
@@ -40,9 +41,7 @@ class ExpenseRatioChart extends StatelessWidget {
     final total = fuel + service;
 
     if (total <= 0) {
-      return Center(
-        child: Text('chartNeedMoreLogs'.tr(), style: AppTextStyles.caption),
-      );
+      return const ChartSparklineEmpty();
     }
 
     return Padding(

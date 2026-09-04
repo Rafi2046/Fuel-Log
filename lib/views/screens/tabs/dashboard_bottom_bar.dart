@@ -28,7 +28,7 @@ class DashboardBottomBar extends StatefulWidget {
   static const barHeight = DashboardBarMetrics.barHeight;
   static const innerContentHeight = DashboardBarMetrics.innerContentHeight;
   static const homeIndicatorGap = 4.0;
-  static const fabGap = 52.0;
+  static const fabGap = 44.0;
 
   /// Exact height of the bottom shell (nav pill + safe area).
   static double shellHeight(BuildContext context) {

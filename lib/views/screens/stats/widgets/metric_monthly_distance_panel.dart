@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/mileage_calculator.dart';
+import 'metric_chart_empty.dart';
 
 /// Monthly distance panel for Metric Explorer.
 class MetricMonthlyDistancePanel extends StatelessWidget {
@@ -64,9 +65,7 @@ class MetricMonthlyDistancePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = buildMonthlyDistanceSeries(logs, maxMonths: null);
     if (data.isEmpty) {
-      return Center(
-        child: Text('chartNeedMoreLogs'.tr(), style: AppTextStyles.caption),
-      );
+      return const ChartSparklineEmpty();
     }
 
     final months = _chartMonths(data);

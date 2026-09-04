@@ -7,6 +7,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/mileage_calculator.dart';
+import '../screens/stats/widgets/metric_chart_empty.dart';
 
 /// Bar chart of kilometres driven per calendar month.
 class MonthlyDistanceChart extends StatelessWidget {
@@ -28,9 +29,7 @@ class MonthlyDistanceChart extends StatelessWidget {
       maxMonths: scrollable ? null : 6,
     );
     if (series.isEmpty) {
-      return Center(
-        child: Text('chartNeedMoreLogs'.tr(), style: AppTextStyles.caption),
-      );
+      return const ChartSparklineEmpty();
     }
 
     final maxY =

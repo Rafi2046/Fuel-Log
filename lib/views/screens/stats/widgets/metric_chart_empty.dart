@@ -131,6 +131,58 @@ void openMetricRefueling(BuildContext context) {
   );
 }
 
+/// Compact chart empty — sparkline + caption (Fuel price / trend card style).
+class ChartSparklineEmpty extends StatelessWidget {
+  const ChartSparklineEmpty({
+    super.key,
+    this.messageKey = 'chartNeedMoreLogs',
+    this.lineColor,
+    this.fillColor,
+    this.sparklineHeight = 72,
+  });
+
+  final String messageKey;
+  final Color? lineColor;
+  final Color? fillColor;
+  final double sparklineHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = lineColor ?? AppColors.primary.withValues(alpha: 0.55);
+    final fill = fillColor ?? AppColors.primary.withValues(alpha: 0.14);
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: sparklineHeight,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: MetricEmptySparklinePainter(
+                lineColor: line,
+                fillColor: fill,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Text(
+              messageKey.tr(),
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MetricUnlockSteps extends StatelessWidget {
   const _MetricUnlockSteps({
     required this.fuelLogCount,

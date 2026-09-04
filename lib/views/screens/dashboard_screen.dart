@@ -237,10 +237,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   floatingActionButtonTheme:
                       const FloatingActionButtonThemeData(
                     sizeConstraints: BoxConstraints.tightFor(
-                      width: 48,
-                      height: 48,
+                      width: 40,
+                      height: 40,
                     ),
-                    iconSize: 24,
+                    iconSize: 18,
                   ),
                 ),
                 child: FloatingActionButton(
@@ -256,11 +256,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     },
                   ),
                   backgroundColor: AppColors.primary,
-                  elevation: 4,
-                  highlightElevation: 6,
+                  elevation: 3,
+                  highlightElevation: 5,
                   shape: const CircleBorder(),
                   child: const Icon(
                     Icons.local_gas_station_rounded,
+                    size: 18,
                     color: Colors.white,
                   ),
                 ),

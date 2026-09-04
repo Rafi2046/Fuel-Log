@@ -8,6 +8,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/app_formatters.dart';
 import '../../../widgets/month_expense_details_sheet.dart';
+import 'metric_chart_empty.dart';
 
 /// Monthly spend for Metric Explorer — premium bar chart + compact rows.
 class MetricMonthlySpendPanel extends StatelessWidget {
@@ -100,9 +101,7 @@ class MetricMonthlySpendPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final dataMonths = _aggregateMonths();
     if (dataMonths.isEmpty) {
-      return Center(
-        child: Text('noLogsYet'.tr(), style: AppTextStyles.caption),
-      );
+      return const ChartSparklineEmpty(messageKey: 'noLogsYet');
     }
 
     final months = _chartMonths(dataMonths);

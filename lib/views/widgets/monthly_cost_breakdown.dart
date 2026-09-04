@@ -6,6 +6,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/app_formatters.dart';
+import '../screens/stats/widgets/metric_chart_empty.dart';
 import 'app_card.dart';
 import 'month_expense_details_sheet.dart';
 
@@ -67,8 +68,14 @@ class MonthlyCostBreakdown extends StatelessWidget {
     final months = _months;
     if (months.isEmpty) {
       return AppCard(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Text('noLogsYet'.tr(), style: AppTextStyles.caption),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.lg,
+        ),
+        child: const ChartSparklineEmpty(
+          messageKey: 'noLogsYet',
+          sparklineHeight: 56,
+        ),
       );
     }
 
