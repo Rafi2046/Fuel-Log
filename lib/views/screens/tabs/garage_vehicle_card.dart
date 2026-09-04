@@ -68,13 +68,13 @@ class GarageVehicleCard extends StatelessWidget {
                   children: [
                     // Vehicle Icon Badge
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         color: isActive
                             ? AppColors.primary.withValues(alpha: 0.15)
                             : Colors.white.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(9),
                         border: Border.all(
                           color: isActive
                               ? AppColors.primary.withValues(alpha: 0.35)
@@ -86,10 +86,10 @@ class GarageVehicleCard extends StatelessWidget {
                         color: isActive
                             ? AppColors.primary
                             : AppColors.textSecondary,
-                        size: 22,
+                        size: 15,
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
 
                     // Title & Model
                     Expanded(

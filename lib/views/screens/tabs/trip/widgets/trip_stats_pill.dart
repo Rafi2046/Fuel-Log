@@ -28,6 +28,7 @@ class TripStatsPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxWidth = MediaQuery.sizeOf(context).width * 0.72;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -39,40 +40,46 @@ class TripStatsPill extends StatelessWidget {
         border: Border.all(color: AppColors.mapOverlayBorder),
         boxShadow: AppShadows.floating,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            LucideIcons.navigation,
-            size: 15,
-            color: AppColors.primary,
-          ),
-          SizedBox(width: AppSpacing.sm),
-          Text(
-            '${distanceKm.toStringAsFixed(2)} ${'km'.tr()}',
-            style: AppTextStyles.label.copyWith(
-              color: AppColors.onMapOverlay,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Text(
-              '|',
-              style: AppTextStyles.label.copyWith(
-                color: AppColors.onMapOverlayMuted,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                LucideIcons.navigation,
+                size: 15,
+                color: AppColors.primary,
               ),
-            ),
+              SizedBox(width: AppSpacing.sm),
+              Text(
+                '${distanceKm >= 1000 ? distanceKm.toStringAsFixed(0) : distanceKm.toStringAsFixed(2)} ${'km'.tr()}',
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.onMapOverlay,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Text(
+                  '|',
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.onMapOverlayMuted,
+                  ),
+                ),
+              ),
+              Text(
+                _timeLabel,
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.onMapOverlay,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
           ),
-          Text(
-            _timeLabel,
-            style: AppTextStyles.label.copyWith(
-              color: AppColors.onMapOverlay,
-              fontWeight: FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

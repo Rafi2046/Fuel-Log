@@ -220,7 +220,7 @@ class HomeVehicleVitalsCard extends StatelessWidget {
                     child: _VitalItem(
                       label: 'totalDistance'.tr(),
                       value: totalDistance > 0
-                          ? '${totalDistance.toStringAsFixed(0)} km'
+                          ? '${NumberFormat('#,###').format(totalDistance.round())} km'
                           : '0 km',
                     ),
                   ),

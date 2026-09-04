@@ -44,6 +44,26 @@ class ExpenseRatioChart extends StatelessWidget {
       return const ChartSparklineEmpty();
     }
 
+    // Use share percentages (not raw ৳) so huge spends still paint in fl_chart.
+    final fuelShare = fuel / total;
+    final serviceShare = service / total;
+    final sections = <PieChartSectionData>[
+      if (fuelShare > 0)
+        PieChartSectionData(
+          value: fuelShare,
+          color: AppColors.primary,
+          radius: 22,
+          showTitle: false,
+        ),
+      if (serviceShare > 0)
+        PieChartSectionData(
+          value: serviceShare,
+          color: AppColors.success,
+          radius: 22,
+          showTitle: false,
+        ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -57,23 +77,10 @@ class ExpenseRatioChart extends StatelessWidget {
             child: PieChart(
               PieChartData(
                 centerSpaceRadius: 40,
-                sectionsSpace: 2,
+                sectionsSpace: sections.length > 1 ? 2 : 0,
                 startDegreeOffset: -90,
                 pieTouchData: PieTouchData(enabled: true),
-                sections: [
-                  PieChartSectionData(
-                    value: fuel,
-                    color: AppColors.primary,
-                    radius: 22,
-                    showTitle: false,
-                  ),
-                  PieChartSectionData(
-                    value: service <= 0 ? 0.01 : service,
-                    color: AppColors.success,
-                    radius: 22,
-                    showTitle: false,
-                  ),
-                ],
+                sections: sections,
               ),
             ),
           ),
@@ -139,6 +146,8 @@ class _LegendRow extends StatelessWidget {
         ),
         Text(
           value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.caption.copyWith(
             color: color,
             fontWeight: FontWeight.w700,

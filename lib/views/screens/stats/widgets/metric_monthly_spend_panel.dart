@@ -367,38 +367,42 @@ class _MonthRow extends StatelessWidget {
               ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  month.label,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Row(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 6,
+                    runSpacing: 4,
                     children: [
-                      Text(
-                        month.label,
-                        style: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                      if (hasFuel)
+                        _CostChip(
+                          color: AppColors.primary,
+                          label: 'metricCategoryFuel'.tr(),
+                          value: AppCurrency.format(month.fuel),
                         ),
-                      ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 16,
-                        color: AppColors.textTertiary,
-                      ),
+                      if (hasService)
+                        _CostChip(
+                          color: AppColors.success,
+                          label: 'metricCategoryCosts'.tr(),
+                          value: AppCurrency.format(month.service),
+                        ),
                     ],
                   ),
                 ),
-                if (hasFuel)
-                  _CostChip(
-                    color: AppColors.primary,
-                    label: 'metricCategoryFuel'.tr(),
-                    value: AppCurrency.format(month.fuel),
-                  ),
-                if (hasFuel && hasService) const SizedBox(width: 8),
-                if (hasService)
-                  _CostChip(
-                    color: AppColors.success,
-                    label: 'metricCategoryCosts'.tr(),
-                    value: AppCurrency.format(month.service),
-                  ),
               ],
             ),
           ),
@@ -421,6 +425,7 @@ class _CostChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxTextWidth = MediaQuery.sizeOf(context).width * 0.42;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
@@ -437,12 +442,20 @@ class _CostChip extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
-          Text(
-            '$label: $value',
-            style: AppTextStyles.caption.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 10,
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxTextWidth),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '$label: $value',
+                maxLines: 1,
+                style: AppTextStyles.caption.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+              ),
             ),
           ),
         ],

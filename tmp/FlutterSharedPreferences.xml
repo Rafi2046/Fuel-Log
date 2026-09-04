@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <boolean name="flutter.onboarding_completed" value="true" />
+    <string name="flutter.app_theme_mode">dark</string>
+    <string name="flutter.locale">bn</string>
+    <long name="flutter.last_active_vehicle_id" value="5" />
+    <boolean name="flutter.weather_tips_alerts_enabled" value="false" />
+</map>

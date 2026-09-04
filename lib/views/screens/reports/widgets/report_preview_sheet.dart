@@ -806,12 +806,17 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                AppCurrency.format(report.grandTotalSpend),
-                style: GoogleFonts.inter(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  AppCurrency.format(report.grandTotalSpend),
+                  style: GoogleFonts.inter(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
                 ),
               ),
               const SizedBox(height: 8),
@@ -853,61 +858,34 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
                   height: 10,
                   child: Row(
                     children: [
-                      Expanded(
-                        flex: (fuelPct * 100).toInt(),
-                        child: Container(color: AppColors.primary),
-                      ),
-                      Expanded(
-                        flex: (servicePct * 100).toInt(),
-                        child: Container(color: AppColors.primary),
-                      ),
+                      if (fuelPct > 0)
+                        Expanded(
+                          flex: (fuelPct * 1000).round().clamp(1, 1000),
+                          child: Container(color: AppColors.primary),
+                        ),
+                      if (servicePct > 0)
+                        Expanded(
+                          flex: (servicePct * 1000).round().clamp(1, 1000),
+                          child: Container(color: AppColors.success),
+                        ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
+                  _ProportionLegend(
+                    color: AppColors.primary,
+                    text:
                         'Fuel: ${AppCurrency.format(report.totalFuelSpend)} (${(fuelPct * 100).toStringAsFixed(0)}%)',
-                        style: GoogleFonts.inter(
-                          fontSize: 11.5,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
                   ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
+                  _ProportionLegend(
+                    color: AppColors.success,
+                    text:
                         'Service: ${AppCurrency.format(report.totalServiceSpend)} (${(servicePct * 100).toStringAsFixed(0)}%)',
-                        style: GoogleFonts.inter(
-                          fontSize: 11.5,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -1126,17 +1104,22 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: isHighlighted ? AppColors.primary : AppColors.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color:
+                    isHighlighted ? AppColors.primary : AppColors.textPrimary,
+              ),
+              maxLines: 1,
+              textAlign: TextAlign.center,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -1211,6 +1194,53 @@ class _ReportPreviewSheetState extends State<ReportPreviewSheet> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ProportionLegend extends StatelessWidget {
+  const _ProportionLegend({
+    required this.color,
+    required this.text,
+  });
+
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width - 72,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                text,
+                maxLines: 1,
+                style: GoogleFonts.inter(
+                  fontSize: 11.5,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

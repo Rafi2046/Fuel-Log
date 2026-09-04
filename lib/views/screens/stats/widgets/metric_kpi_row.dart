@@ -45,7 +45,7 @@ class MetricKpiRow extends StatelessWidget {
       MetricKpiCard(
         title: 'metricKpiDistance'.tr(),
         value: distanceKm > 0
-            ? '${distanceKm.toStringAsFixed(0)} km'
+            ? '${NumberFormat('#,###').format(distanceKm.round())} km'
             : '—',
         hint: 'metricKpiThisPeriod'.tr(),
         icon: Icons.route_rounded,
@@ -145,15 +145,18 @@ class MetricKpiCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: 8),
-        Text(
-          value,
-          style: AppTextStyles.title.copyWith(
-            fontSize: highlightValue ? 14 : 13,
-            fontWeight: FontWeight.w700,
-            height: 1.1,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: AppTextStyles.title.copyWith(
+              fontSize: highlightValue ? 14 : 13,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+            ),
+            maxLines: 1,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
         ),
         SizedBox(height: 3),
         Text(

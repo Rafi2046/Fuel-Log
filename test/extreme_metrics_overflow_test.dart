@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fuel_log/core/constants/app_colors.dart';
 import 'package:fuel_log/core/constants/app_locales.dart';
 import 'package:fuel_log/core/database/app_database.dart';
+import 'package:fuel_log/views/screens/tabs/trip/widgets/trip_stats_pill.dart';
 import 'package:fuel_log/views/widgets/efficiency_gauge.dart';
 import 'package:fuel_log/views/widgets/home_metrics_cards.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -136,6 +137,26 @@ void main() {
 
         expect(tester.takeException(), isNull,
             reason: 'Overflow in HomeVehicleVitalsCard with brightness $brightness');
+      }
+    });
+  });
+
+  group('SQA Trip card extreme stats', () {
+    testWidgets('TripStatsPill scales for million-km distances', (tester) async {
+      for (final brightness in [Brightness.light, Brightness.dark]) {
+        await tester.pumpWidget(
+          _wrapWithTheme(
+            brightness: brightness,
+            size: const Size(360, 640),
+            child: const TripStatsPill(
+              distanceKm: 1000000,
+              elapsed: Duration(hours: 12, minutes: 34, seconds: 56),
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(tester.takeException(), isNull,
+            reason: 'TripStatsPill overflow at brightness $brightness');
       }
     });
   });

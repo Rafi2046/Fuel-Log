@@ -48,8 +48,9 @@ class TripSummaryCard extends ConsumerWidget {
             : 'tripDestination'.tr();
 
     final formattedDate = _dateFormat.format(trip.startedAt);
-    final distanceText =
-        '${trip.distanceKm < 10 ? trip.distanceKm.toStringAsFixed(2) : trip.distanceKm.toStringAsFixed(1)} ${'km'.tr()}';
+    final distanceText = trip.distanceKm >= 1000
+        ? '${trip.distanceKm.toStringAsFixed(0)} ${'km'.tr()}'
+        : '${trip.distanceKm < 10 ? trip.distanceKm.toStringAsFixed(2) : trip.distanceKm.toStringAsFixed(1)} ${'km'.tr()}';
     final durationSec = _durationSec;
     final durationText = _formatDuration(durationSec);
 
@@ -71,7 +72,9 @@ class TripSummaryCard extends ConsumerWidget {
     String mileageText = '—';
     final avgMileage = calculateAverageMileage(logs);
     if (avgMileage > 0) {
-      mileageText = '${avgMileage.toStringAsFixed(1)} $mileageUnit';
+      mileageText = avgMileage >= 1000
+          ? '${avgMileage.toStringAsFixed(0)} $mileageUnit'
+          : '${avgMileage.toStringAsFixed(1)} $mileageUnit';
     }
 
     return Container(
@@ -323,15 +326,18 @@ class _TripStat extends StatelessWidget {
             fontSize: 10,
           ),
         ),
-        SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.body.copyWith(
-            color: emphasize ? AppColors.primary : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: AppTextStyles.body.copyWith(
+              color: emphasize ? AppColors.primary : AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
       ],
