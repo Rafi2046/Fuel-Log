@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
@@ -149,10 +150,10 @@ class _AnalyticsCarouselState extends State<AnalyticsCarousel> {
                       child: Tooltip(
                         message: 'expandChart'.tr(),
                         child: Padding(
-                          padding: EdgeInsets.all(8),
+                          padding: EdgeInsets.all(7),
                           child: Icon(
-                            Icons.show_chart_rounded,
-                            size: 16,
+                            LucideIcons.maximize,
+                            size: 15,
                             color: AppColors.textSecondary,
                           ),
                         ),

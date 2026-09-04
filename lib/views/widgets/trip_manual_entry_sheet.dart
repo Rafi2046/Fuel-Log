@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
@@ -1123,27 +1124,31 @@ class _LocationField extends StatelessWidget {
             validator: validator,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Material(
-            color: AppColors.wash,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              onTap: onPickMap,
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 40,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Icon(
-                  Icons.map_outlined,
-                  size: 18,
-                  color: AppColors.textSecondary,
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Tooltip(
+            message: 'pickOnMap'.tr(),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPickMap,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                child: Ink(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.28),
+                    ),
+                  ),
+                  child: Icon(
+                    LucideIcons.mapPinned,
+                    size: 17,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ),
