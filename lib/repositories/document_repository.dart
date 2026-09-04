@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' as drift;
 
 import '../core/database/app_database.dart';
 import '../core/utils/document_storage_service.dart';
+import '../core/utils/notification_service.dart';
 
 /// Repository coordinating [AppDatabase] E-Documents table and [DocumentStorageService].
 class DocumentRepository {
@@ -96,6 +97,9 @@ class DocumentRepository {
 
     // Delete local storage file
     await _storage.deleteDocumentFile(doc.filePath);
+
+    // Cancel any scheduled document reminder notification
+    await NotificationService().cancelNotification(800000 + id);
 
     // Delete DB record
     final rows = await _db.deleteEDocument(id);

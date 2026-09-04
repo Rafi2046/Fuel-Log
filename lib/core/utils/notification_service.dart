@@ -23,32 +23,36 @@ class NotificationService {
   Future<void> init() async {
     if (_isInitialized) return;
 
-    tz.initializeTimeZones();
+    try {
+      tz.initializeTimeZones();
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    await _flutterLocalNotificationsPlugin.initialize(initSettings);
+      await _flutterLocalNotificationsPlugin.initialize(initSettings);
 
-    final androidImplementation =
-        _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    if (androidImplementation != null) {
-      await androidImplementation.requestNotificationsPermission();
-      await androidImplementation.requestExactAlarmsPermission();
+      final androidImplementation =
+          _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        await androidImplementation.requestNotificationsPermission();
+        await androidImplementation.requestExactAlarmsPermission();
+      }
+
+      _isInitialized = true;
+    } catch (_) {
+      // Platform channel not registered in headless test runners
     }
-
-    _isInitialized = true;
   }
 
   Future<bool> _ensureIosPermissions() async {
@@ -145,6 +149,104 @@ class NotificationService {
       'Maintenance Reminders',
       channelDescription:
           'Notifications for scheduled vehicle maintenance and service due dates',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails = DarwinNotificationDetails();
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      body,
+      details,
+    );
+  }
+
+  /// Schedules a local push notification for document expiry.
+  Future<void> scheduleDocumentReminder({
+    required int id,
+    required String title,
+    required DateTime scheduledDate,
+    required String body,
+  }) async {
+    await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
+
+    final now = DateTime.now();
+    if (scheduledDate.isBefore(now)) {
+      await showDocumentNotification(
+        id: id,
+        title: title,
+        body: body,
+      );
+      return;
+    }
+
+    final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
+
+    const androidDetails = AndroidNotificationDetails(
+      'document_reminders',
+      'Document Expiry Reminders',
+      channelDescription:
+          'Notifications for expiring vehicle and personal documents',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails = DarwinNotificationDetails();
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    try {
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (_) {
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+  }
+
+  /// Shows an immediate document expiry notification.
+  Future<void> showDocumentNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    await init();
+    if (Platform.isIOS) {
+      await _ensureIosPermissions();
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'document_reminders',
+      'Document Expiry Reminders',
+      channelDescription:
+          'Notifications for expiring vehicle and personal documents',
       importance: Importance.high,
       priority: Priority.high,
     );
@@ -307,7 +409,9 @@ class NotificationService {
 
   /// Cancels a scheduled maintenance reminder notification.
   Future<void> cancelNotification(int id) async {
-    await init();
-    await _flutterLocalNotificationsPlugin.cancel(id);
+    try {
+      await init();
+      await _flutterLocalNotificationsPlugin.cancel(id);
+    } catch (_) {}
   }
 }

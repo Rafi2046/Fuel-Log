@@ -3,19 +3,24 @@ part of 'add_cost_service_sheet.dart';
 mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostServiceSheetController {
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final media = MediaQuery.of(context);
+    final bottomInset = media.viewInsets.bottom;
+    final bottomPad = media.padding.bottom;
+    // Leave room above the keyboard so the sheet scrolls instead of overflowing.
+    final maxSheetHeight = (media.size.height - bottomInset) * 0.92;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Material(
-            color: AppColors.card,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            clipBehavior: Clip.antiAlias,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Material(
+          color: AppColors.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxSheetHeight),
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPad + 16),
               child: Form(
                 key: _formKey,
@@ -37,30 +42,13 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
               const SizedBox(height: 16),
 
               // 2. Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2ECC71).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.build_circle_rounded,
-                      color: Color(0xFF2ECC71),
-                      size: 22,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Add Cost / Service',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+              Text(
+                'Add Cost / Service',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
               ),
 
               SizedBox(height: 20),
@@ -88,7 +76,7 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                           cat['icon'] as IconData,
                           size: 15,
                           color: isSelected
-                              ? Color(0xFF2ECC71)
+                              ? AppColors.primary
                               : AppColors.textTertiary,
                         ),
                         label: Text(cat['label'] as String),
@@ -97,16 +85,16 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
                           if (val) _onCategoryChanged(catId);
                         },
                         selectedColor:
-                            const Color(0xFF2ECC71).withValues(alpha: 0.18),
+                            AppColors.primary.withValues(alpha: 0.15),
                         backgroundColor: AppColors.inputFill,
                         side: BorderSide(
                           color: isSelected
-                              ? Color(0xFF2ECC71)
+                              ? AppColors.primary
                               : AppColors.border,
                         ),
                         labelStyle: TextStyle(
                           color: isSelected
-                              ? Color(0xFF2ECC71)
+                              ? AppColors.primary
                               : AppColors.textPrimary,
                           fontSize: 12,
                           fontWeight:
@@ -346,14 +334,14 @@ mixin _AddCostServiceSheetView on ConsumerState<AddCostServiceSheet>, _AddCostSe
               SheetActionBar(
                 primaryLabel: 'Save Cost',
                 onPrimary: _submit,
-                primaryColor: const Color(0xFF2ECC71),
+                primaryColor: AppColors.primary,
               ),
                   ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

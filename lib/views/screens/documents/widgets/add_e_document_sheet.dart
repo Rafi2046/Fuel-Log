@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/notification_service.dart';
 import '../../../../viewmodels/e_document_viewmodel.dart';
 import '../../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../components/forms/sheet_action_bar.dart';
@@ -37,6 +40,12 @@ class _EDocSheetDraft {
   DateTime? expiryDate;
   bool noExpiry = false;
 
+  // Expiry Reminder Settings
+  bool enableReminder = true;
+  int reminderDaysBefore = 7;
+  int reminderTimeHour = 9;
+  int reminderTimeMinute = 0;
+
   void bump() => revision.value++;
 
   void startNew({int? initialVehicleId}) {
@@ -50,6 +59,10 @@ class _EDocSheetDraft {
     vehicleId = initialVehicleId;
     expiryDate = null;
     noExpiry = false;
+    enableReminder = true;
+    reminderDaysBefore = 7;
+    reminderTimeHour = 9;
+    reminderTimeMinute = 0;
     bump();
   }
 
@@ -64,6 +77,10 @@ class _EDocSheetDraft {
     vehicleId = null;
     expiryDate = null;
     noExpiry = false;
+    enableReminder = true;
+    reminderDaysBefore = 7;
+    reminderTimeHour = 9;
+    reminderTimeMinute = 0;
   }
 }
 
@@ -116,6 +133,11 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
   late String? _singleFilePath;
   late bool _isTwoSided;
 
+  // Reminder settings
+  late bool _enableReminder;
+  late int _reminderDaysBefore;
+  late TimeOfDay _reminderTime;
+
   bool _isSaving = false;
   final _imagePicker = ImagePicker();
 
@@ -154,6 +176,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
     _backFilePath = draft.backPath;
     _singleFilePath = draft.singlePath;
     _isTwoSided = draft.isTwoSided;
+    _enableReminder = draft.enableReminder;
+    _reminderDaysBefore = draft.reminderDaysBefore;
+    _reminderTime = TimeOfDay(
+      hour: draft.reminderTimeHour,
+      minute: draft.reminderTimeMinute,
+    );
   }
 
   void _persistDraft({bool notify = false}) {
@@ -167,6 +195,10 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
     draft.vehicleId = _selectedVehicleId;
     draft.expiryDate = _expiryDate;
     draft.noExpiry = _noExpiry;
+    draft.enableReminder = _enableReminder;
+    draft.reminderDaysBefore = _reminderDaysBefore;
+    draft.reminderTimeHour = _reminderTime.hour;
+    draft.reminderTimeMinute = _reminderTime.minute;
     if (notify) draft.bump();
   }
 
@@ -362,6 +394,7 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
         _expiryDate = picked;
         _noExpiry = false;
         _expiryError = null;
+        _enableReminder = true;
       });
       _persistDraft();
     }
@@ -468,12 +501,52 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       }
 
       final controller = ref.read(eDocumentControllerProvider);
-      await controller.addDocumentFromPath(
+      final docId = await controller.addDocumentFromPath(
         vehicleId: _selectedVehicleId,
         docType: _selectedType.code,
         sourcePath: finalSourcePath,
         expiryDate: _noExpiry ? null : _expiryDate,
       );
+
+      // Schedule document expiry reminder push notification if enabled
+      if (!_noExpiry && _expiryDate != null && _enableReminder) {
+        final targetDay =
+            _expiryDate!.subtract(Duration(days: _reminderDaysBefore));
+        final scheduledDateTime = DateTime(
+          targetDay.year,
+          targetDay.month,
+          targetDay.day,
+          _reminderTime.hour,
+          _reminderTime.minute,
+        );
+
+        final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
+        final vehicle = _selectedVehicleId != null
+            ? vehicles.cast<Vehicle?>().firstWhere(
+                  (v) => v?.id == _selectedVehicleId,
+                  orElse: () => null,
+                )
+            : null;
+        final vehicleLabel = vehicle != null ? ' (${vehicle.name})' : '';
+        final docLabel = _selectedType.displayName;
+
+        String body;
+        if (_reminderDaysBefore == 0) {
+          body = '$docLabel$vehicleLabel expires today!';
+        } else if (_reminderDaysBefore == 1) {
+          body = '$docLabel$vehicleLabel expires tomorrow!';
+        } else {
+          body =
+              '$docLabel$vehicleLabel expires in $_reminderDaysBefore days (${DateFormat('dd MMM yyyy').format(_expiryDate!)})';
+        }
+
+        await NotificationService().scheduleDocumentReminder(
+          id: 800000 + docId,
+          title: '⚠️ Document Expiry Reminder',
+          scheduledDate: scheduledDateTime,
+          body: body,
+        );
+      }
 
       if (!mounted) return;
       _EDocSheetDraft.instance.picking = false;
@@ -481,8 +554,15 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${_selectedType.displayName} saved to vault!'),
+          content: Text(
+            '${_selectedType.displayName} saved to vault!',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           backgroundColor: const Color(0xFFFF7A50),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
@@ -501,12 +581,15 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final vehicles = vehiclesAsync.valueOrNull ?? [];
 
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.90;
+
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Material(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Material(
             color: AppColors.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             clipBehavior: Clip.antiAlias,
@@ -920,9 +1003,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                         ),
                       ),
                     ),
+                    // 5. Expiry Reminder & Notification Settings
+                    _buildReminderSection(),
+
                     const SizedBox(height: 24),
 
-                    // 5. Actions
+                    // 6. Actions
                     SheetActionBar(
                       primaryLabel: _isSaving ? 'Saving...' : 'Save Document',
                       onPrimary: _isSaving ? () {} : _saveDocument,
@@ -937,7 +1023,7 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1363,6 +1449,636 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                   ],
                 ),
         ),
+      ),
+    );
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return DateFormat('hh:mm a').format(dt);
+  }
+
+  Future<void> _pickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _reminderTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: const Color(0xFFFF7A50),
+              onPrimary: Colors.white,
+              surface: AppColors.card,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() => _reminderTime = picked);
+      _persistDraft();
+    }
+  }
+
+  Future<void> _showCustomDaysDialog() async {
+    final controller = TextEditingController(
+      text: _reminderDaysBefore.toString(),
+    );
+    final days = await showDialog<int>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppColors.hairline, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    blurRadius: 28,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: StatefulBuilder(
+                builder: (context, setDialogState) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header text
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Custom Reminder Days',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'How many days before expiry do you want to be reminded?',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Quick preset buttons
+                        Text(
+                          'QUICK SELECT',
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [5, 10, 20, 45, 60].map((preset) {
+                            final currentText = controller.text.trim();
+                            final isCurrent =
+                                currentText == preset.toString();
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  setDialogState(() {
+                                    controller.text = preset.toString();
+                                    controller.selection =
+                                        TextSelection.fromPosition(
+                                      TextPosition(
+                                        offset: controller.text.length,
+                                      ),
+                                    );
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isCurrent
+                                        ? const Color(0xFFFF7A50)
+                                            .withValues(alpha: 0.15)
+                                        : AppColors.wash,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isCurrent
+                                          ? const Color(0xFFFF7A50)
+                                          : AppColors.hairline,
+                                      width: isCurrent ? 1.2 : 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '$preset Days',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: isCurrent
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isCurrent
+                                          ? const Color(0xFFFF7A50)
+                                          : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Text Field
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.inputFill,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.hairline,
+                              width: 1,
+                            ),
+                          ),
+                          child: TextField(
+                            controller: controller,
+                            keyboardType: TextInputType.number,
+                            autofocus: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(3),
+                            ],
+                            onChanged: (_) => setDialogState(() {}),
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Enter days (e.g. 10)',
+                              hintStyle: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textTertiary,
+                              ),
+                              suffixIcon: Container(
+                                margin: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.card,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.hairline,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  'DAYS',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Symmetrical Action Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 42,
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.textSecondary,
+                                    backgroundColor: AppColors.wash,
+                                    side: BorderSide(
+                                      color: AppColors.hairline,
+                                      width: 1,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.of(ctx).pop(),
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                height: 42,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFF7A50),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    final parsed =
+                                        int.tryParse(controller.text.trim());
+                                    if (parsed != null &&
+                                        parsed >= 0 &&
+                                        parsed <= 365) {
+                                      Navigator.of(ctx).pop(parsed);
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Please enter a valid number of days (0 - 365)',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    'Set Days',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (days != null) {
+      setState(() => _reminderDaysBefore = days);
+      _persistDraft();
+    }
+  }
+
+  Widget _buildDaysChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7.5),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFFF7A50) : AppColors.card,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFFFF7A50)
+                  : AppColors.hairline,
+              width: 1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFFF7A50).withValues(alpha: 0.28),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderSection() {
+    if (_noExpiry || _expiryDate == null) {
+      return const SizedBox.shrink();
+    }
+
+    final standardDays = [7, 15, 30];
+    final isCustom = !standardDays.contains(_reminderDaysBefore);
+
+    // Target notification day & time
+    final targetDay =
+        _expiryDate!.subtract(Duration(days: _reminderDaysBefore));
+    final scheduledDateTime = DateTime(
+      targetDay.year,
+      targetDay.month,
+      targetDay.day,
+      _reminderTime.hour,
+      _reminderTime.minute,
+    );
+    final isImmediate = scheduledDateTime.isBefore(DateTime.now());
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.inputFill,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _enableReminder
+              ? const Color(0xFFFF7A50).withValues(alpha: 0.35)
+              : AppColors.hairline,
+          width: _enableReminder ? 1.2 : 1,
+        ),
+        boxShadow: _enableReminder
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFFF7A50).withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with switch - notification bell icon removed, switch made smaller
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Expiry Reminder & Notification',
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.1,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Get notified before document expires',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Transform.scale(
+                scale: 0.68,
+                alignment: Alignment.centerRight,
+                child: Switch.adaptive(
+                  value: _enableReminder,
+                  activeThumbColor: const Color(0xFFFF7A50),
+                  activeTrackColor:
+                      const Color(0xFFFF7A50).withValues(alpha: 0.38),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (val) {
+                    setState(() => _enableReminder = val);
+                    _persistDraft();
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          if (_enableReminder) ...[
+            const SizedBox(height: 12),
+            Divider(height: 1, color: AppColors.hairline),
+            const SizedBox(height: 12),
+
+            // 1. Remind Me Before (Days)
+            Text(
+              'Remind Me Before',
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...standardDays.map((days) {
+                    final isSelected =
+                        !isCustom && _reminderDaysBefore == days;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: _buildDaysChip(
+                        label: '$days Days',
+                        isSelected: isSelected,
+                        onTap: () {
+                          setState(() => _reminderDaysBefore = days);
+                          _persistDraft();
+                        },
+                      ),
+                    );
+                  }),
+                  _buildDaysChip(
+                    label:
+                        isCustom ? '$_reminderDaysBefore Days' : 'Custom...',
+                    isSelected: isCustom,
+                    onTap: _showCustomDaysDialog,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // 2. Notification Time
+            Text(
+              'Notification Time',
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _pickReminderTime,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.hairline, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF7A50)
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          LucideIcons.clock,
+                          size: 14,
+                          color: Color(0xFFFF7A50),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _formatTimeOfDay(_reminderTime),
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF7A50)
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Change Time',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFFF7A50),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // 3. Info preview badge
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: isImmediate
+                    ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                    : const Color(0xFFFF7A50).withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isImmediate
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.22)
+                      : const Color(0xFFFF7A50).withValues(alpha: 0.18),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    isImmediate
+                        ? LucideIcons.alertTriangle
+                        : LucideIcons.bell,
+                    size: 14,
+                    color: isImmediate
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFFFF7A50),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isImmediate
+                          ? 'Document expires in less than $_reminderDaysBefore days. Notification will fire immediately.'
+                          : 'Reminder scheduled for ${DateFormat('dd MMM yyyy').format(targetDay)} at ${_formatTimeOfDay(_reminderTime)} ($_reminderDaysBefore days before).',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: isImmediate
+                            ? const Color(0xFFEF4444)
+                            : AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

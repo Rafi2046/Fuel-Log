@@ -293,7 +293,7 @@ class _EDocumentViewerScreenState extends State<EDocumentViewerScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFFF8FAFC),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
