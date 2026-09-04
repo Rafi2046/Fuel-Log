@@ -1,9 +1,12 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_regions.dart';
 import '../../core/services/onboarding_prefs.dart';
+import '../../viewmodels/region_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
 import 'dashboard_screen.dart';
 import 'splash_screen.dart';
@@ -41,6 +44,13 @@ class _AppStartupGateState extends ConsumerState<AppStartupGate> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep EasyLocalization in sync with persisted language+currency region.
+    ref.listen(appRegionProvider, (prev, next) {
+      if (context.locale.languageCode != next.locale.languageCode) {
+        context.setLocale(next.locale);
+      }
+    });
+
     final onboardingSeenAsync = ref.watch(onboardingSeenProvider);
     final vehiclesAsync = ref.watch(vehiclesProvider);
 

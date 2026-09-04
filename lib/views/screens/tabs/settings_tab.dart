@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_locales.dart';
+import '../../../core/constants/app_regions.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/backup_restore_service.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
+import '../../../viewmodels/region_viewmodel.dart';
 import '../../../viewmodels/reminder_viewmodel.dart';
 import '../../../viewmodels/service_log_viewmodel.dart';
 import '../../../viewmodels/trip_log_viewmodel.dart';
@@ -20,6 +21,8 @@ import '../../widgets/clean_glass_panel.dart';
 import '../documents/e_document_vault_screen.dart';
 import '../reports/reports_screen.dart';
 import 'dashboard_bottom_bar.dart';
+import 'widgets/appearance_picker_sheet.dart';
+import 'widgets/region_picker_sheet.dart';
 
 /// Settings tab — clean, minimal dark layout.
 class SettingsTab extends ConsumerStatefulWidget {
@@ -34,15 +37,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   bool _isRestoring = false;
   final _backupService = const BackupRestoreService();
 
-  String _languageLabel(Locale locale) {
-    switch (locale.languageCode) {
-      case 'bn':
-        return 'languageBangla'.tr();
-      case 'hi':
-        return 'languageHindi'.tr();
-      default:
-        return 'languageEnglish'.tr();
-    }
+  String _regionValueLabel(AppRegion region) {
+    return '${region.flagEmoji} ${region.languageNameKey.tr()} · ${region.currencyCode}';
   }
 
   String _themeModeLabel(ThemeMode mode) => switch (mode) {
@@ -51,194 +47,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         ThemeMode.system => 'themeSystem'.tr(),
       };
 
-  Future<void> _pickThemeMode(WidgetRef ref) async {
-    final current = ref.read(themeModeProvider);
-    final selected = await showModalBottomSheet<ThemeMode>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppSpacing.radiusXl),
-          ),
-          child: CleanGlassPanel(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppSpacing.radiusXl),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPadding,
-                  AppSpacing.sm,
-                  AppSpacing.screenPadding,
-                  AppSpacing.md,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.border,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'appearance'.tr(),
-                      style: AppTextStyles.title.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    for (final mode in ThemeMode.values) ...[
-                      ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        leading: Icon(
-                          switch (mode) {
-                            ThemeMode.light => LucideIcons.sun,
-                            ThemeMode.dark => LucideIcons.moon,
-                            ThemeMode.system => LucideIcons.smartphone,
-                          },
-                          size: 20,
-                          color: mode == current
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
-                        title: Text(
-                          _themeModeLabel(mode),
-                          style: AppTextStyles.body.copyWith(
-                            fontWeight: mode == current
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: mode == current
-                                ? AppColors.primary
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                        trailing: mode == current
-                            ? const Icon(
-                                LucideIcons.check,
-                                size: 18,
-                                color: AppColors.primary,
-                              )
-                            : null,
-                        onTap: () => Navigator.pop(sheetContext, mode),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-    if (selected == null) return;
-    await ref.read(themeModeProvider.notifier).setMode(selected);
-  }
+  Future<void> _pickThemeMode(WidgetRef ref) =>
+      showAppearancePickerSheet(context: context, ref: ref);
 
-  Future<void> _pickLanguage() async {
-    final current = context.locale;
-    final selected = await showModalBottomSheet<Locale>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppSpacing.radiusXl),
-          ),
-          child: CleanGlassPanel(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppSpacing.radiusXl),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPadding,
-                  AppSpacing.sm,
-                  AppSpacing.screenPadding,
-                  AppSpacing.md,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.border,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'language'.tr(),
-                      style: AppTextStyles.title.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    for (final locale in supportedAppLocales) ...[
-                      ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        leading: Icon(
-                          LucideIcons.globe,
-                          size: 20,
-                          color: locale.languageCode == current.languageCode
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
-                        title: Text(
-                          _languageLabel(locale),
-                          style: AppTextStyles.body.copyWith(
-                            fontWeight: locale.languageCode == current.languageCode
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: locale.languageCode == current.languageCode
-                                ? AppColors.primary
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                        trailing: locale.languageCode == current.languageCode
-                            ? const Icon(
-                                LucideIcons.check,
-                                size: 18,
-                                color: AppColors.primary,
-                              )
-                            : null,
-                        onTap: () => Navigator.pop(sheetContext, locale),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    if (selected != null && mounted) {
-      await context.setLocale(selected);
-    }
-  }
+  Future<void> _pickRegion(WidgetRef ref) =>
+      showRegionPickerSheet(context: context, ref: ref);
 
   Future<void> _handleExport() async {
     if (_isExporting) return;
@@ -393,7 +206,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final locale = context.locale;
+    final region = ref.watch(appRegionProvider);
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -464,10 +277,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           children: [
             _SettingsTile(
               icon: LucideIcons.globe,
-              title: 'language'.tr(),
-              subtitle: 'languageSubtitle'.tr(),
-              valueText: _languageLabel(locale),
-              onTap: _pickLanguage,
+              title: 'languageAndCurrency'.tr(),
+              subtitle: 'languageAndCurrencySubtitle'.tr(),
+              valueText: _regionValueLabel(region),
+              onTap: () => _pickRegion(ref),
             ),
             _SettingsTile(
               icon: LucideIcons.sunMoon,

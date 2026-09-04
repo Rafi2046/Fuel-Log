@@ -1,12 +1,8 @@
-import 'dart:ui';
-
 import 'package:drift/drift.dart' as drift;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
@@ -19,38 +15,15 @@ import '../../core/utils/trip_stats_helper.dart';
 import '../../viewmodels/fuel_log_viewmodel.dart';
 import '../../viewmodels/trip_log_viewmodel.dart';
 import '../../viewmodels/vehicle_viewmodel.dart';
-import 'app_primary_button.dart';
-import 'clean_glass_panel.dart';
 import 'trip_location_picker_page.dart';
+import 'trip_manual_entry/trip_entry_form_sections.dart';
+import 'trip_manual_entry/trip_manual_entry_prefill.dart';
+import 'trip_manual_entry/trip_manual_entry_sheet_layout.dart';
+import 'trip_manual_entry/trip_privacy_selector.dart';
 
-/// Optional GPS / live-trip values to pre-fill the manual entry form.
-class TripManualEntryPrefill {
-  const TripManualEntryPrefill({
-    this.initialDistanceKm,
-    this.initialDurationSec,
-    this.initialOrigin,
-    this.initialDestination,
-    this.startPoint,
-    this.endPoint,
-    this.startedAt,
-    this.endedAt,
-    this.source = 'gps',
-    this.routeJson,
-  });
+export 'trip_manual_entry/trip_manual_entry_prefill.dart';
 
-  final double? initialDistanceKm;
-  final int? initialDurationSec;
-  final String? initialOrigin;
-  final String? initialDestination;
-  final LatLng? startPoint;
-  final LatLng? endPoint;
-  final DateTime? startedAt;
-  final DateTime? endedAt;
-  final String source;
-  final String? routeJson;
-}
-
-/// Full manual trip form — all reference fields, still borderless (no boxed inputs).
+/// Full manual trip form — all reference fields, borderless style.
 Future<void> showTripManualEntrySheet(
   BuildContext context, {
   TripManualEntryPrefill? prefill,
@@ -125,7 +98,7 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
   Future<void> _addCustomCategory() async {
     final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => const _AddCategoryDialog(),
+      builder: (ctx) => const AddCategoryDialog(),
     );
     if (name == null || name.isEmpty || !mounted) {
       if (mounted) setState(() {});
@@ -179,9 +152,8 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
 
     if (prefill.initialDistanceKm != null) {
       final km = prefill.initialDistanceKm!;
-      _distanceCtrl.text = km < 10
-          ? km.toStringAsFixed(2)
-          : km.toStringAsFixed(1);
+      _distanceCtrl.text =
+          km < 10 ? km.toStringAsFixed(2) : km.toStringAsFixed(1);
     }
 
     final endedAt = prefill.endedAt ?? DateTime.now();
@@ -201,9 +173,8 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
     final logs = ref.read(vehicleLogsProvider).valueOrNull ?? const [];
     final avg = TripStatsHelper.averageCostPerKm(logs);
     if (avg <= 0) return;
-    _costPerKmCtrl.text = avg < 10
-        ? avg.toStringAsFixed(1)
-        : avg.toStringAsFixed(0);
+    _costPerKmCtrl.text =
+        avg < 10 ? avg.toStringAsFixed(1) : avg.toStringAsFixed(0);
     _syncTripCostFromRate();
   }
 
@@ -399,16 +370,18 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
       note: note.isNotEmpty ? drift.Value(note) : const drift.Value.absent(),
       routeJson: widget.prefill?.routeJson != null
           ? drift.Value(widget.prefill!.routeJson)
-          : drift.Value.absent(),
+          : const drift.Value.absent(),
     );
 
     setState(() => _isSaving = true);
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
+      final nav = Navigator.of(context);
       await ref.read(tripLogProvider.notifier).addTrip(companion);
       if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
+      nav.pop();
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             'tripSaved'.tr(),
@@ -434,776 +407,45 @@ class _TripManualEntrySheetState extends ConsumerState<TripManualEntrySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    final maxHeight = MediaQuery.sizeOf(context).height * 0.92;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottomInset),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-          child: Container(
-            height: maxHeight,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border.all(
-                color: AppColors.border,
-              ),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.screenPadding,
-                        AppSpacing.md,
-                        AppSpacing.screenPadding,
-                        0,
-                      ),
-                      child: Column(
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 36,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: AppColors.borderStrong,
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusPill,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'addTrip'.tr(),
-                                  style: AppTextStyles.title.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                              _GlassIconButton(
-                                icon: Icons.close_rounded,
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.screenPadding,
-                          AppSpacing.md,
-                          AppSpacing.screenPadding,
-                          AppSpacing.sm,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _GlassSection(
-                              child: Column(
-                                children: [
-                                  _UnderlineField(
-                                    controller: _titleCtrl,
-                                    label: 'tripTitleField'.tr(),
-                                    hint: 'tripTitleHint'.tr(),
-                                    icon: Icons.work_outline_rounded,
-                                    textInputAction: TextInputAction.next,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _PrivacySelector(
-                                    value: _privacy,
-                                    customCategories: _customCategories,
-                                    onChanged: (v) =>
-                                        setState(() => _privacy = v),
-                                    onAddCustom: _addCustomCategory,
-                                    showBorder: false,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _GlassSection(
-                              label: 'startPoint'.tr(),
-                              child: Column(
-                                children: [
-                                  _LocationField(
-                                    controller: _originCtrl,
-                                    label: 'tripOrigin'.tr(),
-                                    hint: 'tripOriginHint'.tr(),
-                                    icon: Icons.location_on_outlined,
-                                    onPickMap: () =>
-                                        _pickMapLocation(isStart: true),
-                                    validator: (v) =>
-                                        (v == null || v.trim().isEmpty)
-                                            ? 'fieldRequired'.tr()
-                                            : null,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _TapField(
-                                          icon: Icons.calendar_today_outlined,
-                                          label: 'date'.tr(),
-                                          value: _dateFmt.format(_startDate),
-                                          onTap: () =>
-                                              _pickDate(isStart: true),
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Expanded(
-                                        child: _TapField(
-                                          icon: Icons.schedule_rounded,
-                                          label: 'time'.tr(),
-                                          value: _startTime.format(context),
-                                          onTap: () =>
-                                              _pickTime(isStart: true),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _UnderlineField(
-                                    controller: _startOdoCtrl,
-                                    label: 'startOdometer'.tr(),
-                                    hint: '0',
-                                    icon: Icons.speed_rounded,
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    textInputAction: TextInputAction.next,
-                                    showBorder: false,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _GlassSection(
-                              label: 'endPoint'.tr(),
-                              child: Column(
-                                children: [
-                                  _LocationField(
-                                    controller: _destinationCtrl,
-                                    label: 'tripDestination'.tr(),
-                                    hint: 'tripDestinationHint'.tr(),
-                                    icon: Icons.flag_outlined,
-                                    onPickMap: () =>
-                                        _pickMapLocation(isStart: false),
-                                    validator: (v) =>
-                                        (v == null || v.trim().isEmpty)
-                                            ? 'fieldRequired'.tr()
-                                            : null,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _TapField(
-                                          icon: Icons.calendar_today_outlined,
-                                          label: 'date'.tr(),
-                                          value: _dateFmt.format(_endDate),
-                                          onTap: () =>
-                                              _pickDate(isStart: false),
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Expanded(
-                                        child: _TapField(
-                                          icon: Icons.schedule_rounded,
-                                          label: 'time'.tr(),
-                                          value: _endTime.format(context),
-                                          onTap: () =>
-                                              _pickTime(isStart: false),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _UnderlineField(
-                                    controller: _endOdoCtrl,
-                                    label: 'endOdometer'.tr(),
-                                    hint: '0',
-                                    icon: Icons.speed_rounded,
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    textInputAction: TextInputAction.next,
-                                    showBorder: false,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _GlassSection(
-                              label: 'optional'.tr(),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _UnderlineField(
-                                          controller: _costPerKmCtrl,
-                                          label: 'costPerKm'.tr(),
-                                          hint: 'costPerKmHint'.tr(),
-                                          prefixText: '৳ ',
-                                          keyboardType: const TextInputType
-                                              .numberWithOptions(
-                                            decimal: true,
-                                          ),
-                                          textInputAction:
-                                              TextInputAction.next,
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Expanded(
-                                        child: _UnderlineField(
-                                          controller: _tripCostCtrl,
-                                          label: 'tripCost'.tr(),
-                                          hint: 'tripCostHint'.tr(),
-                                          prefixText: '৳ ',
-                                          keyboardType: const TextInputType
-                                              .numberWithOptions(
-                                            decimal: true,
-                                          ),
-                                          textInputAction:
-                                              TextInputAction.next,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _UnderlineField(
-                                    controller: _distanceCtrl,
-                                    label: 'totalDistance'.tr(),
-                                    hint: '0.0',
-                                    icon: Icons.straighten_rounded,
-                                    suffix: 'km'.tr(),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                    textInputAction: TextInputAction.next,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _UnderlineField(
-                                    controller: _noteCtrl,
-                                    label: 'note'.tr(),
-                                    hint: 'tripNoteHint'.tr(),
-                                    icon: Icons.notes_rounded,
-                                    maxLines: 2,
-                                    textInputAction: TextInputAction.done,
-                                    showBorder: false,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    _TripSaveFooter(
-                      isSaving: _isSaving,
-                      onSave: _onSave,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlassSection extends StatelessWidget {
-  const _GlassSection({
-    required this.child,
-    this.label,
-  });
-
-  final Widget child;
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    return CleanGlassPanel(
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      padding: EdgeInsets.fromLTRB(12, 8, 12, 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (label != null) ...[
-            Text(
-              label!,
-              style: AppTextStyles.label.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                letterSpacing: 0.3,
-              ),
-            ),
-            SizedBox(height: AppSpacing.xs),
-          ],
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _TripFieldDecor {
-  _TripFieldDecor._();
-
-  static const prefixConstraints = BoxConstraints(minWidth: 34, minHeight: 28);
-  static const contentPadding = EdgeInsets.symmetric(vertical: 4);
-  static const multiLinePadding = EdgeInsets.only(top: 8, bottom: 4);
-  static final _iconColor = AppColors.textTertiary;
-  static final _labelColor = AppColors.textTertiary;
-  static final _focusedLabelColor = AppColors.textSecondary;
-
-  static InputDecoration base({
-    String? labelText,
-    String? hintText,
-    IconData? prefixIcon,
-    String? prefixText,
-    String? suffixText,
-    int maxLines = 1,
-    bool showBorder = true,
-  }) {
-    final borderSide = showBorder
-        ? BorderSide(color: AppColors.border)
-        : BorderSide.none;
-    final focusedBorder = showBorder
-        ? UnderlineInputBorder(
-            borderSide: BorderSide(
-              color: AppColors.primary.withValues(alpha: 0.65),
-              width: 1.2,
-            ),
-          )
-        : InputBorder.none;
-
-    return InputDecoration(
-      labelText: labelText,
-      hintText: hintText,
-      prefixIcon: prefixIcon == null
-          ? null
-          : Icon(prefixIcon, color: _iconColor, size: 18),
-      prefixIconConstraints: prefixConstraints,
-      prefixText: prefixText,
-      prefixStyle: AppTextStyles.body.copyWith(
-        color: AppColors.primary,
-        fontWeight: FontWeight.w700,
-        fontSize: 16,
-      ),
-      suffixText: suffixText,
-      suffixStyle: AppTextStyles.caption.copyWith(
-        color: AppColors.textTertiary,
-        fontSize: 11,
-      ),
-      isDense: true,
-      filled: false,
-      alignLabelWithHint: maxLines > 1,
-      contentPadding: maxLines > 1 ? multiLinePadding : contentPadding,
-      border: UnderlineInputBorder(borderSide: borderSide),
-      enabledBorder: UnderlineInputBorder(borderSide: borderSide),
-      focusedBorder: focusedBorder,
-      errorBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.error),
-      ),
-      focusedErrorBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.error, width: 1.4),
-      ),
-      labelStyle: AppTextStyles.caption.copyWith(
-        fontSize: 11,
-        color: _labelColor,
-      ),
-      floatingLabelStyle: AppTextStyles.caption.copyWith(
-        color: _focusedLabelColor,
-        fontSize: 11,
-      ),
-      hintStyle: AppTextStyles.bodySecondary.copyWith(
-        color: AppColors.textTertiary,
-        fontSize: 13,
-      ),
-    );
-  }
-}
-
-class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.inputFill,
-      shape: CircleBorder(),
-      child: InkWell(
-        onTap: onPressed,
-        customBorder: CircleBorder(),
-        child: Padding(
-          padding: EdgeInsets.all(8),
-          child: Icon(icon, size: 20, color: AppColors.textSecondary),
-        ),
-      ),
-    );
-  }
-}
-
-class _TripSaveFooter extends StatelessWidget {
-  const _TripSaveFooter({
-    required this.isSaving,
-    required this.onSave,
-  });
-
-  final bool isSaving;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.border),
-        ),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.card.withValues(alpha: 0.2),
-            AppColors.card,
-          ],
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding,
-          AppSpacing.sm,
-          AppSpacing.screenPadding,
-          AppSpacing.md,
-        ),
-        child: AppPrimaryButton(
-          label: 'saveTrip'.tr(),
-          icon: Icons.check_rounded,
-          isLoading: isSaving,
-          compact: true,
-          onPressed: isSaving ? null : onSave,
-        ),
-      ),
-    );
-  }
-}
-
-class _PrivacySelector extends StatelessWidget {
-  const _PrivacySelector({
-    required this.value,
-    required this.customCategories,
-    required this.onChanged,
-    required this.onAddCustom,
-    this.showBorder = true,
-  });
-
-  final String value;
-  final List<String> customCategories;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onAddCustom;
-  final bool showBorder;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = <DropdownMenuItem<String>>[
-      DropdownMenuItem(value: 'private', child: Text('privacyPrivate'.tr())),
-      DropdownMenuItem(value: 'work', child: Text('privacyWork'.tr())),
-      DropdownMenuItem(value: 'other', child: Text('privacyOther'.tr())),
-      for (final name in customCategories)
-        DropdownMenuItem(value: name, child: Text(name)),
-      DropdownMenuItem(
-        value: TripCategoryPrefs.addCustomValue,
-        child: Text(
-          'addCustomCategory'.tr(),
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    ];
-
-    final selected = items.any((item) => item.value == value)
-        ? value
-        : 'private';
-
-    return DropdownButtonFormField<String>(
-      key: ValueKey('$selected-${customCategories.length}'),
-      initialValue: selected,
-      dropdownColor: AppColors.card,
-      icon: Icon(
-        Icons.keyboard_arrow_down_rounded,
-        color: AppColors.textTertiary,
-      ),
-      decoration: _TripFieldDecor.base(
-        labelText: 'tripPrivacy'.tr(),
-        prefixIcon: Icons.label_outline_rounded,
-        showBorder: showBorder,
-      ),
-      style: AppTextStyles.body.copyWith(
-        fontWeight: FontWeight.w500,
-        fontSize: 14,
-      ),
-      items: items,
-      onChanged: (v) {
-        if (v == null) return;
-        if (v == TripCategoryPrefs.addCustomValue) {
-          onAddCustom();
-          return;
-        }
-        onChanged(v);
-      },
-    );
-  }
-}
-
-class _AddCategoryDialog extends StatefulWidget {
-  const _AddCategoryDialog();
-
-  @override
-  State<_AddCategoryDialog> createState() => _AddCategoryDialogState();
-}
-
-class _AddCategoryDialogState extends State<_AddCategoryDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final name = _controller.text.trim();
-    if (name.isEmpty) return;
-    Navigator.of(context).pop(name);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.appBar,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: AppColors.hairline),
-      ),
-      title: Text(
-        'addCustomCategory'.tr(),
-        style: AppTextStyles.title.copyWith(fontSize: 17),
-      ),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (_) => _submit(),
-        style: AppTextStyles.body,
-        cursorColor: AppColors.primary,
-        decoration: InputDecoration(
-          hintText: 'customCategoryHint'.tr(),
-          hintStyle: AppTextStyles.bodySecondary.copyWith(
-            color: AppColors.textTertiary,
-            fontSize: 13,
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'cancel'.tr(),
-            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-          ),
-        ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(
-            'save'.tr(),
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TapField extends StatelessWidget {
-  const _TapField({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      child: InputDecorator(
-        decoration: _TripFieldDecor.base(
-          labelText: label,
-          prefixIcon: icon,
-        ),
-        child: Text(
-          value,
-          style: AppTextStyles.body.copyWith(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LocationField extends StatelessWidget {
-  const _LocationField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    required this.icon,
-    required this.onPickMap,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final IconData icon;
-  final VoidCallback onPickMap;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return TripManualEntrySheetLayout(
+      formKey: _formKey,
+      onClose: () => Navigator.of(context).pop(),
+      onSave: _onSave,
+      isSaving: _isSaving,
       children: [
-        Expanded(
-          child: _UnderlineField(
-            controller: controller,
-            label: label,
-            hint: hint,
-            icon: icon,
-            textInputAction: TextInputAction.next,
-            validator: validator,
-          ),
+        TripGeneralInfoSection(
+          titleCtrl: _titleCtrl,
+          privacy: _privacy,
+          customCategories: _customCategories,
+          onPrivacyChanged: (v) => setState(() => _privacy = v),
+          onAddCustomCategory: _addCustomCategory,
         ),
-        const SizedBox(width: 6),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Tooltip(
-            message: 'pickOnMap'.tr(),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onPickMap,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: Icon(
-                    LucideIcons.map,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        const SizedBox(height: AppSpacing.sm),
+        TripRouteSection(
+          originCtrl: _originCtrl,
+          destinationCtrl: _destinationCtrl,
+          startOdoCtrl: _startOdoCtrl,
+          endOdoCtrl: _endOdoCtrl,
+          startDate: _startDate,
+          startTime: _startTime,
+          endDate: _endDate,
+          endTime: _endTime,
+          dateFmt: _dateFmt,
+          onPickOriginMap: () => _pickMapLocation(isStart: true),
+          onPickDestMap: () => _pickMapLocation(isStart: false),
+          onPickStartDate: () => _pickDate(isStart: true),
+          onPickStartTime: () => _pickTime(isStart: true),
+          onPickEndDate: () => _pickDate(isStart: false),
+          onPickEndTime: () => _pickTime(isStart: false),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TripFinancialsSection(
+          costPerKmCtrl: _costPerKmCtrl,
+          tripCostCtrl: _tripCostCtrl,
+          distanceCtrl: _distanceCtrl,
+          noteCtrl: _noteCtrl,
         ),
       ],
-    );
-  }
-}
-
-class _UnderlineField extends StatelessWidget {
-  const _UnderlineField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    this.icon,
-    this.prefixText,
-    this.suffix,
-    this.keyboardType,
-    this.inputFormatters,
-    this.textInputAction,
-    this.validator,
-    this.maxLines = 1,
-    this.showBorder = true,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final IconData? icon;
-  final String? prefixText;
-  final String? suffix;
-  final TextInputType? keyboardType;
-  final List<TextInputFormatter>? inputFormatters;
-  final TextInputAction? textInputAction;
-  final FormFieldValidator<String>? validator;
-  final int maxLines;
-  final bool showBorder;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      textInputAction: textInputAction,
-      validator: validator,
-      maxLines: maxLines,
-      style: AppTextStyles.body.copyWith(
-        fontWeight: FontWeight.w500,
-        fontSize: 14,
-      ),
-      cursorColor: AppColors.primary,
-      decoration: _TripFieldDecor.base(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: icon,
-        prefixText: prefixText,
-        suffixText: suffix,
-        maxLines: maxLines,
-        showBorder: showBorder,
-      ),
     );
   }
 }
