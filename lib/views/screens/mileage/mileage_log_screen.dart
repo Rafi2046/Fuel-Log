@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../viewmodels/fuel_log_viewmodel.dart';
 import '../../../viewmodels/mileage_log_viewmodel.dart';
 import '../../../viewmodels/vehicle_viewmodel.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/app_shimmer.dart';
-import '../refueling_form_screen.dart';
 import 'widgets/mileage_empty_state.dart';
 import 'widgets/mileage_log_tile.dart';
 import 'widgets/mileage_summary_card.dart';
@@ -28,19 +26,6 @@ class MileageLogScreen extends ConsumerWidget {
     return AppScaffold(
       leading: const AppBackButton(),
       title: 'Mileage Log',
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary),
-          tooltip: 'Add Refueling',
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const RefuelingFormScreen(),
-              ),
-            );
-          },
-        ),
-      ],
       body: Builder(
         builder: (context) {
           if (logsAsync.isLoading && !logsAsync.hasValue) {

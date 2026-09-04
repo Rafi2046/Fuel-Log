@@ -13,6 +13,7 @@ class AppPrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.icon,
+    this.iconSize = 18,
     this.compact = false,
   });
 
@@ -20,6 +21,7 @@ class AppPrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final IconData? icon;
+  final double iconSize;
   final bool compact;
 
   @override
@@ -69,7 +71,7 @@ class AppPrimaryButton extends StatelessWidget {
                       SizedBox(width: AppSpacing.sm),
                       Icon(
                         icon,
-                        size: 20,
+                        size: iconSize,
                         color: onPrimary,
                       ),
                     ],

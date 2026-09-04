@@ -125,14 +125,7 @@ class _HomeContent extends StatelessWidget {
     final totalSpend = totalFuelSpend + totalServiceSpend;
     final costPerKm = totalDistance > 0 ? (totalSpend / totalDistance) : 0.0;
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.screenPadding,
-        AppSpacing.appBarBodyGap,
-        AppSpacing.screenPadding,
-        DashboardBottomBar.contentBottomInset(context),
-      ),
+    return _HomeScrollShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -402,6 +395,48 @@ class _HomeContent extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Own [ScrollController] so IndexedStack tabs don’t share PrimaryScrollController.
+class _HomeScrollShell extends StatefulWidget {
+  const _HomeScrollShell({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_HomeScrollShell> createState() => _HomeScrollShellState();
+}
+
+class _HomeScrollShellState extends State<_HomeScrollShell> {
+  final _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scrollbar(
+      controller: _controller,
+      thumbVisibility: true,
+      thickness: 3,
+      radius: const Radius.circular(8),
+      child: SingleChildScrollView(
+        controller: _controller,
+        primary: false,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.appBarBodyGap,
+          AppSpacing.screenPadding,
+          DashboardBottomBar.contentBottomInset(context),
+        ),
+        child: widget.child,
       ),
     );
   }

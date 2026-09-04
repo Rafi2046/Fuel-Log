@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../widgets/app_primary_button.dart';
 import '../../refueling_form_screen.dart';
 
-/// Premium, sleek empty state for Mileage Log with visual process preview cards.
+/// Premium empty state for Mileage Log with a clear two-step unlock path.
 class MileageEmptyState extends StatelessWidget {
   const MileageEmptyState({super.key});
 
@@ -22,197 +23,167 @@ class MileageEmptyState extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.2),
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.hairline),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(
-                alpha: AppColors.isDark ? 0.3 : 0.08,
+                alpha: AppColors.isDark ? 0.3 : 0.06,
               ),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-              // Sleek Icon Badge with Glow
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    width: 1.2,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.speed_rounded,
-                  size: 32,
-                  color: AppColors.primary,
-                ),
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.wash,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: AppColors.border),
               ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Title & Status Tag
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Icon(
+                Icons.speed_rounded,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'No Mileage Data Yet',
+              style: AppTextStyles.title.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Log at least 2 full refuelings to calculate average mileage, distance driven, and cost per km.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.45,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.wash,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    'No Mileage Data Yet',
-                    style: AppTextStyles.title.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
+                  const Expanded(
+                    child: _StepItem(
+                      title: 'First Fill',
+                      subtitle: 'Sets Odometer',
+                      icon: Icons.flag_rounded,
+                      align: _StepAlign.start,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                  const Expanded(
+                    child: _StepItem(
+                      title: 'Second Fill',
+                      subtitle: 'Calculates km/L',
+                      icon: Icons.insights_rounded,
+                      align: _StepAlign.end,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: AppSpacing.xs),
-
-              Text(
-                'Log at least 2 full refuelings to calculate average mileage, distance driven, and cost per km.',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.45,
-                  fontSize: 13,
-                ),
-              ),
-              SizedBox(height: AppSpacing.lg),
-
-              // How it works preview card (Visual Step Guide)
-              Container(
-                padding: EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: AppColors.border, width: 0.8),
-                ),
-                child: Row(
-                  children: [
-                    _StepItem(
-                      step: '1',
-                      title: 'First Fill',
-                      subtitle: 'Sets Odometer',
-                      icon: Icons.flag_outlined,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(
-                        Icons.east_rounded,
-                        size: 16,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    _StepItem(
-                      step: '2',
-                      title: 'Second Fill',
-                      subtitle: 'Calculates km/L',
-                      icon: Icons.analytics_outlined,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Compact Pill Button
-              SizedBox(
-                height: 44,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const RefuelingFormScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: AppColors.primary.withValues(alpha: 0.4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                    ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            AppPrimaryButton(
+              label: 'Add Refueling Log',
+              icon: Icons.add_rounded,
+              iconSize: 12,
+              compact: true,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RefuelingFormScreen(),
                   ),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text(
-                    'Add Refueling Log',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+                );
+              },
+            ),
+          ],
         ),
+      ),
     );
   }
 }
 
+enum _StepAlign { start, end }
+
 class _StepItem extends StatelessWidget {
   const _StepItem({
-    required this.step,
     required this.title,
     required this.subtitle,
     required this.icon,
+    required this.align,
   });
 
-  final String step;
   final String title;
   final String subtitle;
   final IconData icon;
+  final _StepAlign align;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 14, color: AppColors.primary),
-                SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    title,
-                    style: AppTextStyles.caption.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+    final isEnd = align == _StepAlign.end;
+    final cross = isEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final textAlign = isEnd ? TextAlign.right : TextAlign.left;
+
+    return Align(
+      alignment: isEnd ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: cross,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: AppColors.textSecondary),
+              const SizedBox(width: 5),
+              Text(
+                title,
+                style: AppTextStyles.caption.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  fontSize: 12,
                 ),
-              ],
-            ),
-            SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: AppTextStyles.caption.copyWith(
-                fontSize: 10,
-                color: AppColors.textTertiary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 10,
+              color: AppColors.textTertiary,
             ),
-          ],
-        ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: textAlign,
+          ),
+        ],
       ),
     );
   }

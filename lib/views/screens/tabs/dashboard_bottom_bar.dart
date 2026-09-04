@@ -30,17 +30,21 @@ class DashboardBottomBar extends StatefulWidget {
   static const homeIndicatorGap = 4.0;
   static const fabGap = 44.0;
 
+  /// Extra space so last list cards clear the docked center FAB.
+  static const fabClearance = 32.0;
+
   /// Exact height of the bottom shell (nav pill + safe area).
   static double shellHeight(BuildContext context) {
-    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
+    final mq = MediaQuery.of(context);
+    final safeBottom = math.max(mq.viewPadding.bottom, mq.padding.bottom);
     final bottomInset =
         safeBottom > homeIndicatorGap ? safeBottom : homeIndicatorGap;
     return topFloatPad + barHeight + bottomInset;
   }
 
-  /// Scroll/list padding above the shell.
+  /// Scroll/list padding above the shell + docked FAB.
   static double contentBottomInset(BuildContext context) {
-    return shellHeight(context) + 12;
+    return shellHeight(context) + fabClearance;
   }
 
   /// Overlay dock (Trip map controls) — sit clearly above the floating nav pill.
