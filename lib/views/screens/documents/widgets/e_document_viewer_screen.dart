@@ -142,11 +142,13 @@ class _EDocumentViewerScreenState extends State<EDocumentViewerScreen> {
         ? ' (Expires: ${DateFormat('dd MMM yyyy').format(widget.document.expiryDate!)})'
         : '';
 
-    Share.shareXFiles(
-      [XFile(file.path)],
-      text:
-          '${docType.displayName}$expiry - ${widget.vehicleName ?? 'Personal Document'}',
-      subject: docType.displayName,
+    SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        text:
+            '${docType.displayName}$expiry - ${widget.vehicleName ?? 'Personal Document'}',
+        subject: docType.displayName,
+      ),
     );
   }
 

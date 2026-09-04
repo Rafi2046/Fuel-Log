@@ -35,9 +35,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
       );
       if (authenticated && context.mounted) {
         Navigator.of(context).push<void>(
-          MaterialPageRoute(
-            builder: (_) => const EDocumentVaultScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const EDocumentVaultScreen()),
         );
         return;
       }
@@ -51,9 +49,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
       );
       if (unlocked == true && context.mounted) {
         Navigator.of(context).push<void>(
-          MaterialPageRoute(
-            builder: (_) => const EDocumentVaultScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const EDocumentVaultScreen()),
         );
       }
       return;
@@ -62,14 +58,10 @@ class EDocumentVaultScreen extends ConsumerWidget {
     // 3. If device biometrics was canceled or not available and no PIN is set, open directly
     if (context.mounted) {
       Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => const EDocumentVaultScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const EDocumentVaultScreen()),
       );
     }
   }
-
-
 
   Future<void> _confirmDelete(
     BuildContext context,
@@ -92,10 +84,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.appBar.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  width: 1,
-                ),
+                border: Border.all(color: AppColors.washBorder, width: 1),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.45),
@@ -147,7 +136,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       height: 1.45,
-                      color: const Color(0xFF94A3B8),
+                      color: AppColors.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -163,10 +152,10 @@ class EDocumentVaultScreen extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF222232),
+                              color: AppColors.control,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.08),
+                                color: AppColors.border,
                                 width: 1,
                               ),
                             ),
@@ -176,7 +165,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFFA1A1AA),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),
@@ -196,7 +185,9 @@ class EDocumentVaultScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                  color: const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3),
                                 ),
@@ -250,12 +241,14 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
     final activeVehicle = ref.watch(activeVehicleProvider).valueOrNull;
 
-    final selectedVehicleFilter =
-        ref.watch(selectedEDocumentVehicleFilterProvider);
+    final selectedVehicleFilter = ref.watch(
+      selectedEDocumentVehicleFilterProvider,
+    );
 
     // Build vehicle ID to Vehicle object lookup map
     final vehicleObjectMap = {for (final v in vehicles) v.id: v};
-    final selectedVehicle = selectedVehicleFilter != null && selectedVehicleFilter != -1
+    final selectedVehicle =
+        selectedVehicleFilter != null && selectedVehicleFilter != -1
         ? vehicleObjectMap[selectedVehicleFilter]
         : null;
 
@@ -307,7 +300,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
             color: AppColors.control,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
-              side: const BorderSide(color: Color(0xFF2E2E42)),
+              side: BorderSide(color: AppColors.border),
             ),
             onSelected: (val) async {
               const security = VaultSecurityService();
@@ -328,14 +321,18 @@ class EDocumentVaultScreen extends ConsumerWidget {
                 value: 'pin',
                 child: Row(
                   children: [
-                    const Icon(LucideIcons.keyRound, size: 16, color: Color(0xFFFF7A50)),
+                    const Icon(
+                      LucideIcons.keyRound,
+                      size: 16,
+                      color: Color(0xFFFF7A50),
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'Security PIN Settings',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -345,7 +342,11 @@ class EDocumentVaultScreen extends ConsumerWidget {
                 value: 'lock',
                 child: Row(
                   children: [
-                    const Icon(LucideIcons.lock, size: 16, color: Color(0xFFEF4444)),
+                    const Icon(
+                      LucideIcons.lock,
+                      size: 16,
+                      color: Color(0xFFEF4444),
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'Lock Vault Now',
@@ -579,7 +580,9 @@ class EDocumentVaultScreen extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 10.5,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                color: isSelected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -593,10 +596,14 @@ class EDocumentVaultScreen extends ConsumerWidget {
   IconData _getVehicleTypeIcon(String? type) {
     if (type == null) return LucideIcons.car;
     final lower = type.toLowerCase();
-    if (lower.contains('bike') || lower.contains('motorcycle') || lower.contains('scooter')) {
+    if (lower.contains('bike') ||
+        lower.contains('motorcycle') ||
+        lower.contains('scooter')) {
       return LucideIcons.bike;
     }
-    if (lower.contains('truck') || lower.contains('lorry') || lower.contains('pickup')) {
+    if (lower.contains('truck') ||
+        lower.contains('lorry') ||
+        lower.contains('pickup')) {
       return LucideIcons.truck;
     }
     return LucideIcons.car;
@@ -624,15 +631,27 @@ class EDocumentVaultScreen extends ConsumerWidget {
     }
 
     final pills = <({int? id, String title, IconData icon, int count})>[
-      (id: null, title: 'All Docs', icon: LucideIcons.layers, count: allDocs.length),
-      ...vehicles.map((v) => (
-            id: v.id as int?,
-            title: v.name,
-            icon: _getVehicleTypeIcon(v.type),
-            count: countPerVehicle[v.id] ?? 0,
-          )),
+      (
+        id: null,
+        title: 'All Docs',
+        icon: LucideIcons.layers,
+        count: allDocs.length,
+      ),
+      ...vehicles.map(
+        (v) => (
+          id: v.id as int?,
+          title: v.name,
+          icon: _getVehicleTypeIcon(v.type),
+          count: countPerVehicle[v.id] ?? 0,
+        ),
+      ),
       if (personalCount > 0 || vehicles.isNotEmpty)
-        (id: -1, title: 'Personal / DL', icon: LucideIcons.user, count: personalCount),
+        (
+          id: -1,
+          title: 'Personal / DL',
+          icon: LucideIcons.user,
+          count: personalCount,
+        ),
     ];
 
     return SingleChildScrollView(
@@ -645,7 +664,9 @@ class EDocumentVaultScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(right: 8),
             child: InkWell(
               onTap: () {
-                ref.read(selectedEDocumentVehicleFilterProvider.notifier).state =
+                ref
+                        .read(selectedEDocumentVehicleFilterProvider.notifier)
+                        .state =
                     item.id;
               },
               borderRadius: BorderRadius.circular(10),
@@ -656,20 +677,20 @@ class EDocumentVaultScreen extends ConsumerWidget {
                   vertical: 7.5,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF222234)
-                      : const Color(0xFF14141E),
+                  color: isSelected ? AppColors.card : AppColors.control,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFFFF7A50)
-                        : Colors.white.withValues(alpha: 0.08),
+                        : AppColors.border,
                     width: isSelected ? 1.2 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFFF7A50).withValues(alpha: 0.25),
+                            color: const Color(
+                              0xFFFF7A50,
+                            ).withValues(alpha: 0.18),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -684,18 +705,19 @@ class EDocumentVaultScreen extends ConsumerWidget {
                       size: 13.5,
                       color: isSelected
                           ? const Color(0xFFFF7A50)
-                          : const Color(0xFF94A3B8),
+                          : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       item.title,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF94A3B8),
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -707,7 +729,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFFFF7A50).withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.06),
+                            : AppColors.wash,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -717,7 +739,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w700,
                           color: isSelected
                               ? const Color(0xFFFF7A50)
-                              : const Color(0xFF71717A),
+                              : AppColors.textTertiary,
                         ),
                       ),
                     ),
@@ -768,7 +790,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
       margin: EdgeInsets.only(top: 24),
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 38),
       decoration: BoxDecoration(
-        color: Color(0xFF1B1B24),
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: AppColors.hairline, width: 1),
       ),
@@ -799,7 +821,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF94A3B8),
+              color: AppColors.textSecondary,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -816,7 +838,10 @@ class EDocumentVaultScreen extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF7A50),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
@@ -833,14 +858,15 @@ class EDocumentVaultScreen extends ConsumerWidget {
             const SizedBox(height: 10),
           ] else if (selectedVehicleFilter == -1) ...[
             ElevatedButton.icon(
-              onPressed: () => AddEDocumentSheet.show(
-                context,
-                initialVehicleId: null,
-              ),
+              onPressed: () =>
+                  AddEDocumentSheet.show(context, initialVehicleId: null),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF7A50),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
@@ -896,22 +922,22 @@ class EDocumentVaultScreen extends ConsumerWidget {
     final daysLeft = expiry?.difference(now).inDays;
     final isExpiringSoon = expiry != null && !isExpired && daysLeft! <= 30;
     final isPdf = document.filePath.toLowerCase().endsWith('.pdf');
-    final vehicleName = vehicle?.name ??
+    final vehicleName =
+        vehicle?.name ??
         (document.vehicleId != null
             ? 'Vehicle #${document.vehicleId}'
             : 'Personal Document');
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.appBar,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.07),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
+            color: Colors.black.withValues(
+              alpha: AppColors.isDark ? 0.28 : 0.05,
+            ),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -946,7 +972,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -957,7 +983,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                                     ? _getVehicleTypeIcon(vehicle?.type)
                                     : LucideIcons.user,
                                 size: 12.5,
-                                color: const Color(0xFF94A3B8),
+                                color: AppColors.textSecondary,
                               ),
                               const SizedBox(width: 5.5),
                               Flexible(
@@ -968,18 +994,19 @@ class EDocumentVaultScreen extends ConsumerWidget {
                                   style: GoogleFonts.inter(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF94A3B8),
+                                    color: AppColors.textSecondary,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (vehicle?.brand != null && vehicle!.brand!.isNotEmpty) ...[
+                              if (vehicle?.brand != null &&
+                                  vehicle!.brand!.isNotEmpty) ...[
                                 Text(
                                   ' · ${vehicle.brand}',
                                   style: GoogleFonts.inter(
                                     fontSize: 11.5,
-                                    color: const Color(0xFF64748B),
+                                    color: AppColors.textTertiary,
                                   ),
                                 ),
                               ],
@@ -998,13 +1025,13 @@ class EDocumentVaultScreen extends ConsumerWidget {
                         child: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.04),
+                            color: AppColors.wash,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.trash2,
                             size: 15,
-                            color: Color(0xFF71717A),
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       ),
@@ -1015,10 +1042,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
 
                 // Subtle hairline
-                Container(
-                  height: 1,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
+                Container(height: 1, color: AppColors.divider),
 
                 const SizedBox(height: 10),
 
@@ -1036,12 +1060,17 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
                     // Open / View Pill Button
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFF7A50).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: const Color(0xFFFF7A50).withValues(alpha: 0.28),
+                          color: const Color(
+                            0xFFFF7A50,
+                          ).withValues(alpha: 0.28),
                           width: 0.9,
                         ),
                       ),
@@ -1110,7 +1139,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF94A3B8),
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -1199,7 +1228,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: Color(0xFFCBD5E1),
+            color: AppColors.textSecondary,
           ),
         ),
       ],
@@ -1211,7 +1240,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 42),
       decoration: BoxDecoration(
-        color: Color(0xFF1B1B24),
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: AppColors.hairline, width: 1),
       ),
@@ -1248,7 +1277,7 @@ class EDocumentVaultScreen extends ConsumerWidget {
             'Add Driving License, Tax Token, Registration, or Fitness.',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: const Color(0xFF94A3B8),
+              color: AppColors.textSecondary,
               height: 1.4,
             ),
             textAlign: TextAlign.center,

@@ -263,6 +263,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       if (file == null || !mounted) return;
 
       final summary = await _backupService.inspectBackupFile(file);
+      if (!mounted) return;
 
       final shouldRestore = await showDialog<bool>(
         context: context,

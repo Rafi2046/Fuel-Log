@@ -110,7 +110,7 @@ class IntercomSmartToggles extends StatelessWidget {
 }
 
 class _InsetDivider extends StatelessWidget {
-  _InsetDivider({required this.indent});
+  const _InsetDivider({required this.indent});
 
   final double indent;
 

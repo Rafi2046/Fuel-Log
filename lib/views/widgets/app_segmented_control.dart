@@ -6,7 +6,7 @@ import '../../core/constants/app_text_styles.dart';
 
 /// Compact segmented control for 2–3 options (car/bike, km/mi, L/gal).
 class AppSegmentedControl<T> extends StatelessWidget {
-  AppSegmentedControl({
+  const AppSegmentedControl({
     super.key,
     required this.values,
     required this.labels,

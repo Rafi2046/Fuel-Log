@@ -107,7 +107,7 @@ class StatsTab extends ConsumerWidget {
 }
 
 class _StatsActionTile extends StatelessWidget {
-  _StatsActionTile({
+  const _StatsActionTile({
     required this.icon,
     required this.label,
     required this.onTap,

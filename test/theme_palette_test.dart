@@ -20,9 +20,9 @@ void main() {
 
   test('theme builders do not leak brightness into AppColors', () {
     AppColors.setBrightness(Brightness.light);
-    final _ = AppThemes.dark;
+    AppThemes.dark;
     expect(AppColors.isDark, isFalse);
-    final __ = AppThemes.light;
+    AppThemes.light;
     expect(AppColors.isDark, isFalse);
   });
 

@@ -19,7 +19,7 @@ import '../../../components/forms/sheet_action_bar.dart';
 
 /// Modal bottom sheet for adding or editing a vehicle document / license.
 class AddEditDocumentSheet extends ConsumerStatefulWidget {
-  AddEditDocumentSheet({
+  const AddEditDocumentSheet({
     super.key,
     required this.vehicleId,
     this.existingDoc,

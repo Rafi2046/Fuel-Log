@@ -3,7 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../../core/constants/app_colors.dart';
 
 class TripUserLocationMarker extends StatelessWidget {
-  const TripUserLocationMarker({this.isLocating = false});
+  const TripUserLocationMarker({super.key, this.isLocating = false});
 
   final bool isLocating;
 
@@ -39,7 +39,7 @@ class TripUserLocationMarker extends StatelessWidget {
 }
 
 class TripDestinationFlagMarker extends StatelessWidget {
-  const TripDestinationFlagMarker();
+  const TripDestinationFlagMarker({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +53,7 @@ class TripDestinationFlagMarker extends StatelessWidget {
 
 class TripStationPinMarker extends StatelessWidget {
   const TripStationPinMarker({
+    super.key,
     required this.isSelected,
     required this.onTap,
   });

@@ -485,7 +485,8 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                     if (numId == null) return;
                     final db = ref.read(databaseProvider);
                     final driftReminder = await db.getReminderById(numId);
-                    if (driftReminder == null || !context.mounted) return;
+                    if (!mounted) return;
+                    if (driftReminder == null) return;
                     AddReminderSheet.show(
                       context,
                       vehicleId: vehicle.id,

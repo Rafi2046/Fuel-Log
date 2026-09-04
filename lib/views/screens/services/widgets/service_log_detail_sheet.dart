@@ -366,7 +366,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  _DetailRow({
+  const _DetailRow({
     required this.icon,
     required this.label,
     required this.value,

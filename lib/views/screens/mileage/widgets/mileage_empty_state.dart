@@ -161,7 +161,7 @@ class MileageEmptyState extends StatelessWidget {
 }
 
 class _StepItem extends StatelessWidget {
-  _StepItem({
+  const _StepItem({
     required this.step,
     required this.title,
     required this.subtitle,

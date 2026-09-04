@@ -232,7 +232,7 @@ class WeatherDriveTripBanner extends ConsumerWidget {
 }
 
 class _Shell extends StatelessWidget {
-  _Shell({required this.child});
+  const _Shell({required this.child});
 
   final Widget child;
 

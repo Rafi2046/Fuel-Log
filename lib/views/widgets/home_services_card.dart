@@ -155,7 +155,7 @@ class HomeServicesCard extends ConsumerWidget {
             ),
             const SizedBox(width: 4),
           ],
-          const Icon(
+          Icon(
             LucideIcons.chevronRight,
             size: 16,
             color: AppColors.textTertiary,

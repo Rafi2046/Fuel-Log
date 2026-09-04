@@ -224,7 +224,7 @@ class _DashboardQuickActionsSheet extends ConsumerWidget {
 }
 
 class _ActionTile extends StatelessWidget {
-  _ActionTile({
+  const _ActionTile({
     required this.icon,
     required this.title,
     required this.subtitle,

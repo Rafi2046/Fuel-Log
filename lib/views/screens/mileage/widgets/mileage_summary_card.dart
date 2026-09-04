@@ -145,7 +145,7 @@ class MileageSummaryCard extends ConsumerWidget {
 }
 
 class _UnitSegmentedControl extends StatelessWidget {
-  _UnitSegmentedControl({
+  const _UnitSegmentedControl({
     required this.selectedUnit,
     required this.onUnitChanged,
   });
@@ -192,7 +192,7 @@ class _UnitSegmentedControl extends StatelessWidget {
 }
 
 class _SubStatTile extends StatelessWidget {
-  _SubStatTile({
+  const _SubStatTile({
     required this.icon,
     required this.label,
     required this.value,

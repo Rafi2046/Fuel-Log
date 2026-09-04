@@ -132,9 +132,11 @@ class BackupRestoreService {
   /// Exports backup and opens native Share Sheet.
   Future<void> shareBackup({required AppDatabase db}) async {
     final file = await createBackupFile(db: db);
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/json')],
-      subject: 'Fuel-Log Data Backup',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/json')],
+        subject: 'Fuel-Log Data Backup',
+      ),
     );
   }
 
@@ -145,7 +147,7 @@ class BackupRestoreService {
       allowedExtensions: ['json'],
     );
 
-    if (result == null || result.isEmpty) {
+    if (result.isEmpty) {
       return null;
     }
 

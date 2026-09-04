@@ -9,6 +9,7 @@ import '../../../widgets/clean_glass_panel.dart';
 
 class MetricPeriodMenu extends StatelessWidget {
   const MetricPeriodMenu({
+    super.key,
     required this.label,
     required this.onSelect,
   });
@@ -84,6 +85,7 @@ class MetricPeriodMenu extends StatelessWidget {
 
 class MetricFilterChips extends StatelessWidget {
   const MetricFilterChips({
+    super.key,
     required this.index,
     required this.onChanged,
   });

@@ -88,6 +88,7 @@ class MetricKpiRow extends StatelessWidget {
 
 class MetricKpiCard extends StatelessWidget {
   const MetricKpiCard({
+    super.key,
     required this.title,
     required this.value,
     required this.hint,

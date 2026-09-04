@@ -51,6 +51,7 @@ class TripMapActionChips extends StatelessWidget {
 
 class TripMapChip extends StatelessWidget {
   const TripMapChip({
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,

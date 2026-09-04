@@ -70,12 +70,14 @@ class _TourJoinCodeSheetState extends State<TourJoinCodeSheet> {
 
   void _shareCode() {
     HapticFeedback.lightImpact();
-    Share.share(
-      '🏍️ Join my FuelSync Tour Intercom!\n\n'
-      'Tour: ${widget.tourName}\n'
-      'Code: ${widget.joinCode}\n\n'
-      'Open FuelSync → Tour Intercom → Join Tour → Enter code: ${widget.joinCode}',
-      subject: 'FuelSync Tour Invite — ${widget.joinCode}',
+    SharePlus.instance.share(
+      ShareParams(
+        text: '🏍️ Join my FuelSync Tour Intercom!\n\n'
+            'Tour: ${widget.tourName}\n'
+            'Code: ${widget.joinCode}\n\n'
+            'Open FuelSync → Tour Intercom → Join Tour → Enter code: ${widget.joinCode}',
+        subject: 'FuelSync Tour Invite — ${widget.joinCode}',
+      ),
     );
   }
 

@@ -64,7 +64,7 @@ class IntercomRiderTips extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  _InfoCard({
+  const _InfoCard({
     required this.icon,
     required this.title,
     required this.body,
@@ -153,7 +153,7 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _Bullet extends StatelessWidget {
-  _Bullet({required this.text});
+  const _Bullet({required this.text});
 
   final String text;
 

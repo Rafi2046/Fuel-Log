@@ -1279,7 +1279,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen>
 }
 
 class _MetricCard extends StatelessWidget {
-  _MetricCard({
+  const _MetricCard({
     required this.label,
     required this.value,
     required this.icon,

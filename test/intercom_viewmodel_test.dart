@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fuel_log/core/models/intercom_rider_role.dart';
 import 'package:fuel_log/core/services/hardware_ptt_service.dart';

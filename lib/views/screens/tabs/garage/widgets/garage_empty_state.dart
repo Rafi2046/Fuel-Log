@@ -152,7 +152,7 @@ class _GarageHeroIllustration extends StatelessWidget {
 }
 
 class _VehicleGlyph extends StatelessWidget {
-  _VehicleGlyph({
+  const _VehicleGlyph({
     required this.icon,
     this.offset = Offset.zero,
     this.size = 38,
@@ -180,7 +180,7 @@ class _VehicleGlyph extends StatelessWidget {
 }
 
 class _FeatureChip extends StatelessWidget {
-  _FeatureChip({
+  const _FeatureChip({
     required this.icon,
     required this.label,
   });

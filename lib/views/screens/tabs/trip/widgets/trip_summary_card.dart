@@ -301,7 +301,7 @@ class TripSummaryCard extends ConsumerWidget {
 }
 
 class _TripStat extends StatelessWidget {
-  _TripStat({
+  const _TripStat({
     required this.label,
     required this.value,
     this.emphasize = false,

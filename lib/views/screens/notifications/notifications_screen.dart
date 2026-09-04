@@ -303,7 +303,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         AppSpacing.xl,
                       ),
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) =>
+                      separatorBuilder: (_, _) =>
                           const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, index) {
                         final item = filtered[index];

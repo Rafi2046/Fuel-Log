@@ -18,7 +18,7 @@ import 'document_image_viewer.dart';
 
 /// Full detail modal sheet for viewing, sharing, editing and managing a document.
 class DocumentDetailSheet extends ConsumerWidget {
-  DocumentDetailSheet({
+  const DocumentDetailSheet({
     super.key,
     required this.document,
   });
@@ -53,15 +53,19 @@ class DocumentDetailSheet extends ConsumerWidget {
         '${document.expiryDate != null ? ' - Expiry: ${DateFormat('dd MMM yyyy').format(document.expiryDate!)}' : ''}';
 
     if (files.isNotEmpty) {
-      Share.shareXFiles(
-        files,
-        text: shareText,
-        subject: document.title,
+      SharePlus.instance.share(
+        ShareParams(
+          files: files,
+          text: shareText,
+          subject: document.title,
+        ),
       );
     } else {
-      Share.share(
-        shareText,
-        subject: document.title,
+      SharePlus.instance.share(
+        ShareParams(
+          text: shareText,
+          subject: document.title,
+        ),
       );
     }
   }

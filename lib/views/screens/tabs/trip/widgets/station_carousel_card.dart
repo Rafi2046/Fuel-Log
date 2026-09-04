@@ -10,6 +10,7 @@ import 'station_carousel_thumbnail.dart';
 
 class StationCarouselCard extends StatelessWidget {
   const StationCarouselCard({
+    super.key,
     required this.station,
     required this.isSelected,
     required this.onTap,

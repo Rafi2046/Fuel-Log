@@ -319,7 +319,7 @@ class _TripLocationPickerPageState extends State<TripLocationPickerPage> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: _results.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, i) {
                     final place = _results[i];
                     return ListTile(

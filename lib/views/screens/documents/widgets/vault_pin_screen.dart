@@ -8,11 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../viewmodels/document_vault_viewmodel.dart';
 
-enum VaultPinMode {
-  unlock,
-  setup,
-  change,
-}
+enum VaultPinMode { unlock, setup, change }
 
 /// Dedicated PIN & Biometric Screen for E-Document Vault (Unlock, Setup, Change PIN)
 class VaultPinScreen extends ConsumerStatefulWidget {
@@ -267,13 +263,13 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F17),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: widget.onCancel != null
             ? IconButton(
-                icon: const Icon(LucideIcons.x, color: Color(0xFFA1A1AA)),
+                icon: Icon(LucideIcons.x, color: AppColors.textTertiary),
                 onPressed: widget.onCancel,
               )
             : null,
@@ -287,12 +283,9 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: const Color(0xFF1B1B27),
+                color: AppColors.card,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFF2E2E42),
-                  width: 1.5,
-                ),
+                border: Border.all(color: AppColors.border, width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF10B981).withValues(alpha: 0.15),
@@ -326,7 +319,7 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
                 _getHeaderSubtitle(),
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: const Color(0xFF94A3B8),
+                  color: AppColors.textSecondary,
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
@@ -348,15 +341,15 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
                     shape: BoxShape.circle,
                     color: isFilled
                         ? (_errorMessage != null
-                            ? Color(0xFFEF4444)
-                            : Color(0xFF10B981))
+                              ? Color(0xFFEF4444)
+                              : Color(0xFF10B981))
                         : AppColors.hairline,
                     border: Border.all(
                       color: isFilled
                           ? (_errorMessage != null
-                              ? const Color(0xFFEF4444)
-                              : const Color(0xFF10B981))
-                          : const Color(0xFF3F3F56),
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF10B981))
+                          : AppColors.border,
                       width: 1.5,
                     ),
                   ),
@@ -393,7 +386,8 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Biometric Action Button (Fingerprint / Face)
-                      if (_isBiometricsAvailable && widget.mode == VaultPinMode.unlock)
+                      if (_isBiometricsAvailable &&
+                          widget.mode == VaultPinMode.unlock)
                         _buildBiometricButton()
                       else
                         const SizedBox(width: 72, height: 72),
@@ -493,11 +487,7 @@ class _VaultPinScreenState extends ConsumerState<VaultPinScreen> {
           width: 72,
           height: 72,
           child: Center(
-            child: Icon(
-              icon,
-              size: 22,
-              color: const Color(0xFFA1A1AA),
-            ),
+            child: Icon(icon, size: 22, color: AppColors.textTertiary),
           ),
         ),
       ),

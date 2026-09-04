@@ -21,7 +21,7 @@ void main() {
   testWidgets('TripListView displays empty state when no trips are recorded',
       (tester) async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final vehicleId = await db.insertVehicle(
+    await db.insertVehicle(
       VehiclesCompanion.insert(
         type: 'Car',
         name: 'Empty State Car',
@@ -83,7 +83,7 @@ void main() {
     final startedAt = DateTime(2026, 8, 27, 10, 0);
     final endedAt = DateTime(2026, 8, 27, 11, 0);
 
-    final tripId = await db.insertTripLog(
+    await db.insertTripLog(
       TripLogsCompanion.insert(
         vehicleId: vehicleId,
         title: const drift.Value('Airport Drop'),

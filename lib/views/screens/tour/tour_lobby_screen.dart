@@ -570,7 +570,7 @@ class _InfoItem {
 }
 
 class _InfoCard extends StatelessWidget {
-  _InfoCard({required this.title, required this.items});
+  const _InfoCard({required this.title, required this.items});
 
   final String title;
   final List<_InfoItem> items;
