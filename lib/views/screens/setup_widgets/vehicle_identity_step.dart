@@ -183,7 +183,7 @@ class _IdentityInputRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(color: AppColors.border),
             ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_motion.dart';
-import '../../core/constants/app_shadows.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 
@@ -32,23 +31,24 @@ class AppSelectableCard extends StatelessWidget {
       curve: AppMotion.emphasized,
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.primary.withValues(alpha: 0.08)
+            ? AppColors.primary.withValues(alpha: AppColors.isDark ? 0.08 : 0.06)
             : AppColors.card,
         borderRadius: borderRadius,
         border: Border.all(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.85)
+              ? AppColors.primary.withValues(alpha: 0.7)
               : AppColors.border,
           width: isSelected ? 1.5 : 1.0,
         ),
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.18),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  color: AppColors.primary.withValues(
+                    alpha: AppColors.isDark ? 0.18 : 0.1,
+                  ),
+                  blurRadius: AppColors.isDark ? 16 : 10,
+                  offset: const Offset(0, 3),
                 ),
-                ...AppShadows.card,
               ]
             : null,
       ),
@@ -94,19 +94,12 @@ class AppSelectableCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.surface,
+                            : AppColors.wash,
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusMd),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.35),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 2),
-                                ),
-                              ]
-                            : null,
+                        border: isSelected
+                            ? null
+                            : Border.all(color: AppColors.border),
                       ),
                       child: Icon(
                         icon,
@@ -121,9 +114,7 @@ class AppSelectableCard extends StatelessWidget {
                       title,
                       style: AppTextStyles.title.copyWith(
                         fontSize: 15,
-                        color: isSelected
-                            ? AppColors.textPrimary
-                            : AppColors.textPrimary,
+                        color: AppColors.textPrimary,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w600,
                       ),
@@ -134,9 +125,7 @@ class AppSelectableCard extends StatelessWidget {
                         subtitle!,
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 11,
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.9)
-                              : AppColors.textTertiary,
+                          color: AppColors.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

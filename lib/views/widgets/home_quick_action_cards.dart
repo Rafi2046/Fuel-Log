@@ -70,13 +70,13 @@ class _ActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       onTap: onTap,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(6.5),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: AppColors.control,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -100,15 +100,19 @@ class _ActionTile extends StatelessWidget {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(
-                        title,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          title,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          softWrap: false,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (badge != null) ...[
@@ -138,7 +142,7 @@ class _ActionTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 2),
           Icon(
             LucideIcons.plus,
             size: 13,

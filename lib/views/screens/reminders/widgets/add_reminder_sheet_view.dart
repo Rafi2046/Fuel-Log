@@ -12,7 +12,12 @@ mixin _AddReminderSheetView on ConsumerState<AddReminderSheet>, _AddReminderShee
         (logs.isNotEmpty ? logs.first.odometer : (vehicle?.startOdo ?? 0.0));
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 20 + bottomInset),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        14,
+        20,
+        16 + bottomInset + MediaQuery.paddingOf(context).bottom,
+      ),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

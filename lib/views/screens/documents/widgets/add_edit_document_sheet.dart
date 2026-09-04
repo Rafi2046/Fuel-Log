@@ -161,7 +161,7 @@ class _AddEditDocumentSheetState extends ConsumerState<AddEditDocumentSheet> {
   void _showImageSourceDialog(bool isFront) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF1B1B27),
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

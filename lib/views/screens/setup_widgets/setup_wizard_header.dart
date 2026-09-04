@@ -104,18 +104,8 @@ class SetupWizardHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isActive
                         ? AppColors.primary
-                        : AppColors.surface,
+                        : AppColors.wash,
                     borderRadius: BorderRadius.circular(2),
-                    boxShadow: isActive
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary
-                                  .withValues(alpha: 0.5),
-                              blurRadius: 6,
-                              offset: const Offset(0, 1),
-                            ),
-                          ]
-                        : null,
                   ),
                 ),
               );

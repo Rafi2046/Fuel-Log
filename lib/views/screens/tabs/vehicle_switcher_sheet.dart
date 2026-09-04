@@ -19,7 +19,9 @@ class VehicleSwitcherSheet extends ConsumerWidget {
 
   final VoidCallback onManageGarage;
 
-  static final _sheetRadius = BorderRadius.circular(AppSpacing.radiusXl);
+  static final _sheetRadius = const BorderRadius.vertical(
+    top: Radius.circular(AppSpacing.radiusXl),
+  );
   static final _listRadius = BorderRadius.circular(AppSpacing.radiusLg);
 
   static Future<void> show(
@@ -28,6 +30,8 @@ class VehicleSwitcherSheet extends ConsumerWidget {
   }) {
     return showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: false,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.58),
       builder: (_) => VehicleSwitcherSheet(onManageGarage: onManageGarage),
@@ -51,63 +55,53 @@ class VehicleSwitcherSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
     final currentActive = ref.watch(activeVehicleProvider).valueOrNull;
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
 
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: ClipRRect(
-          borderRadius: _sheetRadius,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: _sheetRadius,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.22),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: 22,
-                  offset: const Offset(0, -2),
+    return Material(
+      color: AppColors.card,
+      borderRadius: _sheetRadius,
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            bottomPad > 0 ? bottomPad + 4 : 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderStrong,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'switchVehicleTitle'.tr(),
-                      style: AppTextStyles.label.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'switchVehicleDeleteHint'.tr(),
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textTertiary,
-                        fontSize: 10,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'switchVehicleTitle'.tr(),
+                style: AppTextStyles.label.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'switchVehicleDeleteHint'.tr(),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textTertiary,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: 12),
                     ClipRRect(
                       borderRadius: _listRadius,
                       child: DecoratedBox(
@@ -174,7 +168,7 @@ class VehicleSwitcherSheet extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     _ManageGarageRow(onTap: () {
                       Navigator.of(context).pop();
                       onManageGarage();
@@ -183,10 +177,7 @@ class VehicleSwitcherSheet extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
   }
 }
 

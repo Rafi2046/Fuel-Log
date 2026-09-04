@@ -56,9 +56,11 @@ class StationDetailScreen extends ConsumerWidget {
           top: Radius.circular(AppSpacing.radiusLg),
         ),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.all(AppSpacing.screenPadding),
-        child: Column(
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.screenPadding),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -132,7 +134,8 @@ class StationDetailScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   @override

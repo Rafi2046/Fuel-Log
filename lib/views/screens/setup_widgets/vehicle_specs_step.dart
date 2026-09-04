@@ -222,7 +222,7 @@ class _SpecsInputRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(color: AppColors.border),
             ),
@@ -278,7 +278,7 @@ class _SpecsInputRow extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               border: Border.all(color: AppColors.border),
             ),
@@ -323,7 +323,7 @@ class _SpecsDropdownRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.wash,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(color: AppColors.border),
             ),

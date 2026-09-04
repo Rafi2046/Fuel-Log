@@ -24,6 +24,7 @@ class EditVehicleSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: false,
       backgroundColor: Colors.transparent,
       builder: (_) => EditVehicleSheet(vehicle: vehicle),
     );
@@ -137,7 +138,9 @@ class _EditVehicleSheetState extends ConsumerState<EditVehicleSheet> {
         AppSpacing.screenPadding,
         AppSpacing.md,
         AppSpacing.screenPadding,
-        MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+        MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.paddingOf(context).bottom +
+            AppSpacing.md,
       ),
       child: SingleChildScrollView(
         child: Column(

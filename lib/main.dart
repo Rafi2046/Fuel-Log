@@ -113,7 +113,8 @@ class FuelLogApp extends ConsumerWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlay.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppColors.card,
+        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarDividerColor: Colors.transparent,
         systemNavigationBarIconBrightness: brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,

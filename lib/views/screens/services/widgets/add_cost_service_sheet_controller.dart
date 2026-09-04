@@ -120,20 +120,19 @@ mixin _AddCostServiceSheetController on ConsumerState<AddCostServiceSheet> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: AppColors.control,
+        backgroundColor: AppColors.card,
         content: Text(
           '✅ Added "$rawTitle" (৳${cost.toStringAsFixed(0)})',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         action: SnackBarAction(
           label: 'View History',
-          textColor: const Color(0xFF2ECC71),
+          textColor: AppColors.primary,
           onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const RemindersScreen(initialTabIndex: 1),
-              ),
-            );
+            ServicesScreen.open(context, initialTabIndex: 1);
           },
         ),
         behavior: SnackBarBehavior.floating,

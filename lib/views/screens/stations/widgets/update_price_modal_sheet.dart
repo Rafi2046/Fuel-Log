@@ -129,7 +129,9 @@ class _UpdatePriceSheetState extends ConsumerState<_UpdatePriceSheet> {
         AppSpacing.screenPadding,
         AppSpacing.md,
         AppSpacing.screenPadding,
-        AppSpacing.lg + bottomInset,
+        AppSpacing.md +
+            bottomInset +
+            MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

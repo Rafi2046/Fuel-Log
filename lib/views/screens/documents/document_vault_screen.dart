@@ -73,7 +73,7 @@ class _DocumentVaultScreenState extends ConsumerState<DocumentVaultScreen> {
   void _showSecurityMenu(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF1B1B27),
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

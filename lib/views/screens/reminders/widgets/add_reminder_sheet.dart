@@ -40,6 +40,7 @@ class AddReminderSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: false,
       backgroundColor: Colors.transparent,
       builder: (_) => AddReminderSheet(
         vehicleId: vehicleId,

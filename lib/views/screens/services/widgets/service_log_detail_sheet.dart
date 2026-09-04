@@ -8,7 +8,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/app_formatters.dart';
 import '../../../../viewmodels/service_log_viewmodel.dart';
-import '../../../widgets/clean_glass_panel.dart';
 
 /// Bottom sheet displaying detailed information for a single ServiceLog entry.
 class ServiceLogDetailSheet extends ConsumerWidget {
@@ -40,6 +39,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        useSafeArea: false,
         backgroundColor: Colors.transparent,
         useRootNavigator: true,
         builder: (sheetContext) => ServiceLogDetailSheet(
@@ -75,17 +75,17 @@ class ServiceLogDetailSheet extends ConsumerWidget {
 
   Color _getCategoryColor(String category) {
     final lower = category.toLowerCase();
-    if (lower.contains('maintenance')) return const Color(0xFF2ECC71);
-    if (lower.contains('repair')) return const Color(0xFFE67E22);
+    if (lower.contains('maintenance')) return AppColors.primary;
+    if (lower.contains('repair')) return const Color(0xFFB45309);
     if (lower.contains('parking') || lower.contains('toll')) {
-      return const Color(0xFF3498DB);
+      return const Color(0xFF64748B);
     }
     if (lower.contains('tax') || lower.contains('document')) {
-      return Color(0xFF9B59B6);
+      return const Color(0xFF78716C);
     }
-    if (lower.contains('wash')) return Color(0xFF00CEC9);
-    if (lower.contains('parts')) return Color(0xFFF39C12);
-    return AppColors.primary;
+    if (lower.contains('wash')) return const Color(0xFF57534E);
+    if (lower.contains('parts')) return const Color(0xFFA8A29E);
+    return AppColors.textSecondary;
   }
 
   Future<void> _deleteLog(BuildContext context, WidgetRef ref) async {
@@ -193,35 +193,29 @@ class ServiceLogDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
     final catColor = _getCategoryColor(log.category);
     final catIcon = _getCategoryIcon(log.category);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        0,
-        AppSpacing.sm,
-        bottomInset + AppSpacing.sm,
+    return Material(
+      color: AppColors.card,
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(AppSpacing.radiusXl),
       ),
-      child: CleanGlassPanel(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-          bottom: Radius.circular(AppSpacing.radiusXl),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            bottomPad > 0 ? bottomPad + 8 : AppSpacing.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                 Center(
                   child: Container(
                     width: 36,
@@ -242,13 +236,15 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: catColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: catColor.withValues(alpha: 0.3),
-                        ),
+                        color: AppColors.wash,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.border),
                       ),
-                      child: Icon(catIcon, color: catColor, size: 22),
+                      child: Icon(
+                        catIcon,
+                        color: AppColors.textSecondary,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -301,7 +297,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF2ECC71),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -360,8 +356,7 @@ class ServiceLogDetailSheet extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 

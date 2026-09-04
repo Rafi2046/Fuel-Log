@@ -137,6 +137,12 @@ abstract final class AppThemes {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
+        modalBarrierColor: Colors.black.withValues(alpha: 0.58),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusXl),
+          ),
+        ),
       ),
     );
   }
