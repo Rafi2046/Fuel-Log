@@ -52,19 +52,19 @@ class MileageEntryModel {
 
   /// Returns formatted efficiency value based on selected [unit].
   String formatEfficiency(EfficiencyUnit unit) {
+    String fmt(double? value, String suffix) {
+      if (value == null) return '--';
+      if (value >= 1000) return '${value.toStringAsFixed(0)} $suffix';
+      return '${value.toStringAsFixed(1)} $suffix';
+    }
+
     switch (unit) {
       case EfficiencyUnit.kmPerLitre:
-        return kmPerLitre != null
-            ? '${kmPerLitre!.toStringAsFixed(1)} km/L'
-            : '--';
+        return fmt(kmPerLitre, 'km/L');
       case EfficiencyUnit.l100km:
-        return consumptionL100km != null
-            ? '${consumptionL100km!.toStringAsFixed(1)} L/100km'
-            : '--';
+        return fmt(consumptionL100km, 'L/100km');
       case EfficiencyUnit.mpg:
-        return milesPerGallon != null
-            ? '${milesPerGallon!.toStringAsFixed(1)} MPG'
-            : '--';
+        return fmt(milesPerGallon, 'MPG');
     }
   }
 

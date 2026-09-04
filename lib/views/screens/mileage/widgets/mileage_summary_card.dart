@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -116,7 +117,7 @@ class MileageSummaryCard extends ConsumerWidget {
                   icon: Icons.add_road_rounded,
                   label: 'Total Distance',
                   value: summary.totalDistanceDriven > 0
-                      ? '${summary.totalDistanceDriven.toStringAsFixed(0)} km'
+                      ? '${NumberFormat('#,###').format(summary.totalDistanceDriven.round())} km'
                       : '--',
                 ),
               ),

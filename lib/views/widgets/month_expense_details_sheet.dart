@@ -6,7 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/database/app_database.dart';
 import '../../core/utils/app_formatters.dart';
 
-/// Animated popup dialog for monthly cost breakdown with dynamic height & neon orange theme
+/// Monthly cost breakdown dialog — theme-aware for light & dark.
 class MonthExpenseDetailsSheet extends StatelessWidget {
   const MonthExpenseDetailsSheet({
     super.key,
@@ -29,7 +29,7 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Month Expense Details',
-      barrierColor: Colors.black.withValues(alpha: 0.78),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (ctx, anim1, anim2) => MonthExpenseDetailsSheet(
         monthLabel: monthLabel,
@@ -77,16 +77,23 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
     return Icons.receipt_long_rounded;
   }
 
+  String _formatOdo(double km) =>
+      '${NumberFormat('#,###').format(km.round())} km';
+
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM dd, yyyy');
+    // Keep palette in sync when this dialog opens (esp. light mode).
+    AppColors.setBrightness(Theme.of(context).brightness);
+
+    final dateFormat = DateFormat('dd MMM yyyy');
+    const serviceAccent = Color(0xFF38BDF8);
 
     final List<_ExpenseItem> combinedItems = [
       ...fuelLogs.map((f) => _ExpenseItem(
             date: f.date,
-            title: 'Refueling (${f.amount.toStringAsFixed(1)} L)',
-            subtitle:
-                '${dateFormat.format(f.date)} • ${f.odometer.toStringAsFixed(0)} km',
+            title:
+                '${'refuelingTitle'.tr()} (${f.amount.toStringAsFixed(1)} L)',
+            subtitle: '${dateFormat.format(f.date)} • ${_formatOdo(f.odometer)}',
             cost: f.cost,
             icon: Icons.local_gas_station_rounded,
             iconColor: AppColors.primary,
@@ -94,11 +101,12 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
       ...serviceLogs.map((s) => _ExpenseItem(
             date: s.date,
             title: s.title,
-            subtitle:
-                '${dateFormat.format(s.date)} ${s.odometer != null ? '• ${s.odometer!.toStringAsFixed(0)} km' : '• ${s.category}'}',
+            subtitle: s.odometer != null
+                ? '${dateFormat.format(s.date)} • ${_formatOdo(s.odometer!)}'
+                : '${dateFormat.format(s.date)} • ${s.category}',
             cost: s.cost,
             icon: _getCategoryIcon(s.category),
-            iconColor: const Color(0xFF38BDF8),
+            iconColor: serviceAccent,
           )),
     ]..sort((a, b) => b.date.compareTo(a.date));
 
@@ -114,21 +122,21 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
             maxHeight: maxPopupHeight,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF161626),
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.5),
+              color: AppColors.primary.withValues(alpha: 0.45),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.2),
+                color: AppColors.primary.withValues(alpha: 0.12),
                 blurRadius: 24,
-                spreadRadius: 2,
+                spreadRadius: 1,
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.7),
-                blurRadius: 30,
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.45 : 0.12),
+                blurRadius: 24,
                 offset: const Offset(0, 10),
               ),
             ],
@@ -136,7 +144,6 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 1. Header with Neon Orange accents & full un-truncated title
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 18, 16, 14),
                 child: Row(
@@ -146,16 +153,18 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '$monthLabel Breakdown',
+                            '$monthLabel ${'breakdown'.tr()}',
                             style: GoogleFonts.inter(
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            '${combinedItems.length} total entries recorded',
+                            'monthEntriesRecorded'.tr(
+                              namedArgs: {'count': '${combinedItems.length}'},
+                            ),
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -165,8 +174,11 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close_rounded,
-                          size: 20, color: AppColors.textTertiary),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -174,118 +186,30 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                   ],
                 ),
               ),
-
-              Divider(color: Color(0xFF26263A), height: 1),
-
-              // 2. Summary Breakdown Cards
+              Divider(color: AppColors.hairline, height: 1),
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E2E),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Fuel Total',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.textTertiary,
-                                    ),
-                                  ),
-                                  Text(
-                                    AppCurrency.format(_totalFuelCost),
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: _SummaryTile(
+                        label: 'fuelCosts'.tr(),
+                        value: AppCurrency.format(_totalFuelCost),
+                        accent: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E2E),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF38BDF8)
-                                .withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF38BDF8),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Service/Costs',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.textTertiary,
-                                    ),
-                                  ),
-                                  Text(
-                                    AppCurrency.format(_totalServiceCost),
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: _SummaryTile(
+                        label: 'serviceCosts'.tr(),
+                        value: AppCurrency.format(_totalServiceCost),
+                        accent: serviceAccent,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // 3. Total Monthly Spend Banner
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
@@ -293,45 +217,50 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.35),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Total Monthly Spending',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                      Expanded(
+                        child: Text(
+                          'totalMonthlySpend'.tr(),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
-                      Text(
-                        AppCurrency.format(_grandTotal),
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            AppCurrency.format(_grandTotal),
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                            maxLines: 1,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              SizedBox(height: 12),
-
-              // 4. Dynamic Height Itemized List (Shrinks for 1-2 items, scrolls if many)
+              const SizedBox(height: 12),
               Flexible(
                 child: combinedItems.isEmpty
                     ? Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
                         child: Text(
-                          'No transactions recorded for this month.',
+                          'noLogsYet'.tr(),
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
                       )
@@ -339,79 +268,13 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
-                          children: combinedItems.map((item) {
-                            return Container(
-                              margin: EdgeInsets.only(bottom: 8),
-                              padding: EdgeInsets.all(11),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF1E1E2E),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: AppColors.controlBorder,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 34,
-                                    height: 34,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF252538),
-                                      borderRadius: BorderRadius.circular(9),
-                                    ),
-                                    child: Icon(
-                                      item.icon,
-                                      color: item.iconColor,
-                                      size: 17,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.title,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          item.subtitle,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.textTertiary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    AppCurrency.format(item.cost),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: item.iconColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                          children: [
+                            for (final item in combinedItems)
+                              _ExpenseRow(item: item),
+                          ],
                         ),
                       ),
               ),
-
-              // 5. Close Button Footer
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: SizedBox(
@@ -420,15 +283,16 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Color(0xFF2E2E44)),
+                      side: BorderSide(color: AppColors.border),
+                      foregroundColor: AppColors.textPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
-                      'Close',
+                      'close'.tr(),
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -439,6 +303,146 @@ class MonthExpenseDetailsSheet extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SummaryTile extends StatelessWidget {
+  const _SummaryTile({
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  final String label;
+  final String value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.wash,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpenseRow extends StatelessWidget {
+  const _ExpenseRow({required this.item});
+
+  final _ExpenseItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: AppColors.wash,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.control,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(item.icon, color: item.iconColor, size: 17),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    item.subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              AppCurrency.format(item.cost),
+              style: GoogleFonts.inter(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: item.iconColor,
+              ),
+              maxLines: 1,
+            ),
+          ),
+        ],
       ),
     );
   }
