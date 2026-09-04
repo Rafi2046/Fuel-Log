@@ -16,6 +16,56 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../viewmodels/e_document_viewmodel.dart';
 import '../../../../viewmodels/vehicle_viewmodel.dart';
 import '../../../components/forms/sheet_action_bar.dart';
+import 'document_image_viewer.dart';
+
+/// Survives Android activity recreation while camera/gallery is open.
+/// Without this, Two-Sided flips back to Single File after picking an image.
+class _EDocSheetDraft {
+  _EDocSheetDraft._();
+  static final _EDocSheetDraft instance = _EDocSheetDraft._();
+
+  final ValueNotifier<int> revision = ValueNotifier(0);
+
+  bool sessionActive = false;
+  bool picking = false;
+  bool isTwoSided = true;
+  String? frontPath;
+  String? backPath;
+  String? singlePath;
+  EDocumentType docType = EDocumentType.taxToken;
+  int? vehicleId;
+  DateTime? expiryDate;
+  bool noExpiry = false;
+
+  void bump() => revision.value++;
+
+  void startNew({int? initialVehicleId}) {
+    if (picking) return;
+    sessionActive = true;
+    isTwoSided = true;
+    frontPath = null;
+    backPath = null;
+    singlePath = null;
+    docType = EDocumentType.taxToken;
+    vehicleId = initialVehicleId;
+    expiryDate = null;
+    noExpiry = false;
+    bump();
+  }
+
+  void clear() {
+    if (picking) return;
+    sessionActive = false;
+    isTwoSided = true;
+    frontPath = null;
+    backPath = null;
+    singlePath = null;
+    docType = EDocumentType.taxToken;
+    vehicleId = null;
+    expiryDate = null;
+    noExpiry = false;
+  }
+}
 
 /// Modal bottom sheet to upload and record a new E-Document (supports Front & Back for NID/DL).
 class AddEDocumentSheet extends ConsumerStatefulWidget {
@@ -33,46 +83,108 @@ class AddEDocumentSheet extends ConsumerStatefulWidget {
       ),
     );
 
+    _EDocSheetDraft.instance.startNew(initialVehicleId: initialVehicleId);
+
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: false,
       backgroundColor: Colors.transparent,
       builder: (_) => AddEDocumentSheet(initialVehicleId: initialVehicleId),
-    );
+    ).whenComplete(() {
+      if (!_EDocSheetDraft.instance.picking) {
+        _EDocSheetDraft.instance.clear();
+      }
+    });
   }
 
   @override
   ConsumerState<AddEDocumentSheet> createState() => _AddEDocumentSheetState();
 }
 
+enum _UploadSlot { front, back, single }
+
 class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
   final _formKey = GlobalKey<FormState>();
 
-  EDocumentType _selectedType = EDocumentType.taxToken;
-  int? _selectedVehicleId;
-  DateTime? _expiryDate;
-  bool _noExpiry = false;
-
-  // Single file or Front side path
-  String? _frontFilePath;
-  // Optional back side path for two-sided documents (NID / Driving License)
-  String? _backFilePath;
-  bool _isTwoSided = false;
+  late EDocumentType _selectedType;
+  late int? _selectedVehicleId;
+  late DateTime? _expiryDate;
+  late bool _noExpiry;
+  late String? _frontFilePath;
+  late String? _backFilePath;
+  late String? _singleFilePath;
+  late bool _isTwoSided;
 
   bool _isSaving = false;
   final _imagePicker = ImagePicker();
 
+  String? _attachmentError;
+  String? _expiryError;
+
   @override
   void initState() {
     super.initState();
-    _selectedVehicleId = widget.initialVehicleId;
+    final draft = _EDocSheetDraft.instance;
+    if (!draft.sessionActive) {
+      draft.startNew(initialVehicleId: widget.initialVehicleId);
+    }
+    _hydrateFromDraft();
+    draft.revision.addListener(_onDraftChanged);
+  }
+
+  @override
+  void dispose() {
+    _EDocSheetDraft.instance.revision.removeListener(_onDraftChanged);
+    super.dispose();
+  }
+
+  void _onDraftChanged() {
+    if (!mounted) return;
+    setState(_hydrateFromDraft);
+  }
+
+  void _hydrateFromDraft() {
+    final draft = _EDocSheetDraft.instance;
+    _selectedType = draft.docType;
+    _selectedVehicleId = draft.vehicleId ?? widget.initialVehicleId;
+    _expiryDate = draft.expiryDate;
+    _noExpiry = draft.noExpiry;
+    _frontFilePath = draft.frontPath;
+    _backFilePath = draft.backPath;
+    _singleFilePath = draft.singlePath;
+    _isTwoSided = draft.isTwoSided;
+  }
+
+  void _persistDraft({bool notify = false}) {
+    final draft = _EDocSheetDraft.instance;
+    draft.sessionActive = true;
+    draft.isTwoSided = _isTwoSided;
+    draft.frontPath = _frontFilePath;
+    draft.backPath = _backFilePath;
+    draft.singlePath = _singleFilePath;
+    draft.docType = _selectedType;
+    draft.vehicleId = _selectedVehicleId;
+    draft.expiryDate = _expiryDate;
+    draft.noExpiry = _noExpiry;
+    if (notify) draft.bump();
+  }
+
+  void _setTwoSided(bool value) {
+    setState(() {
+      _isTwoSided = value;
+      _attachmentError = null;
+    });
+    _persistDraft();
   }
 
   Future<void> _pickImageForSlot({
     required ImageSource source,
-    required bool isFront,
+    required _UploadSlot slot,
   }) async {
+    final draft = _EDocSheetDraft.instance;
+    draft.picking = true;
+    _persistDraft();
     try {
       final picked = await _imagePicker.pickImage(
         source: source,
@@ -81,44 +193,62 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
         imageQuality: 88,
       );
       if (picked != null) {
-        setState(() {
-          if (isFront) {
-            _frontFilePath = picked.path;
-          } else {
-            _backFilePath = picked.path;
-          }
-        });
+        switch (slot) {
+          case _UploadSlot.front:
+            draft.frontPath = picked.path;
+            break;
+          case _UploadSlot.back:
+            draft.backPath = picked.path;
+            break;
+          case _UploadSlot.single:
+            draft.singlePath = picked.path;
+            break;
+        }
+        draft.bump();
       }
+      if (!mounted) return;
+      setState(_hydrateFromDraft);
+      _attachmentError = null;
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error selecting image: $e')));
+    } finally {
+      draft.picking = false;
     }
   }
 
   Future<void> _pickPdf() async {
+    final draft = _EDocSheetDraft.instance;
+    draft.picking = true;
+    _persistDraft();
     try {
       final result = await FilePickerPlatform.instance.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
       );
       if (result.isNotEmpty && result.first.path != null) {
-        setState(() {
-          _frontFilePath = result.first.path;
-          _backFilePath = null;
-          _isTwoSided = false;
-        });
+        draft.singlePath = result.first.path;
+        draft.bump();
       }
+      if (!mounted) return;
+      setState(_hydrateFromDraft);
+      _attachmentError = null;
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error selecting file: $e')));
+    } finally {
+      draft.picking = false;
     }
   }
 
-  void _showPickerOptions({required bool isFront}) {
+  void _showPickerOptions({required _UploadSlot slot}) {
+    final isSingle = slot == _UploadSlot.single;
+    final isFront = slot == _UploadSlot.front;
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
@@ -137,9 +267,11 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                   color: Color(0xFFFF7A50),
                 ),
                 title: Text(
-                  isFront
-                      ? 'Take Front Photo with Camera'
-                      : 'Take Back Photo with Camera',
+                  isSingle
+                      ? 'Take Photo with Camera'
+                      : (isFront
+                          ? 'Take Front Photo with Camera'
+                          : 'Take Back Photo with Camera'),
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w500,
@@ -149,7 +281,7 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                   Navigator.of(ctx).pop();
                   _pickImageForSlot(
                     source: ImageSource.camera,
-                    isFront: isFront,
+                    slot: slot,
                   );
                 },
               ),
@@ -159,9 +291,11 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                   color: Color(0xFF38BDF8),
                 ),
                 title: Text(
-                  isFront
-                      ? 'Choose Front Image from Gallery'
-                      : 'Choose Back Image from Gallery',
+                  isSingle
+                      ? 'Choose Image from Gallery'
+                      : (isFront
+                          ? 'Choose Front Image from Gallery'
+                          : 'Choose Back Image from Gallery'),
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w500,
@@ -171,11 +305,13 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                   Navigator.of(ctx).pop();
                   _pickImageForSlot(
                     source: ImageSource.gallery,
-                    isFront: isFront,
+                    slot: slot,
                   );
                 },
               ),
-              if (!_isTwoSided || isFront)
+              // PDF / single-file upload only in Single mode — offering it
+              // while Two-Sided is on used to flip the toggle and drop the back.
+              if (isSingle)
                 ListTile(
                   leading: const Icon(
                     LucideIcons.fileText,
@@ -225,8 +361,38 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       setState(() {
         _expiryDate = picked;
         _noExpiry = false;
+        _expiryError = null;
       });
+      _persistDraft();
     }
+  }
+
+  bool _validateBeforeSave() {
+    String? attachmentError;
+    String? expiryError;
+
+    if (_isTwoSided) {
+      if (_frontFilePath == null && _backFilePath == null) {
+        attachmentError = 'Please attach front and back photos';
+      } else if (_frontFilePath == null) {
+        attachmentError = 'Please attach the front side photo';
+      } else if (_backFilePath == null) {
+        attachmentError = 'Please attach the back side photo';
+      }
+    } else if (_singleFilePath == null) {
+      attachmentError = 'Please attach a photo or PDF of the document';
+    }
+
+    if (!_noExpiry && _expiryDate == null) {
+      expiryError = 'Select an expiry date, or check No Expiry';
+    }
+
+    setState(() {
+      _attachmentError = attachmentError;
+      _expiryError = expiryError;
+    });
+
+    return attachmentError == null && expiryError == null;
   }
 
   /// Stitches front and back photos into a single vertical composite image.
@@ -283,26 +449,22 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
   }
 
   Future<void> _saveDocument() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_frontFilePath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please attach a photo or PDF of the document'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
-      return;
-    }
+    if (_isSaving) return;
+    if (!_validateBeforeSave()) return;
 
     setState(() => _isSaving = true);
     try {
-      String finalSourcePath = _frontFilePath!;
-      if (_isTwoSided && _backFilePath != null) {
-        finalSourcePath = await _stitchFrontAndBackImages(
-          _frontFilePath!,
-          _backFilePath!,
-        );
+      String finalSourcePath;
+      if (_isTwoSided) {
+        finalSourcePath = _frontFilePath!;
+        if (_backFilePath != null) {
+          finalSourcePath = await _stitchFrontAndBackImages(
+            _frontFilePath!,
+            _backFilePath!,
+          );
+        }
+      } else {
+        finalSourcePath = _singleFilePath!;
       }
 
       final controller = ref.read(eDocumentControllerProvider);
@@ -314,6 +476,8 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
       );
 
       if (!mounted) return;
+      _EDocSheetDraft.instance.picking = false;
+      _EDocSheetDraft.instance.clear();
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -429,20 +593,12 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                             if (val != null) {
                               setState(() {
                                 _selectedType = val;
-                                if (val == EDocumentType.drivingLicense ||
-                                    val == EDocumentType.nationalId) {
-                                  _selectedVehicleId =
-                                      null; // Personal by default
-                                  _isTwoSided =
-                                      true; // Two-sided by default for NID / DL
-                                } else {
-                                  _isTwoSided = false;
-                                }
                                 if (val == EDocumentType.nationalId) {
                                   _noExpiry = true;
                                   _expiryDate = null;
                                 }
                               });
+                              _persistDraft();
                             }
                           },
                         ),
@@ -510,8 +666,10 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                               );
                             }),
                           ],
-                          onChanged: (val) =>
-                              setState(() => _selectedVehicleId = val),
+                          onChanged: (val) {
+                            setState(() => _selectedVehicleId = val);
+                            _persistDraft();
+                          },
                         ),
                       ),
                     ),
@@ -530,21 +688,35 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
+                        Row(
                           children: [
-                            _buildFormatTogglePill(
-                              title: 'Two-Sided',
-                              isSelected: _isTwoSided,
-                              onTap: () => setState(() => _isTwoSided = true),
+                            Expanded(
+                              child: _buildFormatTogglePill(
+                                title: 'Two-Sided',
+                                isSelected: _isTwoSided,
+                                onTap: () => _setTwoSided(true),
+                              ),
                             ),
-                            _buildFormatTogglePill(
-                              title: 'Single / PDF',
-                              isSelected: !_isTwoSided,
-                              onTap: () => setState(() => _isTwoSided = false),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildFormatTogglePill(
+                                title: 'Single File',
+                                isSelected: !_isTwoSided,
+                                onTap: () => _setTwoSided(false),
+                              ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _isTwoSided
+                              ? 'Front + back photos. Stays on Two-Sided until you switch.'
+                              : 'One photo or PDF. Stays on Single File until you switch.',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: AppColors.textTertiary,
+                            height: 1.3,
+                          ),
                         ),
                       ],
                     ),
@@ -560,9 +732,16 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                               title: 'Front Side (সামনে)',
                               filePath: _frontFilePath,
                               isFront: true,
-                              onTap: () => _showPickerOptions(isFront: true),
-                              onClear: () =>
-                                  setState(() => _frontFilePath = null),
+                              hasError: _attachmentError != null &&
+                                  _frontFilePath == null,
+                              onTap: () => _showPickerOptions(slot: _UploadSlot.front),
+                              onClear: () {
+                                setState(() {
+                                  _frontFilePath = null;
+                                  _attachmentError = null;
+                                });
+                                _persistDraft();
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -572,15 +751,36 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                               title: 'Back Side (পেছনে)',
                               filePath: _backFilePath,
                               isFront: false,
-                              onTap: () => _showPickerOptions(isFront: false),
-                              onClear: () =>
-                                  setState(() => _backFilePath = null),
+                              hasError: _attachmentError != null &&
+                                  _backFilePath == null,
+                              onTap: () => _showPickerOptions(slot: _UploadSlot.back),
+                              onClear: () {
+                                setState(() {
+                                  _backFilePath = null;
+                                  _attachmentError = null;
+                                });
+                                _persistDraft();
+                              },
                             ),
                           ),
                         ],
                       )
                     else
-                      _buildSingleUploadBox(),
+                      _buildSingleUploadBox(
+                        hasError: _attachmentError != null,
+                      ),
+
+                    if (_attachmentError != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        _attachmentError!,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -610,8 +810,10 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                             AppSpacing.radiusMd,
                           ),
                           border: Border.all(
-                            color: AppColors.hairline,
-                            width: 1,
+                            color: _expiryError != null
+                                ? const Color(0xFFEF4444)
+                                : AppColors.hairline,
+                            width: _expiryError != null ? 1.2 : 1,
                           ),
                         ),
                         child: Row(
@@ -646,41 +848,88 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    if (_expiryError != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        _expiryError!,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
 
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _noExpiry,
-                          activeColor: const Color(0xFFFF7A50),
-                          checkColor: Colors.white,
-                          side: BorderSide(
-                            color: AppColors.borderStrong,
-                            width: 1.4,
-                          ),
-                          onChanged: (val) {
-                            setState(() {
-                              _noExpiry = val ?? false;
-                              if (_noExpiry) _expiryDate = null;
-                            });
-                          },
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _noExpiry = !_noExpiry;
+                          if (_noExpiry) {
+                            _expiryDate = null;
+                            _expiryError = null;
+                          }
+                        });
+                        _persistDraft();
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: Checkbox(
+                                value: _noExpiry,
+                                activeColor: const Color(0xFFFF7A50),
+                                checkColor: Colors.white,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                side: BorderSide(
+                                  color: AppColors.borderStrong,
+                                  width: 1.4,
+                                ),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _noExpiry = val ?? false;
+                                    if (_noExpiry) {
+                                      _expiryDate = null;
+                                      _expiryError = null;
+                                    }
+                                  });
+                                  _persistDraft();
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'No Expiry Date (Lifetime)',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.2,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'No Expiry Date (Lifetime)',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 24),
 
                     // 5. Actions
                     SheetActionBar(
                       primaryLabel: _isSaving ? 'Saving...' : 'Save Document',
-                      onPrimary: _saveDocument,
-                      onCancel: () => Navigator.of(context).pop(),
+                      onPrimary: _isSaving ? () {} : _saveDocument,
+                      onCancel: () {
+                        _EDocSheetDraft.instance.clear();
+                        Navigator.of(context).pop();
+                      },
                       primaryColor: const Color(0xFFFF7A50),
                     ),
                   ],
@@ -698,32 +947,38 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 150),
-        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Color(0xFFFF7A50).withValues(alpha: 0.15)
-              : AppColors.inputFill,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
             color: isSelected
-                ? Color(0xFFFF7A50).withValues(alpha: 0.4)
-                : AppColors.hairline,
-            width: 1,
+                ? const Color(0xFFFF7A50).withValues(alpha: 0.15)
+                : AppColors.inputFill,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFFFF7A50).withValues(alpha: 0.55)
+                  : AppColors.hairline,
+              width: isSelected ? 1.4 : 1,
+            ),
           ),
-        ),
-        child: Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected
-                ? const Color(0xFFFF7A50)
-                : AppColors.textSecondary,
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected
+                  ? const Color(0xFFFF7A50)
+                  : AppColors.textSecondary,
+            ),
           ),
         ),
       ),
@@ -736,175 +991,378 @@ class _AddEDocumentSheetState extends ConsumerState<AddEDocumentSheet> {
     required bool isFront,
     required VoidCallback onTap,
     required VoidCallback onClear,
+    bool hasError = false,
   }) {
     final hasFile = filePath != null;
+    final isPdf =
+        filePath != null && filePath.toLowerCase().endsWith('.pdf');
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        height: 110,
-        padding: EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.inputFill,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: hasFile
-                ? Color(0xFF10B981).withValues(alpha: 0.5)
-                : AppColors.hairline,
-            width: 1.2,
+    void openPreview() {
+      if (filePath == null || isPdf) return;
+      DocumentImageViewer.show(
+        context,
+        imagePath: filePath,
+        title: title,
+        subtitle: 'Pinch to zoom · tap X to close',
+      );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: hasFile ? (isPdf ? onTap : openPreview) : onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Ink(
+          height: 132,
+          decoration: BoxDecoration(
+            color: AppColors.inputFill,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: hasFile
+                  ? const Color(0xFF10B981).withValues(alpha: 0.55)
+                  : hasError
+                      ? const Color(0xFFEF4444)
+                      : AppColors.hairline,
+              width: hasError && !hasFile ? 1.4 : 1.2,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd - 1),
+            child: hasFile
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (isPdf)
+                        ColoredBox(
+                          color: AppColors.wash,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                LucideIcons.fileText,
+                                color: AppColors.primary,
+                                size: 28,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'PDF attached',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Image.file(
+                          File(filePath),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: AppColors.wash,
+                            child: Icon(
+                              LucideIcons.imageOff,
+                              color: AppColors.textTertiary,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0),
+                                Colors.black.withValues(alpha: 0.75),
+                              ],
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      isPdf
+                                          ? 'Tap to change'
+                                          : 'Tap to enlarge',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFF7DD3FC),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!isPdf)
+                                Material(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: InkWell(
+                                    onTap: onTap,
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 5,
+                                      ),
+                                      child: Text(
+                                        'Change',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            LucideIcons.check,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Material(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: onClear,
+                            child: const Padding(
+                              padding: EdgeInsets.all(5),
+                              child: Icon(
+                                LucideIcons.x,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isFront ? LucideIcons.idCard : LucideIcons.rotateCcw,
+                        color: const Color(0xFFFF7A50),
+                        size: 22,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Camera / Gallery',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
-        child: hasFile
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    LucideIcons.checkCircle2,
-                    color: Color(0xFF10B981),
-                    size: 24,
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tap to Change',
-                    style: GoogleFonts.inter(
-                      fontSize: 10.5,
-                      color: const Color(0xFF38BDF8),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isFront ? LucideIcons.idCard : LucideIcons.rotateCcw,
-                    color: Color(0xFFFF7A50),
-                    size: 22,
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Camera / Gallery',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
       ),
     );
   }
 
-  Widget _buildSingleUploadBox() {
-    final hasFile = _frontFilePath != null;
+  Widget _buildSingleUploadBox({bool hasError = false}) {
+    final hasFile = _singleFilePath != null;
     final isPdf =
-        _frontFilePath != null &&
-        _frontFilePath!.toLowerCase().endsWith('.pdf');
+        _singleFilePath != null &&
+        _singleFilePath!.toLowerCase().endsWith('.pdf');
 
-    return InkWell(
-      onTap: () => _showPickerOptions(isFront: true),
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        decoration: BoxDecoration(
-          color: AppColors.inputFill,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: hasFile ? Color(0xFFFF7A50) : AppColors.hairline,
-            width: 1.2,
+    void openPreview() {
+      final path = _singleFilePath;
+      if (path == null || isPdf) return;
+      DocumentImageViewer.show(
+        context,
+        imagePath: path,
+        title: 'Document preview',
+        subtitle: 'Pinch to zoom · tap X to close',
+      );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: hasFile
+            ? (isPdf ? () => _showPickerOptions(slot: _UploadSlot.single) : openPreview)
+            : () => _showPickerOptions(slot: _UploadSlot.single),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.inputFill,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: hasFile
+                  ? const Color(0xFFFF7A50)
+                  : hasError
+                      ? const Color(0xFFEF4444)
+                      : AppColors.hairline,
+              width: hasError && !hasFile ? 1.4 : 1.2,
+            ),
           ),
+          child: hasFile
+              ? Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: isPdf
+                            ? ColoredBox(
+                                color: AppColors.wash,
+                                child: Icon(
+                                  LucideIcons.fileText,
+                                  color: AppColors.primary,
+                                  size: 24,
+                                ),
+                              )
+                            : Image.file(
+                                File(_singleFilePath!),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => ColoredBox(
+                                  color: AppColors.wash,
+                                  child: Icon(
+                                    LucideIcons.imageOff,
+                                    color: AppColors.textTertiary,
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _singleFilePath!.split('/').last,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isPdf
+                                ? 'PDF ready · tap to change'
+                                : 'Tap to enlarge',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFFFF7A50),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _showPickerOptions(slot: _UploadSlot.single),
+                      tooltip: 'Change file',
+                      icon: Icon(
+                        LucideIcons.refreshCw,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _singleFilePath = null;
+                          _attachmentError = null;
+                        });
+                        _persistDraft();
+                      },
+                      tooltip: 'Remove file',
+                      icon: Icon(
+                        LucideIcons.x,
+                        size: 18,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Icon(
+                      LucideIcons.uploadCloud,
+                      color: Color(0xFFFF7A50),
+                      size: 28,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Attach Camera Photo, Gallery, or PDF',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'JPG, PNG, PDF up to 15MB',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
         ),
-        child: hasFile
-            ? Row(
-                children: [
-                  Icon(
-                    isPdf ? LucideIcons.fileText : LucideIcons.image,
-                    color: const Color(0xFFFF7A50),
-                    size: 24,
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _frontFilePath!.split('/').last,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tap to change file',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: const Color(0xFFFF7A50),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    LucideIcons.checkCircle2,
-                    color: Color(0xFF10B981),
-                    size: 20,
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  Icon(
-                    LucideIcons.uploadCloud,
-                    color: Color(0xFFFF7A50),
-                    size: 28,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Attach Camera Photo, Gallery, or PDF',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'JPG, PNG, PDF up to 15MB',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
       ),
     );
   }

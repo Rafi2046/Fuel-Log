@@ -394,12 +394,12 @@ class EDocumentVaultScreen extends ConsumerWidget {
                 initialVehicleId: activeVehicle?.id,
               ),
             ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.screenPadding,
           AppSpacing.appBarBodyGap,
           AppSpacing.screenPadding,
-          90,
+          AppSpacing.screenPadding,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,37 +426,46 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
             // 3. Document Content (Empty State or List)
             if (allDocs.isEmpty)
-              _buildEmptyState(context, activeVehicle?.id)
-            else if (docs.isEmpty)
-              _buildFilterEmptyState(
-                context: context,
-                ref: ref,
-                activeTab: activeTab,
-                selectedVehicleFilter: selectedVehicleFilter,
-                selectedVehicle: selectedVehicle,
+              Expanded(
+                child: Center(
+                  child: _buildEmptyState(context, activeVehicle?.id),
+                ),
               )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: docs.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (ctx, index) {
-                  final doc = docs[index];
-                  final type = EDocumentType.fromCode(doc.docType);
-                  final vehicle = doc.vehicleId != null
-                      ? vehicleObjectMap[doc.vehicleId]
-                      : null;
-
-                  return _buildDocumentCard(
+            else if (docs.isEmpty)
+              Expanded(
+                child: Center(
+                  child: _buildFilterEmptyState(
                     context: context,
                     ref: ref,
-                    document: doc,
-                    type: type,
-                    vehicle: vehicle,
-                  );
-                },
+                    activeTab: activeTab,
+                    selectedVehicleFilter: selectedVehicleFilter,
+                    selectedVehicle: selectedVehicle,
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.only(bottom: 90),
+                  itemCount: docs.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (ctx, index) {
+                    final doc = docs[index];
+                    final type = EDocumentType.fromCode(doc.docType);
+                    final vehicle = doc.vehicleId != null
+                        ? vehicleObjectMap[doc.vehicleId]
+                        : null;
+
+                    return _buildDocumentCard(
+                      context: context,
+                      ref: ref,
+                      document: doc,
+                      type: type,
+                      vehicle: vehicle,
+                    );
+                  },
+                ),
               ),
           ],
         ),
@@ -787,8 +796,8 @@ class EDocumentVaultScreen extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(top: 24),
-      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 38),
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -800,33 +809,33 @@ class EDocumentVaultScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: const Color(0xFFFF7A50).withValues(alpha: 0.12),
               shape: BoxShape.circle,
               border: Border.all(
                 color: const Color(0xFFFF7A50).withValues(alpha: 0.3),
-                width: 1.5,
+                width: 1.2,
               ),
             ),
             child: const Icon(
               LucideIcons.fileSearch,
-              size: 32,
+              size: 26,
               color: Color(0xFFFF7A50),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             message,
             style: GoogleFonts.inter(
-              fontSize: 14,
+              fontSize: 13.5,
               fontWeight: FontWeight.w500,
               color: AppColors.textSecondary,
-              height: 1.4,
+              height: 1.35,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
           // Primary Action: Add document for this specific vehicle or personal
           if (selectedVehicleFilter != null && selectedVehicleFilter != -1) ...[
@@ -838,12 +847,15 @@ class EDocumentVaultScreen extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF7A50),
                 foregroundColor: Colors.white,
+                elevation: 0,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                  horizontal: 18,
+                  vertical: 10,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               icon: const Icon(LucideIcons.plus, size: 16),
@@ -863,12 +875,15 @@ class EDocumentVaultScreen extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF7A50),
                 foregroundColor: Colors.white,
+                elevation: 0,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                  horizontal: 18,
+                  vertical: 10,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               icon: const Icon(LucideIcons.plus, size: 16),
@@ -1238,51 +1253,52 @@ class EDocumentVaultScreen extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, int? activeVehicleId) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 42),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: AppColors.hairline, width: 1),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: const Color(0xFFFF7A50).withValues(alpha: 0.12),
               shape: BoxShape.circle,
               border: Border.all(
                 color: const Color(0xFFFF7A50).withValues(alpha: 0.3),
-                width: 1.5,
+                width: 1.2,
               ),
             ),
-            child: Icon(
+            child: const Icon(
               LucideIcons.shieldCheck,
-              size: 40,
+              size: 28,
               color: Color(0xFFFF7A50),
             ),
           ),
-          SizedBox(height: 18),
+          const SizedBox(height: 12),
           Text(
             'Never lose your papers again.',
             style: GoogleFonts.inter(
-              fontSize: 16.5,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'Add Driving License, Tax Token, Registration, or Fitness.',
             style: GoogleFonts.inter(
-              fontSize: 13,
+              fontSize: 12.5,
               color: AppColors.textSecondary,
-              height: 1.4,
+              height: 1.35,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 14),
           ElevatedButton.icon(
             onPressed: () => AddEDocumentSheet.show(
               context,
@@ -1293,9 +1309,12 @@ class EDocumentVaultScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF7A50),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+              elevation: 0,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
           ),
