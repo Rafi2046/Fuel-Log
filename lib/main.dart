@@ -40,12 +40,14 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Color(0xFF121212),
-      systemNavigationBarColor: Color(0xFF121212),
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
     ),
   );
 
@@ -113,11 +115,12 @@ class FuelLogApp extends ConsumerWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlay.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarColor: Colors.transparent,
         systemNavigationBarDividerColor: Colors.transparent,
         systemNavigationBarIconBrightness: brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
       ),
       child: MaterialApp(
         title: 'FuelSync',

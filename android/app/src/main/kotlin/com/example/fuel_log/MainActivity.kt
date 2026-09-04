@@ -17,8 +17,12 @@ class MainActivity : FlutterFragmentActivity() {
     private val sessionEventChannelName = "com.ridelog.bd/intercom_session_events"
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.navigationBarColor = Color.parseColor("#121212")
-        window.statusBarColor = Color.parseColor("#121212")
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.navigationBarColor = Color.TRANSPARENT
+        window.statusBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         super.onCreate(savedInstanceState)
     }
 

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -55,22 +56,24 @@ class VehicleSwitcherSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
     final currentActive = ref.watch(activeVehicleProvider).valueOrNull;
-    final bottomPad = MediaQuery.paddingOf(context).bottom;
-
-    return Material(
-      color: AppColors.card,
-      borderRadius: _sheetRadius,
-      clipBehavior: Clip.antiAlias,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            12,
-            16,
-            bottomPad > 0 ? bottomPad + 4 : 20,
-          ),
-          child: Column(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness:
+            AppColors.isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: Material(
+        color: AppColors.card,
+        borderRadius: _sheetRadius,
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -173,7 +176,8 @@ class VehicleSwitcherSheet extends ConsumerWidget {
                       Navigator.of(context).pop();
                       onManageGarage();
                     }),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
